@@ -46,6 +46,29 @@
                 </div>
             </div>
             
+            <div class="editing-section">
+                <h3>✏️ Edit Workout</h3>
+                <p>Modify workout intensity and scale segments (excluding warmup/cooldown).</p>
+                
+                <div class="editing-controls">
+                    <div class="scale-controls">
+                        <label for="scaleSlider">Scale Factor:</label>
+                        <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+                        <span class="scale-value">1.0</span>
+                        <div class="scale-info">Multiplier for main workout segments (excludes warmup/cooldown)</div>
+                        <button id="applyScale" class="action-btn">Apply Scale</button>
+                        <button id="resetWorkout" class="action-btn secondary">Reset</button>
+                    </div>
+                    
+                    <div class="export-controls">
+                        <button id="exportModified" class="export-btn">
+                            📥 Download Modified ZWO
+                            <span class="format-info">Save your edited workout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="conversion-section">
                 <h3>🔄 Convert for Other Platforms</h3>
                 <p>Convert this workout to formats compatible with MyWhoosh, Rouvy, and other training platforms.</p>

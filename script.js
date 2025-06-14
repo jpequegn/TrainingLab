@@ -2,7 +2,9 @@ class ZwiftWorkoutVisualizer {
     constructor() {
         this.chart = null;
         this.workoutData = null;
+        this.originalWorkoutData = null; // Store original for reset functionality
         this.ftp = 250; // Default FTP value in watts
+        this.currentEditingSegment = null;
         this.initializeEventListeners();
     }
 
@@ -25,6 +27,23 @@ class ZwiftWorkoutVisualizer {
 
         document.getElementById('ftpInput').addEventListener('input', (e) => {
             this.updateFTP(parseInt(e.target.value) || 250);
+        });
+
+        // Editing functionality event listeners
+        document.getElementById('scaleSlider').addEventListener('input', (e) => {
+            this.updateScaleValue(e.target.value);
+        });
+
+        document.getElementById('applyScale').addEventListener('click', () => {
+            this.applyScaling();
+        });
+
+        document.getElementById('resetWorkout').addEventListener('click', () => {
+            this.resetWorkout();
+        });
+
+        document.getElementById('exportModified').addEventListener('click', () => {
+            this.exportModifiedZWO();
         });
     }
 
@@ -78,6 +97,7 @@ class ZwiftWorkoutVisualizer {
             }
 
             this.workoutData = this.parseWorkoutXML(xmlDoc);
+            this.originalWorkoutData = JSON.parse(JSON.stringify(this.workoutData)); // Deep copy for reset
             this.displayWorkoutInfo();
             this.createChart();
             this.displaySegmentDetails();
@@ -403,13 +423,13 @@ class ZwiftWorkoutVisualizer {
 
         allSegments.forEach((segment, index) => {
             const segmentDiv = document.createElement('div');
-            segmentDiv.className = 'segment';
+            segmentDiv.className = 'segment segment-item';
             
             let powerText = '';
             if (segment.power !== undefined) {
-                powerText = `${(segment.power * 100).toFixed(0)}% FTP`;
+                powerText = `${segment.power}% FTP`;
             } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
-                powerText = `${(segment.powerLow * 100).toFixed(0)}% - ${(segment.powerHigh * 100).toFixed(0)}% FTP`;
+                powerText = `${segment.powerLow}% - ${segment.powerHigh}% FTP`;
             }
 
             segmentDiv.innerHTML = `
@@ -424,6 +444,9 @@ class ZwiftWorkoutVisualizer {
         });
 
         document.getElementById('segmentDetails').style.display = 'block';
+        
+        // Setup segment editing after segments are displayed
+        setTimeout(() => this.setupSegmentEditing(), 100);
     }
 
     calculateTSS(workout) {
@@ -698,9 +721,274 @@ class ZwiftWorkoutVisualizer {
             return `${minutes}:${secs.toString().padStart(2, '0')}`;
         }
     }
+
+    // Editing functionality methods
+    updateScaleValue(value) {
+        document.querySelector('.scale-value').textContent = parseFloat(value).toFixed(1);
+    }
+
+    applyScaling() {
+        if (!this.workoutData) {
+            alert('Please load a workout first');
+            return;
+        }
+
+        const scaleFactor = parseFloat(document.getElementById('scaleSlider').value);
+        
+        // Apply scaling to segments (excluding warmup and cooldown)
+        this.workoutData.segments.forEach(segment => {
+            if (this.shouldScaleSegment(segment)) {
+                this.scaleSegmentPower(segment, scaleFactor);
+            }
+        });
+
+        // Regenerate power data and update displays
+        this.workoutData.powerData = this.generatePowerData(this.workoutData.segments);
+        this.workoutData.tss = this.calculateTSS(this.workoutData.powerData);
+        
+        this.displayWorkoutInfo();
+        this.createChart();
+        this.displaySegmentDetails();
+    }
+
+    shouldScaleSegment(segment) {
+        // Don't scale warmup and cooldown segments
+        const type = segment.type.toLowerCase();
+        return type !== 'warmup' && type !== 'cooldown';
+    }
+
+    scaleSegmentPower(segment, scaleFactor) {
+        if (segment.power !== undefined) {
+            segment.power = Math.round(segment.power * scaleFactor);
+        }
+        if (segment.powerLow !== undefined) {
+            segment.powerLow = Math.round(segment.powerLow * scaleFactor);
+        }
+        if (segment.powerHigh !== undefined) {
+            segment.powerHigh = Math.round(segment.powerHigh * scaleFactor);
+        }
+    }
+
+    resetWorkout() {
+        if (!this.originalWorkoutData) {
+            alert('No original workout data to reset to');
+            return;
+        }
+
+        // Restore original workout data
+        this.workoutData = JSON.parse(JSON.stringify(this.originalWorkoutData));
+        
+        // Reset scale slider
+        document.getElementById('scaleSlider').value = 1.0;
+        this.updateScaleValue(1.0);
+        
+        // Update displays
+        this.displayWorkoutInfo();
+        this.createChart();
+        this.displaySegmentDetails();
+    }
+
+    exportModifiedZWO() {
+        if (!this.workoutData) {
+            alert('Please load a workout first');
+            return;
+        }
+
+        const zwoContent = this.generateZWOContent();
+        const blob = new Blob([zwoContent], { type: 'application/xml' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${this.workoutData.name.replace(/[^a-z0-9]/gi, '_')}_modified.zwo`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    generateZWOContent() {
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<workout_file>\n';
+        xml += `    <author>${this.escapeXml(this.workoutData.author)}</author>\n`;
+        xml += `    <name>${this.escapeXml(this.workoutData.name)}</name>\n`;
+        xml += `    <description>${this.escapeXml(this.workoutData.description)}</description>\n`;
+        xml += `    <sportType>${this.workoutData.sportType}</sportType>\n`;
+        xml += '    <workout>\n';
+
+        this.workoutData.segments.forEach(segment => {
+            xml += this.generateSegmentXML(segment);
+        });
+
+        xml += '    </workout>\n';
+        xml += '</workout_file>';
+        
+        return xml;
+    }
+
+    generateSegmentXML(segment) {
+        let xml = '';
+        const duration = segment.duration;
+        
+        switch (segment.type.toLowerCase()) {
+            case 'warmup':
+                xml += `        <Warmup Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+                break;
+            case 'cooldown':
+                xml += `        <Cooldown Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+                break;
+            case 'steadystate':
+                xml += `        <SteadyState Duration="${duration}" Power="${segment.power / 100}"/>\n`;
+                break;
+            case 'intervals':
+                xml += `        <IntervalsT Repeat="${segment.repeat || 1}" OnDuration="${segment.onDuration}" OffDuration="${segment.offDuration}" OnPower="${segment.onPower / 100}" OffPower="${segment.offPower / 100}"/>\n`;
+                break;
+            case 'ramp':
+                xml += `        <Ramp Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+                break;
+            default:
+                xml += `        <SteadyState Duration="${duration}" Power="${(segment.power || 50) / 100}"/>\n`;
+        }
+        
+        return xml;
+    }
+
+    escapeXml(text) {
+        if (!text) return '';
+        return text.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    setupSegmentEditing() {
+        // Add click handlers to segment items for editing
+        const segmentItems = document.querySelectorAll('.segment-item');
+        segmentItems.forEach((item, index) => {
+            item.addEventListener('click', () => {
+                this.toggleSegmentEditing(index);
+            });
+        });
+    }
+
+    toggleSegmentEditing(segmentIndex) {
+        // Close any currently editing segment
+        if (this.currentEditingSegment !== null && this.currentEditingSegment !== segmentIndex) {
+            this.closeSegmentEditing(this.currentEditingSegment);
+        }
+
+        const segmentItem = document.querySelectorAll('.segment-item')[segmentIndex];
+        const isCurrentlyEditing = segmentItem.classList.contains('editing');
+
+        if (isCurrentlyEditing) {
+            this.closeSegmentEditing(segmentIndex);
+        } else {
+            this.openSegmentEditing(segmentIndex);
+        }
+    }
+
+    openSegmentEditing(segmentIndex) {
+        const segment = this.workoutData.segments[segmentIndex];
+        const segmentItem = document.querySelectorAll('.segment-item')[segmentIndex];
+        
+        segmentItem.classList.add('editing');
+        this.currentEditingSegment = segmentIndex;
+
+        // Create editing controls
+        const editControls = this.createSegmentEditControls(segment, segmentIndex);
+        segmentItem.appendChild(editControls);
+    }
+
+    closeSegmentEditing(segmentIndex) {
+        const segmentItem = document.querySelectorAll('.segment-item')[segmentIndex];
+        segmentItem.classList.remove('editing');
+        
+        const editControls = segmentItem.querySelector('.segment-edit-controls');
+        if (editControls) {
+            editControls.remove();
+        }
+        
+        if (this.currentEditingSegment === segmentIndex) {
+            this.currentEditingSegment = null;
+        }
+    }
+
+    createSegmentEditControls(segment, segmentIndex) {
+        const controls = document.createElement('div');
+        controls.className = 'segment-edit-controls active';
+
+        let controlsHTML = '';
+        
+        if (segment.type.toLowerCase() === 'steadystate') {
+            controlsHTML = `
+                <div class="power-input-group">
+                    <label>Power:</label>
+                    <input type="number" id="power-${segmentIndex}" value="${segment.power}" min="0" max="300">
+                    <span>% FTP</span>
+                </div>
+            `;
+        } else if (segment.type.toLowerCase() === 'warmup' || segment.type.toLowerCase() === 'cooldown' || segment.type.toLowerCase() === 'ramp') {
+            controlsHTML = `
+                <div class="power-input-group">
+                    <label>Power Low:</label>
+                    <input type="number" id="powerLow-${segmentIndex}" value="${segment.powerLow}" min="0" max="300">
+                    <span>% FTP</span>
+                </div>
+                <div class="power-input-group">
+                    <label>Power High:</label>
+                    <input type="number" id="powerHigh-${segmentIndex}" value="${segment.powerHigh}" min="0" max="300">
+                    <span>% FTP</span>
+                </div>
+            `;
+        }
+
+        controlsHTML += `
+            <div class="segment-edit-buttons">
+                <button class="apply-btn" onclick="visualizer.applySegmentEdit(${segmentIndex})">Apply</button>
+                <button class="cancel-btn" onclick="visualizer.closeSegmentEditing(${segmentIndex})">Cancel</button>
+            </div>
+        `;
+
+        controls.innerHTML = controlsHTML;
+        return controls;
+    }
+
+    applySegmentEdit(segmentIndex) {
+        const segment = this.workoutData.segments[segmentIndex];
+        
+        if (segment.type.toLowerCase() === 'steadystate') {
+            const powerInput = document.getElementById(`power-${segmentIndex}`);
+            if (powerInput) {
+                segment.power = parseInt(powerInput.value) || segment.power;
+            }
+        } else if (segment.type.toLowerCase() === 'warmup' || segment.type.toLowerCase() === 'cooldown' || segment.type.toLowerCase() === 'ramp') {
+            const powerLowInput = document.getElementById(`powerLow-${segmentIndex}`);
+            const powerHighInput = document.getElementById(`powerHigh-${segmentIndex}`);
+            
+            if (powerLowInput) {
+                segment.powerLow = parseInt(powerLowInput.value) || segment.powerLow;
+            }
+            if (powerHighInput) {
+                segment.powerHigh = parseInt(powerHighInput.value) || segment.powerHigh;
+            }
+        }
+
+        // Regenerate power data and update displays
+        this.workoutData.powerData = this.generatePowerData(this.workoutData.segments);
+        this.workoutData.tss = this.calculateTSS(this.workoutData.powerData);
+        
+        this.displayWorkoutInfo();
+        this.createChart();
+        this.displaySegmentDetails();
+        
+        this.closeSegmentEditing(segmentIndex);
+    }
 }
 
 // Initialize the application when the page loads
+let visualizer;
 document.addEventListener('DOMContentLoaded', () => {
-    new ZwiftWorkoutVisualizer();
+    visualizer = new ZwiftWorkoutVisualizer();
 });
