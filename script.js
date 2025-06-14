@@ -2,6 +2,7 @@ class ZwiftWorkoutVisualizer {
     constructor() {
         this.chart = null;
         this.workoutData = null;
+        this.ftp = 250; // Default FTP value in watts
         this.initializeEventListeners();
     }
 
@@ -12,6 +13,18 @@ class ZwiftWorkoutVisualizer {
 
         document.getElementById('loadSample').addEventListener('click', () => {
             this.loadSampleWorkout();
+        });
+
+        document.getElementById('exportERG').addEventListener('click', () => {
+            this.exportToERG();
+        });
+
+        document.getElementById('exportMRC').addEventListener('click', () => {
+            this.exportToMRC();
+        });
+
+        document.getElementById('ftpInput').addEventListener('input', (e) => {
+            this.updateFTP(parseInt(e.target.value) || 250);
         });
     }
 
@@ -478,6 +491,199 @@ class ZwiftWorkoutVisualizer {
         const tss = (totalDuration * normalizedPower * intensityFactor) / (1.0 * 3600) * 100;
         
         return Math.round(tss);
+    }
+
+    updateFTP(newFTP) {
+        this.ftp = newFTP;
+        // Update display if workout is loaded
+        if (this.workoutData) {
+            this.displayWorkoutInfo();
+        }
+    }
+
+    exportToERG() {
+        if (!this.workoutData) {
+            alert('Please load a workout first');
+            return;
+        }
+
+        const ergContent = this.generateERGContent();
+        this.downloadFile(ergContent, `${this.workoutData.name}.erg`, 'text/plain');
+    }
+
+    exportToMRC() {
+        if (!this.workoutData) {
+            alert('Please load a workout first');
+            return;
+        }
+
+        const mrcContent = this.generateMRCContent();
+        this.downloadFile(mrcContent, `${this.workoutData.name}.mrc`, 'text/plain');
+    }
+
+    generateERGContent() {
+        const header = [
+            '[COURSE HEADER]',
+            'VERSION=2',
+            'UNITS=ENGLISH',
+            `DESCRIPTION=${this.workoutData.description}`,
+            `FILE NAME=${this.workoutData.name}.erg`,
+            `FTP=${this.ftp}`,
+            'MINUTES\tWATTS',
+            '[END COURSE HEADER]',
+            '',
+            '[COURSE DATA]'
+        ].join('\n');
+
+        const dataPoints = this.generateWorkoutDataPoints('watts');
+        const courseData = dataPoints.map(point => 
+            `${(point.time / 60).toFixed(2)}\t${Math.round(point.power * this.ftp)}`
+        ).join('\n');
+
+        const textCues = this.generateTextCues();
+        
+        let content = header + '\n' + courseData + '\n[END COURSE DATA]';
+        
+        if (textCues.length > 0) {
+            content += '\n\n[COURSE TEXT]\n' + textCues.join('\n') + '\n[END COURSE TEXT]';
+        }
+
+        return content;
+    }
+
+    generateMRCContent() {
+        const header = [
+            '[COURSE HEADER]',
+            'VERSION = 2',
+            'UNITS = ENGLISH',
+            `DESCRIPTION = ${this.workoutData.description}`,
+            `FILE NAME = ${this.workoutData.name}.mrc`,
+            'MINUTES PERCENT',
+            '[END COURSE HEADER]',
+            '',
+            '[COURSE DATA]'
+        ].join('\n');
+
+        const dataPoints = this.generateWorkoutDataPoints('percent');
+        const courseData = dataPoints.map(point => 
+            `${(point.time / 60).toFixed(2)}\t${Math.round(point.power * 100)}`
+        ).join('\n');
+
+        const textCues = this.generateTextCues();
+        
+        let content = header + '\n' + courseData + '\n[END COURSE DATA]';
+        
+        if (textCues.length > 0) {
+            content += '\n\n[COURSE TEXT]\n' + textCues.join('\n') + '\n[END COURSE TEXT]';
+        }
+
+        return content;
+    }
+
+    generateWorkoutDataPoints(format) {
+        const points = [];
+        
+        // Flatten all segments
+        const allSegments = [];
+        this.workoutData.segments.forEach(segment => {
+            if (Array.isArray(segment)) {
+                allSegments.push(...segment);
+            } else {
+                allSegments.push(segment);
+            }
+        });
+
+        // Sort segments by start time
+        allSegments.sort((a, b) => a.startTime - b.startTime);
+
+        let currentTime = 0;
+
+        allSegments.forEach(segment => {
+            const startTime = segment.startTime;
+            const endTime = segment.startTime + segment.duration;
+
+            // Add transition point if there's a gap
+            if (currentTime < startTime) {
+                points.push({ time: startTime, power: 0.5 }); // Easy spinning
+            }
+
+            if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
+                // Add start and end points for ramps
+                points.push({ time: startTime, power: segment.powerLow });
+                points.push({ time: endTime, power: segment.powerHigh });
+            } else {
+                // Steady state or intervals
+                const power = segment.power || 0.6;
+                points.push({ time: startTime, power: power });
+                points.push({ time: endTime, power: power });
+            }
+
+            currentTime = endTime;
+        });
+
+        return points;
+    }
+
+    generateTextCues() {
+        const textCues = [];
+        
+        // Flatten all segments and extract text events
+        const allSegments = [];
+        this.workoutData.segments.forEach(segment => {
+            if (Array.isArray(segment)) {
+                allSegments.push(...segment);
+            } else {
+                allSegments.push(segment);
+            }
+        });
+
+        // Add basic text cues for each segment
+        allSegments.forEach(segment => {
+            const startTimeSeconds = segment.startTime;
+            let message = '';
+            
+            switch (segment.type) {
+                case 'Warmup':
+                    message = 'Warmup - gradually increase effort';
+                    break;
+                case 'Cooldown':
+                    message = 'Cooldown - gradually decrease effort';
+                    break;
+                case 'SteadyState':
+                    message = `Steady effort at ${Math.round(segment.power * 100)}% FTP`;
+                    break;
+                case 'Interval (On)':
+                    message = `Interval ON - ${Math.round(segment.power * 100)}% FTP`;
+                    break;
+                case 'Interval (Off)':
+                    message = `Recovery - ${Math.round(segment.power * 100)}% FTP`;
+                    break;
+                case 'Ramp':
+                    message = `Ramp from ${Math.round(segment.powerLow * 100)}% to ${Math.round(segment.powerHigh * 100)}% FTP`;
+                    break;
+                case 'FreeRide':
+                    message = 'Free ride - choose your own effort';
+                    break;
+            }
+            
+            if (message) {
+                textCues.push(`${startTimeSeconds}\t${message}\t10`);
+            }
+        });
+
+        return textCues;
+    }
+
+    downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     formatDuration(seconds) {

@@ -10,6 +10,7 @@ A web-based application that loads Zwift workout files (.zwo) and displays them 
 - **Workout Details**: View workout metadata (name, author, description, duration)
 - **Training Stress Score (TSS)**: Automatic calculation of workout training load
 - **Segment Breakdown**: See detailed information about each workout segment
+- **Cross-Platform Conversion**: Convert Zwift workouts to ERG and MRC formats for use with MyWhoosh, Rouvy, and other training platforms
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Supported Workout Elements
@@ -42,6 +43,11 @@ The visualizer supports the following Zwift workout elements:
    - View the power profile graph
    - Hover over the chart for detailed information
    - Check the segment details below the chart
+
+5. **Convert for Other Platforms**:
+   - Set your FTP (Functional Threshold Power) in watts
+   - Download ERG files for MyWhoosh, Rouvy, and most training platforms
+   - Download MRC files for TrainerRoad and compatible apps
 
 ## File Structure
 
@@ -106,6 +112,24 @@ The application automatically calculates TSS for each workout:
 - Safari 12+
 - Edge 79+
 
+## Supported Export Formats
+
+### ERG Format
+- **Compatible with**: MyWhoosh, Rouvy, most training platforms
+- **Power values**: Absolute watts (requires FTP setting)
+- **Use case**: Universal compatibility across platforms
+
+### MRC Format  
+- **Compatible with**: TrainerRoad, Rouvy, some training platforms
+- **Power values**: Percentage of FTP
+- **Use case**: TrainerRoad and percentage-based platforms
+
+### Platform-Specific Import Instructions
+
+**MyWhoosh**: Use the workout builder to import ERG or MRC files
+**Rouvy**: Import ERG, MRC, or ZWO files directly in the workouts section
+**TrainerRoad**: Use the Workout Creator to import ERG or MRC files
+
 ## Contributing
 
 Contributions are welcome! Areas for improvement:
@@ -116,6 +140,7 @@ Contributions are welcome! Areas for improvement:
 - Power zone visualization
 - Advanced TSS metrics (IF, NP display)
 - Training load planning tools
+- Additional export formats (FIT, TCX)
 
 ## License
 
