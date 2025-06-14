@@ -8,6 +8,7 @@ A web-based application that loads Zwift workout files (.zwo) and displays them 
 - **Sample Workout**: Try the application with a built-in sample workout
 - **Interactive Graph**: Visualize power profiles over time with Chart.js
 - **Workout Details**: View workout metadata (name, author, description, duration)
+- **Training Stress Score (TSS)**: Automatic calculation of workout training load
 - **Segment Breakdown**: See detailed information about each workout segment
 - **Responsive Design**: Works on desktop and mobile devices
 
@@ -75,11 +76,21 @@ Zwift workout files (.zwo) are XML files with the following structure:
 </workout_file>
 ```
 
-## Power Values
+## Power Values and Training Metrics
 
 - Power values in .zwo files are expressed as decimals (e.g., 1.0 = 100% FTP)
 - The visualizer displays power as percentages of FTP (Functional Threshold Power)
 - FTP is the maximum power a cyclist can sustain for one hour
+
+### Training Stress Score (TSS)
+
+The application automatically calculates TSS for each workout:
+
+- **TSS** quantifies the training load of a workout
+- Based on Normalized Power, Intensity Factor, and duration
+- 100 TSS = 1 hour at FTP (Functional Threshold Power)
+- Higher intensity workouts generate more TSS per unit time
+- Useful for planning training load and recovery
 
 ## Technical Details
 
@@ -103,7 +114,8 @@ Contributions are welcome! Areas for improvement:
 - Export functionality (PNG, PDF)
 - Workout comparison features
 - Power zone visualization
-- Training stress score calculation
+- Advanced TSS metrics (IF, NP display)
+- Training load planning tools
 
 ## License
 
