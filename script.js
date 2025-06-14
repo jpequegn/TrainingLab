@@ -305,25 +305,22 @@ class ZwiftWorkoutVisualizer {
             }
         });
 
-        // Group segments by type for better visualization
-        const segmentsByType = {};
-        allSegments.forEach(segment => {
-            if (!segmentsByType[segment.type]) {
-                segmentsByType[segment.type] = [];
-            }
-            segmentsByType[segment.type].push(...segment.powerData);
-        });
+        // Sort segments by start time to ensure proper ordering
+        allSegments.sort((a, b) => a.startTime - b.startTime);
 
-        // Create datasets
-        Object.keys(segmentsByType).forEach(type => {
+        // Create datasets for each segment with filled areas
+        allSegments.forEach((segment, index) => {
             datasets.push({
-                label: type,
-                data: segmentsByType[type],
-                borderColor: colors[type] || '#999',
-                backgroundColor: colors[type] ? colors[type] + '20' : '#99920',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
+                label: segment.type,
+                data: segment.powerData,
+                borderColor: colors[segment.type] || '#999',
+                backgroundColor: colors[segment.type] ? colors[segment.type] + '60' : '#99960',
+                borderWidth: 1,
+                fill: true,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                order: index // Ensure proper layering
             });
         });
 

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Improvements Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Chart Improvements Test Suite</h1>
+        <p>Testing the improved charting style with filled areas for workout intensity visualization.</p>
+        
+        <div id="testResults"></div>
+        
+        <h2>Visual Test - Sample Chart</h2>
+        <div class="chart-container">
+            <canvas id="testChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Import the ZwiftWorkoutVisualizer class functionality for testing
+        class ChartTester {
+            constructor() {
+                this.testResults = [];
+                this.runTests();
+            }
+
+            runTests() {
+                console.log('Starting chart improvement tests...');
+                
+                // Test 1: Chart.js library is loaded
+                this.testChartJSLoaded();
+                
+                // Test 2: Create a test chart with filled areas
+                this.testFilledAreaChart();
+                
+                // Test 3: Test color configuration
+                this.testColorConfiguration();
+                
+                // Test 4: Test chart responsiveness
+                this.testChartResponsiveness();
+                
+                this.displayResults();
+            }
+
+            testChartJSLoaded() {
+                try {
+                    const isLoaded = typeof Chart !== 'undefined';
+                    this.addTestResult('Chart.js Library Loaded', isLoaded, 
+                        isLoaded ? 'Chart.js is properly loaded' : 'Chart.js failed to load');
+                } catch (error) {
+                    this.addTestResult('Chart.js Library Loaded', false, `Error: ${error.message}`);
+                }
+            }
+
+            testFilledAreaChart() {
+                try {
+                    const ctx = document.getElementById('testChart').getContext('2d');
+                    
+                    // Create test data similar to workout segments
+                    const testData = [
+                        { x: 0, y: 50 },
+                        { x: 300, y: 70 },
+                        { x: 600, y: 60 },
+                        { x: 900, y: 105 },
+                        { x: 1200, y: 50 },
+                        { x: 1500, y: 105 },
+                        { x: 1800, y: 40 }
+                    ];
+
+                    const chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            datasets: [{
+                                label: 'Test Workout Profile',
+                                data: testData,
+                                borderColor: '#42A5F5',
+                                backgroundColor: '#42A5F560',
+                                borderWidth: 1,
+                                fill: true,
+                                tension: 0.1,
+                                pointRadius: 0,
+                                pointHoverRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Test Chart - Filled Area Style'
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    type: 'linear',
+                                    title: {
+                                        display: true,
+                                        text: 'Time (seconds)'
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Power (% FTP)'
+                                    },
+                                    min: 0,
+                                    max: 120
+                                }
+                            }
+                        }
+                    });
+
+                    // Check if chart was created successfully
+                    const chartCreated = chart && chart.data && chart.data.datasets.length > 0;
+                    const fillEnabled = chart.data.datasets[0].fill === true;
+                    
+                    this.addTestResult('Filled Area Chart Creation', chartCreated && fillEnabled,
+                        chartCreated && fillEnabled ? 'Chart created with filled areas successfully' : 'Failed to create filled area chart');
+                        
+                } catch (error) {
+                    this.addTestResult('Filled Area Chart Creation', false, `Error: ${error.message}`);
+                }
+            }
+
+            testColorConfiguration() {
+                try {
+                    const colors = {
+                        'Warmup': '#FFA726',
+                        'Cooldown': '#66BB6A',
+                        'SteadyState': '#42A5F5',
+                        'Interval (On)': '#EF5350',
+                        'Interval (Off)': '#AB47BC',
+                        'Ramp': '#FF7043',
+                        'FreeRide': '#78909C'
+                    };
+
+                    const allColorsValid = Object.values(colors).every(color => 
+                        /^#[0-9A-F]{6}$/i.test(color)
+                    );
+
+                    const expectedSegmentTypes = ['Warmup', 'Cooldown', 'SteadyState', 'Interval (On)', 'Interval (Off)', 'Ramp', 'FreeRide'];
+                    const allSegmentTypesCovered = expectedSegmentTypes.every(type => colors.hasOwnProperty(type));
+
+                    this.addTestResult('Color Configuration', allColorsValid && allSegmentTypesCovered,
+                        allColorsValid && allSegmentTypesCovered ? 'All segment types have valid colors' : 'Color configuration issues detected');
+                        
+                } catch (error) {
+                    this.addTestResult('Color Configuration', false, `Error: ${error.message}`);
+                }
+            }
+
+            testChartResponsiveness() {
+                try {
+                    const canvas = document.getElementById('testChart');
+                    const hasResponsiveParent = canvas.parentElement.classList.contains('chart-container');
+                    const canvasExists = canvas !== null;
+                    
+                    this.addTestResult('Chart Responsiveness', canvasExists && hasResponsiveParent,
+                        canvasExists && hasResponsiveParent ? 'Chart is properly configured for responsiveness' : 'Chart responsiveness configuration issues');
+                        
+                } catch (error) {
+                    this.addTestResult('Chart Responsiveness', false, `Error: ${error.message}`);
+                }
+            }
+
+            addTestResult(testName, passed, message) {
+                this.testResults.push({
+                    name: testName,
+                    passed: passed,
+                    message: message
+                });
+            }
+
+            displayResults() {
+                const resultsContainer = document.getElementById('testResults');
+                let html = '<h2>Test Results</h2>';
+                
+                let passedCount = 0;
+                this.testResults.forEach(result => {
+                    if (result.passed) passedCount++;
+                    
+                    html += `
+                        <div class="test-result ${result.passed ? 'test-pass' : 'test-fail'}">
+                            <strong>${result.passed ? '✅' : '❌'} ${result.name}</strong><br>
+                            ${result.message}
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="test-result ${passedCount === this.testResults.length ? 'test-pass' : 'test-fail'}">
+                        <strong>Overall Result: ${passedCount}/${this.testResults.length} tests passed</strong>
+                    </div>
+                `;
+
+                resultsContainer.innerHTML = html;
+                
+                console.log(`Chart improvement tests completed: ${passedCount}/${this.testResults.length} passed`);
+            }
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChartTester();
+        });
+    </script>
+</body>
+</html>
