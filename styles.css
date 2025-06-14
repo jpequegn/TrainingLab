@@ -418,6 +418,267 @@ header p {
     color: #2c3e50;
 }
 
+/* Editing Section Styles */
+.editing-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 25px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.editing-section h3 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editing-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.scale-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.scale-controls label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 100px;
+}
+
+#scaleSlider {
+    flex: 1;
+    min-width: 150px;
+    height: 6px;
+    background: #dee2e6;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+#scaleSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#scaleSlider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.scale-value {
+    font-weight: bold;
+    color: #007bff;
+    min-width: 30px;
+    text-align: center;
+}
+
+.scale-info {
+    font-size: 0.9em;
+    color: #6c757d;
+    font-style: italic;
+    flex-basis: 100%;
+    margin-top: 5px;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95em;
+}
+
+.action-btn:not(.secondary) {
+    background: #007bff;
+    color: white;
+}
+
+.action-btn:not(.secondary):hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.action-btn.secondary:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.export-controls {
+    display: flex;
+    justify-content: center;
+}
+
+/* Segment editing styles */
+.segment-item {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.segment-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.segment-item.editing {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.segment-edit-controls {
+    display: none;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.segment-edit-controls.active {
+    display: block;
+}
+
+.power-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.power-input-group label {
+    min-width: 80px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.power-input-group input {
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.power-input-group span {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.segment-edit-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.segment-edit-buttons button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.segment-edit-buttons .apply-btn {
+    background: #28a745;
+    color: white;
+}
+
+.segment-edit-buttons .apply-btn:hover {
+    background: #218838;
+}
+
+.segment-edit-buttons .cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.segment-edit-buttons .cancel-btn:hover {
+    background: #545b62;
+}
+
+/* Responsive adjustments for editing section */
+@media (max-width: 768px) {
+    .editing-controls {
+        gap: 15px;
+    }
+    
+    .scale-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .scale-controls label {
+        min-width: auto;
+    }
+    
+    #scaleSlider {
+        min-width: auto;
+    }
+    
+    .action-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .export-controls {
+        width: 100%;
+    }
+    
+    .power-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+    }
+    
+    .power-input-group label {
+        min-width: auto;
+    }
+    
+    .power-input-group input {
+        width: 100%;
+    }
+    
+    .segment-edit-buttons {
+        flex-direction: column;
+    }
+}
+
 /* Responsive adjustments for conversion section */
 @media (max-width: 768px) {
     .export-buttons {

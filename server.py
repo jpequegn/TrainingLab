@@ -21,7 +21,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
 def main():
-    port = 12000
+    port = 53218
     
     # Change to the directory containing the HTML files
     os.chdir(Path(__file__).parent)
