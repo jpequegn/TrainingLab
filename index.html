@@ -45,6 +45,38 @@
                     <span id="workoutSport" class="stat-value"></span>
                 </div>
             </div>
+            
+            <div class="conversion-section">
+                <h3>🔄 Convert for Other Platforms</h3>
+                <p>Convert this workout to formats compatible with MyWhoosh, Rouvy, and other training platforms.</p>
+                
+                <div class="ftp-input-section">
+                    <label for="ftpInput">Your FTP (watts):</label>
+                    <input type="number" id="ftpInput" value="250" min="100" max="500" />
+                    <span class="ftp-help">Used for ERG file conversion (absolute watts)</span>
+                </div>
+                
+                <div class="export-buttons">
+                    <button id="exportERG" class="export-btn">
+                        📥 Download ERG File
+                        <span class="format-info">Compatible with most platforms</span>
+                    </button>
+                    <button id="exportMRC" class="export-btn">
+                        📥 Download MRC File
+                        <span class="format-info">TrainerRoad format</span>
+                    </button>
+                </div>
+                
+                <div class="platform-compatibility">
+                    <h4>Platform Compatibility:</h4>
+                    <ul>
+                        <li><strong>MyWhoosh:</strong> Import ERG or MRC files via workout builder</li>
+                        <li><strong>Rouvy:</strong> Import ERG, MRC, or ZWO files directly</li>
+                        <li><strong>TrainerRoad:</strong> Import ERG or MRC files via Workout Creator</li>
+                        <li><strong>Other platforms:</strong> Most support ERG format</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <div class="chart-container" style="display: none;">

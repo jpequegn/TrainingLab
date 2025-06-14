@@ -284,3 +284,153 @@ header p {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Conversion section styles */
+.conversion-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px solid #ecf0f1;
+}
+
+.conversion-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.conversion-section p {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.ftp-input-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #e9ecef;
+}
+
+.ftp-input-section label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.ftp-input-section input {
+    width: 120px;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-right: 15px;
+    transition: border-color 0.3s ease;
+}
+
+.ftp-input-section input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.ftp-help {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 25px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.export-btn:hover {
+    background: #229954;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3);
+}
+
+.export-btn:active {
+    transform: translateY(0);
+}
+
+.format-info {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+.platform-compatibility {
+    background: #e8f4fd;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid #3498db;
+}
+
+.platform-compatibility h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.platform-compatibility ul {
+    list-style: none;
+    padding: 0;
+}
+
+.platform-compatibility li {
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+    color: #555;
+    line-height: 1.5;
+}
+
+.platform-compatibility li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.platform-compatibility strong {
+    color: #2c3e50;
+}
+
+/* Responsive adjustments for conversion section */
+@media (max-width: 768px) {
+    .export-buttons {
+        flex-direction: column;
+    }
+    
+    .export-btn {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .ftp-input-section input {
+        width: 100px;
+        margin-right: 10px;
+    }
+}
