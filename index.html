@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zwift Workout Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚴‍♂️ Zwift Workout Visualizer</h1>
+            <p>Load and visualize your Zwift workout files (.zwo)</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".zwo" />
+                <label for="fileInput" class="file-input-label">
+                    📁 Choose Zwift Workout File (.zwo)
+                </label>
+            </div>
+            <button id="loadSample" class="sample-btn">Load Sample Workout</button>
+        </div>
+
+        <div id="workoutInfo" class="workout-info" style="display: none;">
+            <h2 id="workoutName"></h2>
+            <p id="workoutDescription"></p>
+            <div class="workout-stats">
+                <div class="stat">
+                    <span class="stat-label">Duration:</span>
+                    <span id="totalDuration" class="stat-value"></span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Author:</span>
+                    <span id="workoutAuthor" class="stat-value"></span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Sport:</span>
+                    <span id="workoutSport" class="stat-value"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container" style="display: none;">
+            <canvas id="workoutChart"></canvas>
+        </div>
+
+        <div id="segmentDetails" class="segment-details" style="display: none;">
+            <h3>Workout Segments</h3>
+            <div id="segmentList"></div>
+        </div>
+
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Click "Choose Zwift Workout File" to upload your .zwo file</li>
+                <li>Or click "Load Sample Workout" to see a demo</li>
+                <li>View the power profile graph and segment details</li>
+                <li>Hover over the chart to see detailed information</li>
+            </ol>
+            <p><strong>Note:</strong> Power values are shown as percentage of FTP (Functional Threshold Power)</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
