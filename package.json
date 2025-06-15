@@ -1,0 +1,23 @@
+{
+  "name": "wkolibrary",
+  "version": "1.0.0",
+  "description": "A web-based application that loads Zwift workout files (.zwo) and displays them as interactive graphs.",
+  "main": "script.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jpequegn/WkoLibrary.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jpequegn/WkoLibrary/issues"
+  },
+  "homepage": "https://github.com/jpequegn/WkoLibrary#readme"
+}
