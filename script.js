@@ -45,6 +45,10 @@ class ZwiftWorkoutVisualizer {
         document.getElementById('exportModified').addEventListener('click', () => {
             this.exportModifiedZWO();
         });
+
+        document.getElementById('deployWorkout').addEventListener('click', () => {
+            this.deployWorkout();
+        });
     }
 
     async handleFileUpload(event) {
@@ -984,6 +988,39 @@ class ZwiftWorkoutVisualizer {
         this.displaySegmentDetails();
         
         this.closeSegmentEditing(segmentIndex);
+    }
+
+    async deployWorkout() {
+        if (!this.workoutData) {
+            alert('Please load a workout first');
+            return;
+        }
+
+        const zwoContent = this.generateZWOContent();
+        const workoutName = this.workoutData.name.replace(/[^a-z0-9]/gi, '_');
+
+        try {
+            const response = await fetch('/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: workoutName,
+                    content: zwoContent
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(`Workout successfully deployed to: ${result.path}`);
+            } else {
+                throw new Error('Deployment failed');
+            }
+        } catch (error) {
+            console.error('Error deploying workout:', error);
+            alert('Failed to deploy workout. Please try again.');
+        }
     }
 }
 

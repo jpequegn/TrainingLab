@@ -7,6 +7,7 @@ import http.server
 import socketserver
 import os
 import sys
+import json
 from pathlib import Path
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -19,6 +20,30 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.end_headers()
+
+    def do_POST(self):
+        if self.path == '/deploy':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            # Get the Zwift workout directory
+            zwift_dir = os.path.expanduser('~/Documents/Zwift/Workouts')
+            if not os.path.exists(zwift_dir):
+                os.makedirs(zwift_dir)
+            
+            # Save the workout file
+            workout_path = os.path.join(zwift_dir, f"{data['name']}.zwo")
+            with open(workout_path, 'w', encoding='utf-8') as f:
+                f.write(data['content'])
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'path': workout_path}).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 def main():
     port = 53218
