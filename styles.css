@@ -142,27 +142,59 @@ header p {
 }
 
 .chart-container {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    position: relative;
-    height: 500px;
+    margin-top: 18px;
+    margin-bottom: 24px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+    padding: 20px 24px;
+    display: block;
 }
 
 .segment-details {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(44, 62, 80, 0.04);
+    margin-top: 18px;
+    padding: 0 0 18px 0;
+    transition: max-height 0.3s, padding 0.3s;
+    overflow: hidden;
 }
 
-.segment-details h3 {
+.segment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px 0 24px;
+}
+
+.segment-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+#toggleSegments.panel-toggle {
+    background: #e9ecef;
     color: #2c3e50;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
+    border: none;
+    margin-left: 12px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+#toggleSegments.panel-toggle:hover {
+    background: #d1f2eb;
+}
+
+.segment-details.collapsed #segmentList {
+    display: none;
+}
+
+.segment-details.collapsed #toggleSegments {
+    transform: rotate(180deg);
 }
 
 .segment {
@@ -177,13 +209,6 @@ header p {
 .segment:hover {
     transform: translateX(5px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.segment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
 }
 
 .segment-type {

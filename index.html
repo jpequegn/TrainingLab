@@ -31,6 +31,10 @@
             <button id="loadSample" class="sample-btn">Load Sample Workout</button>
         </div>
 
+        <div class="chart-container" style="display: none;">
+            <canvas id="workoutChart"></canvas>
+        </div>
+
         <div id="workoutInfo" class="workout-info" style="display: none;">
             <h2 id="workoutName"></h2>
             <p id="workoutDescription"></p>
@@ -113,12 +117,11 @@
             </div>
         </div>
 
-        <div class="chart-container" style="display: none;">
-            <canvas id="workoutChart"></canvas>
-        </div>
-
         <div id="segmentDetails" class="segment-details" style="display: none;">
-            <h3>Workout Segments</h3>
+            <div class="segment-header">
+                <h3>Workout Segments</h3>
+                <button id="toggleSegments" class="panel-toggle" title="Collapse">−</button>
+            </div>
             <div id="segmentList"></div>
         </div>
 

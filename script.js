@@ -1157,3 +1157,15 @@ document.addEventListener('DOMContentLoaded', function() {
         chatToggle.title = chatPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
     });
 });
+
+// Collapsible workout segments
+const segmentDetails = document.getElementById('segmentDetails');
+const toggleSegments = document.getElementById('toggleSegments');
+if (toggleSegments && segmentDetails) {
+    toggleSegments.addEventListener('click', function(e) {
+        e.stopPropagation();
+        segmentDetails.classList.toggle('collapsed');
+        toggleSegments.textContent = segmentDetails.classList.contains('collapsed') ? '+' : '−';
+        toggleSegments.title = segmentDetails.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+    });
+}
