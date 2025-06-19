@@ -9,6 +9,8 @@ import os
 import sys
 import json
 from pathlib import Path
+from dotenv import load_dotenv
+import requests
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -41,6 +43,48 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'path': workout_path}).encode('utf-8'))
+        elif self.path == '/chat':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            user_message = data.get('message', '')
+
+            # Load API key from .env
+            load_dotenv()
+            api_key = os.getenv('OPENAI_API_KEY')
+            if not api_key:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'reply': 'LLM API key not set on server.'}).encode('utf-8'))
+                return
+
+            # Call OpenAI API (gpt-3.5-turbo)
+            try:
+                response = requests.post(
+                    'https://api.openai.com/v1/chat/completions',
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': 'gpt-3.5-turbo',
+                        'messages': [
+                            {'role': 'system', 'content': 'You are a helpful assistant for Zwift workouts.'},
+                            {'role': 'user', 'content': user_message}
+                        ],
+                        'max_tokens': 512
+                    }
+                )
+                result = response.json()
+                reply = result['choices'][0]['message']['content'].strip()
+            except Exception as e:
+                reply = f'Error contacting LLM: {e}'
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'reply': reply}).encode('utf-8'))
         else:
             self.send_response(404)
             self.end_headers()

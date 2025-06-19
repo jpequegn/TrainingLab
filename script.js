@@ -1029,3 +1029,40 @@ let visualizer;
 document.addEventListener('DOMContentLoaded', () => {
     visualizer = new ZwiftWorkoutVisualizer();
 });
+
+// === Chat Interface Logic ===
+function appendChatMessage(text, sender) {
+    const chatMessages = document.getElementById('chatMessages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-message ' + sender;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+document.getElementById('chatForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    appendChatMessage(message, 'user');
+    input.value = '';
+    appendChatMessage('Thinking...', 'llm');
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        // Remove the 'Thinking...' message
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.removeChild(chatMessages.lastChild);
+        appendChatMessage(data.reply, 'llm');
+    } catch (err) {
+        // Remove the 'Thinking...' message
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.removeChild(chatMessages.lastChild);
+        appendChatMessage('Error: Could not reach LLM backend.', 'llm');
+    }
+});
