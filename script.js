@@ -1131,3 +1131,29 @@ async function renderDirectoryTree() {
 document.addEventListener('DOMContentLoaded', function() {
     renderDirectoryTree();
 });
+
+// === Panel Minimize/Restore Logic ===
+document.addEventListener('DOMContentLoaded', function() {
+    // Directory panel toggle
+    const dirPanel = document.getElementById('directoryPanel');
+    const dirToggle = document.getElementById('toggleDirectoryPanel');
+    dirToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dirPanel.classList.toggle('minimized');
+        // Change icon
+        dirToggle.textContent = dirPanel.classList.contains('minimized') ? '>' : '<';
+        // For mobile, also update title
+        dirToggle.title = dirPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
+    });
+
+    // Chat panel toggle
+    const chatPanel = document.getElementById('chatPanel');
+    const chatToggle = document.getElementById('toggleChatPanel');
+    chatToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        chatPanel.classList.toggle('minimized');
+        // Change icon
+        chatToggle.textContent = chatPanel.classList.contains('minimized') ? '<' : '>';
+        chatToggle.title = chatPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
+    });
+});
