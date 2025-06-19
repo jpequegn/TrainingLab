@@ -1066,3 +1066,68 @@ document.getElementById('chatForm').addEventListener('submit', async function(e)
         appendChatMessage('Error: Could not reach LLM backend.', 'llm');
     }
 });
+
+// === Directory Panel Logic ===
+async function fetchDirectory(path = '') {
+    const res = await fetch(`/workouts${path ? '/' + encodeURIComponent(path) : ''}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || [];
+}
+
+function createDirectoryItem(item, parentPath = '') {
+    const div = document.createElement('div');
+    div.className = 'directory-item' + (item.is_dir ? ' folder' : ' file');
+    div.textContent = item.name;
+    div.dataset.path = item.path;
+    if (item.is_dir) {
+        div.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            if (div.classList.contains('expanded')) {
+                div.classList.remove('expanded');
+                const children = div.querySelectorAll(':scope > .directory-children');
+                children.forEach(child => child.remove());
+            } else {
+                div.classList.add('expanded');
+                if (!div.querySelector('.directory-children')) {
+                    const childrenDiv = document.createElement('div');
+                    childrenDiv.className = 'directory-children';
+                    const children = await fetchDirectory(item.path);
+                    children.forEach(child => {
+                        childrenDiv.appendChild(createDirectoryItem(child, item.path));
+                    });
+                    div.appendChild(childrenDiv);
+                }
+            }
+        });
+    } else if (item.name.toLowerCase().endsWith('.zwo')) {
+        div.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            // Highlight selected
+            document.querySelectorAll('.directory-item.selected').forEach(el => el.classList.remove('selected'));
+            div.classList.add('selected');
+            // Fetch and visualize workout
+            const res = await fetch(`/workout?file=${encodeURIComponent(item.path)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (window.visualizer) {
+                    window.visualizer.parseAndVisualize(data.content);
+                }
+            }
+        });
+    }
+    return div;
+}
+
+async function renderDirectoryTree() {
+    const tree = document.getElementById('directoryTree');
+    tree.innerHTML = '';
+    const items = await fetchDirectory();
+    items.forEach(item => {
+        tree.appendChild(createDirectoryItem(item));
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderDirectoryTree();
+});

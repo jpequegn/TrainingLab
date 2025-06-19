@@ -89,6 +89,46 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
+    def do_GET(self):
+        if self.path.startswith('/workouts'):
+            # List Zwift/Workouts directory
+            zwift_dir = os.path.expanduser('~/Documents/Zwift/Workouts')
+            rel_path = self.path[len('/workouts'):].lstrip('/')
+            target_dir = os.path.join(zwift_dir, rel_path)
+            if not os.path.exists(target_dir):
+                self.send_response(404)
+                self.end_headers()
+                return
+            items = []
+            for entry in os.scandir(target_dir):
+                items.append({
+                    'name': entry.name,
+                    'is_dir': entry.is_dir(),
+                    'path': os.path.relpath(entry.path, zwift_dir)
+                })
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'items': items}).encode('utf-8'))
+        elif self.path.startswith('/workout?file='):
+            # Return the content of a .zwo file
+            from urllib.parse import unquote
+            zwift_dir = os.path.expanduser('~/Documents/Zwift/Workouts')
+            file_param = self.path[len('/workout?file='):]
+            file_path = os.path.join(zwift_dir, unquote(file_param))
+            if not os.path.isfile(file_path):
+                self.send_response(404)
+                self.end_headers()
+                return
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'content': content}).encode('utf-8'))
+        else:
+            super().do_GET()
+
 def main():
     port = 53218
     
