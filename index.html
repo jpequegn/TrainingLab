@@ -12,16 +12,7 @@
         <div class="directory-header">📂 Zwift Workouts
             <button class="panel-toggle" id="toggleDirectoryPanel" title="Minimize">&lt;</button>
         </div>
-        <div class="directory-tree" id="directoryTree"></div>
-    </div>
-
-    <div class="container">
-        <header>
-            <h1>🚴‍♂️ Zwift Workout Visualizer</h1>
-            <p>Load and visualize your Zwift workout files (.zwo)</p>
-        </header>
-
-        <div class="upload-section">
+        <div class="directory-actions">
             <div class="file-input-wrapper">
                 <input type="file" id="fileInput" accept=".zwo" />
                 <label for="fileInput" class="file-input-label">
@@ -30,10 +21,18 @@
             </div>
             <button id="loadSample" class="sample-btn">Load Sample Workout</button>
         </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🚴‍♂️ Zwift Workout Visualizer</h1>
+            <p>Load and visualize your Zwift workout files (.zwo)</p>
+        </header>
 
         <div class="chart-container" style="display: none;">
             <canvas id="workoutChart"></canvas>
         </div>
+        <div id="hoverPowerBox" class="hover-power-box" style="display:none;"></div>
 
         <div id="workoutInfo" class="workout-info" style="display: none;">
             <h2 id="workoutName"></h2>

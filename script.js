@@ -354,6 +354,10 @@ class ZwiftWorkoutVisualizer {
             order: idx
         }));
 
+        // Reference to the hover power box
+        const hoverPowerBox = document.getElementById('hoverPowerBox');
+        if (hoverPowerBox) hoverPowerBox.style.display = 'none';
+
         this.chart = new Chart(ctx, {
             type: 'line',
             data: { datasets },
@@ -375,13 +379,32 @@ class ZwiftWorkoutVisualizer {
                         position: 'top'
                     },
                     tooltip: {
+                        enabled: true,
                         callbacks: {
                             title: function(context) {
                                 const time = context[0].parsed.x;
                                 return `Time: ${Math.floor(time / 60)}:${(time % 60).toString().padStart(2, '0')}`;
                             },
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}% FTP`;
+                            label: (context) => {
+                                const percent = context.parsed.y;
+                                const ftp = this.ftp || 250;
+                                const actual = Math.round((percent / 100) * ftp);
+                                return `${context.dataset.label}: ${percent.toFixed(1)}% FTP (${actual} W)`;
+                            }
+                        },
+                        external: (context) => {
+                            // Show hovered power in the box below the chart
+                            const tooltip = context.tooltip;
+                            if (!hoverPowerBox) return;
+                            if (tooltip && tooltip.opacity > 0 && tooltip.dataPoints && tooltip.dataPoints.length > 0) {
+                                const dp = tooltip.dataPoints[0];
+                                const percent = dp.parsed.y;
+                                const ftp = this.ftp || 250;
+                                const actual = Math.round((percent / 100) * ftp);
+                                hoverPowerBox.innerHTML = `<span>Hovered Power: <b>${percent.toFixed(1)}% FTP</b> = <b>${actual} W</b> (FTP: ${ftp} W)</span>`;
+                                hoverPowerBox.style.display = 'block';
+                            } else {
+                                hoverPowerBox.style.display = 'none';
                             }
                         }
                     }
