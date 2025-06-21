@@ -308,7 +308,6 @@ class ZwiftWorkoutVisualizer {
         }
 
         // Prepare data for Chart.js
-        const datasets = [];
         const colors = {
             'Warmup': '#FFA726',
             'Cooldown': '#66BB6A',
@@ -332,21 +331,28 @@ class ZwiftWorkoutVisualizer {
         // Sort segments by start time to ensure proper ordering
         allSegments.sort((a, b) => a.startTime - b.startTime);
 
-        // Create datasets for each segment with filled areas
-        allSegments.forEach((segment, index) => {
-            datasets.push({
-                label: segment.type,
-                data: segment.powerData,
-                borderColor: colors[segment.type] || '#999',
-                backgroundColor: colors[segment.type] ? colors[segment.type] + '60' : '#99960',
-                borderWidth: 1,
-                fill: true,
-                tension: 0.1,
-                pointRadius: 0,
-                pointHoverRadius: 4,
-                order: index // Ensure proper layering
-            });
+        // Group data points by type for legend clarity
+        const typeDataMap = {};
+        allSegments.forEach(segment => {
+            const type = segment.type;
+            if (!typeDataMap[type]) typeDataMap[type] = [];
+            // Add all points for this segment to the type's array
+            segment.powerData.forEach(point => typeDataMap[type].push(point));
         });
+
+        // Create one dataset per type
+        const datasets = Object.keys(typeDataMap).map((type, idx) => ({
+            label: type,
+            data: typeDataMap[type],
+            borderColor: colors[type] || '#999',
+            backgroundColor: (colors[type] ? colors[type] + '60' : '#99960'),
+            borderWidth: 1,
+            fill: true,
+            tension: 0.1,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            order: idx
+        }));
 
         this.chart = new Chart(ctx, {
             type: 'line',
