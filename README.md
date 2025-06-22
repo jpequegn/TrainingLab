@@ -1,5 +1,9 @@
 # 🚴‍♂️ Zwift Workout Visualizer
 
+[![Build Status](https://github.com/<your-username>/<your-repo>/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/<your-repo>/actions)
+[![Tests](https://github.com/<your-username>/<your-repo>/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/<your-username>/<your-repo>/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A web-based application that loads Zwift workout files (.zwo) and displays them as interactive graphs.
 
 ## Features
@@ -145,3 +149,11 @@ Contributions are welcome! Areas for improvement:
 ## License
 
 This project is open source and available under the MIT License.
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration. Build and test status are shown above.
+
+---
+
+*Zwift® is a registered trademark of Zwift, Inc. This project is not affiliated with or endorsed by Zwift, Inc.*
