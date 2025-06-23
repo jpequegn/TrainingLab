@@ -370,6 +370,12 @@ class ZwiftWorkoutVisualizer {
                 pointHoverRadius: 6,
                 order: 100
             });
+            // Show edit form for selected segment
+            this.showSegmentEditForm(this.selectedSegmentIndex, seg);
+        } else {
+            // Hide edit form if no segment selected
+            const editBox = document.getElementById('segmentEditBox');
+            if (editBox) editBox.style.display = 'none';
         }
 
         // Reference to the hover power box
@@ -1093,6 +1099,80 @@ class ZwiftWorkoutVisualizer {
             console.error('Error deploying workout:', error);
             alert('Failed to deploy workout. Please try again.');
         }
+    }
+
+    showSegmentEditForm(segmentIndex, segment) {
+        const editBox = document.getElementById('segmentEditBox');
+        if (!editBox) return;
+        let html = `<form id="segmentEditForm">`;
+        html += `<div><b>Edit Segment:</b> <span>${segment.type}</span></div><br/>`;
+        // Duration
+        html += `<div><label for="segEditDuration">Duration (sec):</label><input type="number" id="segEditDuration" value="${segment.duration}" min="1" max="7200"></div>`;
+        // Power fields by type
+        if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
+            html += `<div><label for="segEditPower">Power (% FTP):</label><input type="number" id="segEditPower" value="${segment.power}" min="1" max="300"></div>`;
+        } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
+            html += `<div><label for="segEditPowerLow">Power Low (% FTP):</label><input type="number" id="segEditPowerLow" value="${segment.powerLow}" min="1" max="300"></div>`;
+            html += `<div><label for="segEditPowerHigh">Power High (% FTP):</label><input type="number" id="segEditPowerHigh" value="${segment.powerHigh}" min="1" max="300"></div>`;
+        }
+        html += `<div class="edit-btns">
+            <button type="submit" class="apply-btn">Apply</button>
+            <button type="button" class="cancel-btn" id="segEditCancel">Cancel</button>
+        </div>`;
+        html += `</form>`;
+        editBox.innerHTML = html;
+        editBox.style.display = 'block';
+
+        // Form logic
+        const form = document.getElementById('segmentEditForm');
+        const cancelBtn = document.getElementById('segEditCancel');
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            // Validate and update segment
+            const newDuration = parseInt(document.getElementById('segEditDuration').value) || segment.duration;
+            if (newDuration < 1 || newDuration > 7200) return alert('Duration must be 1-7200 seconds');
+            segment.duration = newDuration;
+            if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
+                const newPower = parseInt(document.getElementById('segEditPower').value) || segment.power;
+                if (newPower < 1 || newPower > 300) return alert('Power must be 1-300% FTP');
+                segment.power = newPower;
+            } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
+                const newPowerLow = parseInt(document.getElementById('segEditPowerLow').value) || segment.powerLow;
+                const newPowerHigh = parseInt(document.getElementById('segEditPowerHigh').value) || segment.powerHigh;
+                if (newPowerLow < 1 || newPowerLow > 300 || newPowerHigh < 1 || newPowerHigh > 300) return alert('Power must be 1-300% FTP');
+                segment.powerLow = newPowerLow;
+                segment.powerHigh = newPowerHigh;
+            }
+            // Regenerate powerData for this segment
+            if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
+                segment.powerData = this.generateSteadyData(segment);
+            } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
+                segment.powerData = this.generateRampData(segment);
+            }
+            // Recalculate start times for all segments
+            let currentTime = 0;
+            const allSegments = [];
+            this.workoutData.segments.forEach(seg => {
+                if (Array.isArray(seg)) {
+                    allSegments.push(...seg);
+                } else {
+                    allSegments.push(seg);
+                }
+            });
+            for (let i = 0; i < allSegments.length; i++) {
+                allSegments[i].startTime = currentTime;
+                currentTime += allSegments[i].duration;
+            }
+            // Update displays
+            this.displayWorkoutInfo();
+            this.createChart();
+            this.displaySegmentDetails();
+        };
+        cancelBtn.onclick = (e) => {
+            this.selectedSegmentIndex = null;
+            editBox.style.display = 'none';
+            this.createChart();
+        };
     }
 }
 
