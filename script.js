@@ -5,6 +5,7 @@ class ZwiftWorkoutVisualizer {
         this.originalWorkoutData = null; // Store original for reset functionality
         this.ftp = 250; // Default FTP value in watts
         this.currentEditingSegment = null;
+        this.selectedSegmentIndex = null; // For chart selection
         this.initializeEventListeners();
     }
 
@@ -340,7 +341,7 @@ class ZwiftWorkoutVisualizer {
             segment.powerData.forEach(point => typeDataMap[type].push(point));
         });
 
-        // Create one dataset per type
+        // Create one dataset per type, but also create a dataset for each segment for highlighting
         const datasets = Object.keys(typeDataMap).map((type, idx) => ({
             label: type,
             data: typeDataMap[type],
@@ -353,6 +354,23 @@ class ZwiftWorkoutVisualizer {
             pointHoverRadius: 4,
             order: idx
         }));
+
+        // Add a dataset for the selected segment (if any)
+        if (this.selectedSegmentIndex !== null && allSegments[this.selectedSegmentIndex]) {
+            const seg = allSegments[this.selectedSegmentIndex];
+            datasets.push({
+                label: 'Selected',
+                data: seg.powerData,
+                borderColor: '#FFD600',
+                backgroundColor: '#FFD60040',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                order: 100
+            });
+        }
 
         // Reference to the hover power box
         const hoverPowerBox = document.getElementById('hoverPowerBox');
@@ -407,6 +425,31 @@ class ZwiftWorkoutVisualizer {
                                 hoverPowerBox.style.display = 'none';
                             }
                         }
+                    }
+                },
+                onClick: (event, elements, chart) => {
+                    // Find the nearest segment to the click
+                    const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false }, true);
+                    if (points && points.length > 0) {
+                        const point = points[0];
+                        const clickedX = point.element.parsed.x;
+                        // Find which segment this x belongs to
+                        let foundIndex = null;
+                        for (let i = 0; i < allSegments.length; i++) {
+                            const seg = allSegments[i];
+                            if (clickedX >= seg.startTime && clickedX <= seg.startTime + seg.duration) {
+                                foundIndex = i;
+                                break;
+                            }
+                        }
+                        if (foundIndex !== null) {
+                            this.selectedSegmentIndex = foundIndex;
+                            this.createChart(); // re-render to highlight
+                        }
+                    } else {
+                        // Clicked outside any segment, deselect
+                        this.selectedSegmentIndex = null;
+                        this.createChart();
                     }
                 },
                 scales: {
