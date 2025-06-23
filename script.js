@@ -6,7 +6,9 @@ class ZwiftWorkoutVisualizer {
         this.ftp = 250; // Default FTP value in watts
         this.currentEditingSegment = null;
         this.selectedSegmentIndex = null; // For chart selection
+        this.undoStack = [];
         this.initializeEventListeners();
+        this.setupUndoButton();
     }
 
     initializeEventListeners() {
@@ -50,6 +52,43 @@ class ZwiftWorkoutVisualizer {
         document.getElementById('deployWorkout').addEventListener('click', () => {
             this.deployWorkout();
         });
+    }
+
+    setupUndoButton() {
+        const undoBtn = document.getElementById('undoEditBtn');
+        if (!undoBtn) return;
+        undoBtn.onclick = () => {
+            if (this.undoStack.length > 0) {
+                const prev = this.undoStack.pop();
+                this.workoutData = JSON.parse(JSON.stringify(prev));
+                this.selectedSegmentIndex = null;
+                this.displayWorkoutInfo();
+                this.createChart();
+                this.displaySegmentDetails();
+                this.updateUndoButton();
+                this.showToast('Undo successful');
+            }
+        };
+        this.updateUndoButton();
+    }
+
+    updateUndoButton() {
+        const undoBtn = document.getElementById('undoEditBtn');
+        if (!undoBtn) return;
+        undoBtn.style.display = this.undoStack.length > 0 ? 'block' : 'none';
+    }
+
+    showToast(msg) {
+        let toast = document.getElementById('toastNotification');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toastNotification';
+            toast.className = 'toast-notification';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
     async handleFileUpload(event) {
@@ -1107,14 +1146,15 @@ class ZwiftWorkoutVisualizer {
         let html = `<form id="segmentEditForm">`;
         html += `<div><b>Edit Segment:</b> <span>${segment.type}</span></div><br/>`;
         // Duration
-        html += `<div><label for="segEditDuration">Duration (sec):</label><input type="number" id="segEditDuration" value="${segment.duration}" min="1" max="7200"></div>`;
+        html += `<div><label for="segEditDuration">Duration (sec):</label><input type="number" id="segEditDuration" value="${segment.duration}" min="1" max="7200" required></div>`;
         // Power fields by type
         if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
-            html += `<div><label for="segEditPower">Power (% FTP):</label><input type="number" id="segEditPower" value="${segment.power}" min="1" max="300"></div>`;
+            html += `<div><label for="segEditPower">Power (% FTP):</label><input type="number" id="segEditPower" value="${segment.power}" min="1" max="300" required></div>`;
         } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
-            html += `<div><label for="segEditPowerLow">Power Low (% FTP):</label><input type="number" id="segEditPowerLow" value="${segment.powerLow}" min="1" max="300"></div>`;
-            html += `<div><label for="segEditPowerHigh">Power High (% FTP):</label><input type="number" id="segEditPowerHigh" value="${segment.powerHigh}" min="1" max="300"></div>`;
+            html += `<div><label for="segEditPowerLow">Power Low (% FTP):</label><input type="number" id="segEditPowerLow" value="${segment.powerLow}" min="1" max="300" required></div>`;
+            html += `<div><label for="segEditPowerHigh">Power High (% FTP):</label><input type="number" id="segEditPowerHigh" value="${segment.powerHigh}" min="1" max="300" required></div>`;
         }
+        html += `<div id="segEditError" style="color:#c62828;font-weight:600;margin:8px 0 0 0;display:none;"></div>`;
         html += `<div class="edit-btns">
             <button type="submit" class="apply-btn">Apply</button>
             <button type="button" class="cancel-btn" id="segEditCancel">Cancel</button>
@@ -1126,20 +1166,42 @@ class ZwiftWorkoutVisualizer {
         // Form logic
         const form = document.getElementById('segmentEditForm');
         const cancelBtn = document.getElementById('segEditCancel');
+        const errorDiv = document.getElementById('segEditError');
         form.onsubmit = (e) => {
             e.preventDefault();
+            errorDiv.style.display = 'none';
             // Validate and update segment
-            const newDuration = parseInt(document.getElementById('segEditDuration').value) || segment.duration;
-            if (newDuration < 1 || newDuration > 7200) return alert('Duration must be 1-7200 seconds');
+            const newDuration = parseInt(document.getElementById('segEditDuration').value);
+            if (isNaN(newDuration) || newDuration < 1 || newDuration > 7200) {
+                errorDiv.textContent = 'Duration must be between 1 and 7200 seconds.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            // Save current state for undo
+            this.undoStack.push(JSON.parse(JSON.stringify(this.workoutData)));
+            this.updateUndoButton();
             segment.duration = newDuration;
             if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
-                const newPower = parseInt(document.getElementById('segEditPower').value) || segment.power;
-                if (newPower < 1 || newPower > 300) return alert('Power must be 1-300% FTP');
+                const newPower = parseInt(document.getElementById('segEditPower').value);
+                if (isNaN(newPower) || newPower < 1 || newPower > 300) {
+                    errorDiv.textContent = 'Power must be between 1 and 300% FTP.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
                 segment.power = newPower;
             } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
-                const newPowerLow = parseInt(document.getElementById('segEditPowerLow').value) || segment.powerLow;
-                const newPowerHigh = parseInt(document.getElementById('segEditPowerHigh').value) || segment.powerHigh;
-                if (newPowerLow < 1 || newPowerLow > 300 || newPowerHigh < 1 || newPowerHigh > 300) return alert('Power must be 1-300% FTP');
+                const newPowerLow = parseInt(document.getElementById('segEditPowerLow').value);
+                const newPowerHigh = parseInt(document.getElementById('segEditPowerHigh').value);
+                if (isNaN(newPowerLow) || isNaN(newPowerHigh) || newPowerLow < 1 || newPowerLow > 300 || newPowerHigh < 1 || newPowerHigh > 300) {
+                    errorDiv.textContent = 'Power values must be between 1 and 300% FTP.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                if (newPowerLow > newPowerHigh) {
+                    errorDiv.textContent = 'Power Low must be less than or equal to Power High.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
                 segment.powerLow = newPowerLow;
                 segment.powerHigh = newPowerHigh;
             }
@@ -1167,6 +1229,7 @@ class ZwiftWorkoutVisualizer {
             this.displayWorkoutInfo();
             this.createChart();
             this.displaySegmentDetails();
+            this.showToast('Segment updated!');
         };
         cancelBtn.onclick = (e) => {
             this.selectedSegmentIndex = null;

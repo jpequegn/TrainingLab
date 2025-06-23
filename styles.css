@@ -1019,3 +1019,43 @@ header p {
 .segment-edit-box .cancel-btn:hover {
     background: #78909c;
 }
+
+.undo-btn {
+    display: block;
+    background: #ffb300;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 10px 24px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(255, 179, 0, 0.08);
+}
+.undo-btn:hover {
+    background: #ff8f00;
+}
+
+.toast-notification {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #43a047;
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 12px rgba(67, 160, 71, 0.15);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.toast-notification.show {
+    opacity: 1;
+    pointer-events: auto;
+}
