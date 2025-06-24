@@ -1167,6 +1167,19 @@ class ZwiftWorkoutVisualizer {
         const form = document.getElementById('segmentEditForm');
         const cancelBtn = document.getElementById('segEditCancel');
         const errorDiv = document.getElementById('segEditError');
+        
+        // Track which input was last focused
+        let lastFocusedInput = null;
+        const inputs = ['segEditDuration', 'segEditPower', 'segEditPowerLow', 'segEditPowerHigh'];
+        inputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('focus', () => {
+                    lastFocusedInput = inputId;
+                });
+            }
+        });
+
         form.onsubmit = (e) => {
             e.preventDefault();
             errorDiv.style.display = 'none';
@@ -1230,6 +1243,17 @@ class ZwiftWorkoutVisualizer {
             this.createChart();
             this.displaySegmentDetails();
             this.showToast('Segment updated!');
+            
+            // Restore focus to the last focused input after chart update
+            setTimeout(() => {
+                if (lastFocusedInput) {
+                    const input = document.getElementById(lastFocusedInput);
+                    if (input) {
+                        input.focus();
+                        input.select(); // Select the text for easy editing
+                    }
+                }
+            }, 100);
         };
         cancelBtn.onclick = (e) => {
             this.selectedSegmentIndex = null;

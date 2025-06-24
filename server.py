@@ -68,7 +68,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         'Content-Type': 'application/json'
                     },
                     json={
-                        'model': 'gpt-3.5-turbo',
+                        'model': 'gpt-4o-mini',
                         'messages': [
                             {'role': 'system', 'content': 'You are a helpful assistant for Zwift workouts.'},
                             {'role': 'user', 'content': user_message}
