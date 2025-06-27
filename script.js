@@ -209,34 +209,34 @@ class ZwiftWorkoutVisualizer {
         };
 
         switch (tagName) {
-            case 'Warmup':
-            case 'Cooldown':
-                segmentData.powerLow = parseFloat(segment.getAttribute('PowerLow')) || 0.5;
-                segmentData.powerHigh = parseFloat(segment.getAttribute('PowerHigh')) || 0.7;
-                segmentData.powerData = this.generateRampData(segmentData);
-                break;
+        case 'Warmup':
+        case 'Cooldown':
+            segmentData.powerLow = parseFloat(segment.getAttribute('PowerLow')) || 0.5;
+            segmentData.powerHigh = parseFloat(segment.getAttribute('PowerHigh')) || 0.7;
+            segmentData.powerData = this.generateRampData(segmentData);
+            break;
 
-            case 'SteadyState':
-                segmentData.power = parseFloat(segment.getAttribute('Power')) || 0.6;
-                segmentData.powerData = this.generateSteadyData(segmentData);
-                break;
+        case 'SteadyState':
+            segmentData.power = parseFloat(segment.getAttribute('Power')) || 0.6;
+            segmentData.powerData = this.generateSteadyData(segmentData);
+            break;
 
-            case 'IntervalsT':
-                return this.parseIntervals(segment, startTime);
+        case 'IntervalsT':
+            return this.parseIntervals(segment, startTime);
 
-            case 'Ramp':
-                segmentData.powerLow = parseFloat(segment.getAttribute('PowerLow')) || 0.5;
-                segmentData.powerHigh = parseFloat(segment.getAttribute('PowerHigh')) || 1.0;
-                segmentData.powerData = this.generateRampData(segmentData);
-                break;
+        case 'Ramp':
+            segmentData.powerLow = parseFloat(segment.getAttribute('PowerLow')) || 0.5;
+            segmentData.powerHigh = parseFloat(segment.getAttribute('PowerHigh')) || 1.0;
+            segmentData.powerData = this.generateRampData(segmentData);
+            break;
 
-            case 'FreeRide':
-                segmentData.power = 0.6; // Default for free ride
-                segmentData.powerData = this.generateSteadyData(segmentData);
-                break;
+        case 'FreeRide':
+            segmentData.power = 0.6; // Default for free ride
+            segmentData.powerData = this.generateSteadyData(segmentData);
+            break;
 
-            default:
-                return null;
+        default:
+            return null;
         }
 
         return segmentData;
@@ -784,27 +784,27 @@ class ZwiftWorkoutVisualizer {
             let message = '';
             
             switch (segment.type) {
-                case 'Warmup':
-                    message = 'Warmup - gradually increase effort';
-                    break;
-                case 'Cooldown':
-                    message = 'Cooldown - gradually decrease effort';
-                    break;
-                case 'SteadyState':
-                    message = `Steady effort at ${Math.round(segment.power * 100)}% FTP`;
-                    break;
-                case 'Interval (On)':
-                    message = `Interval ON - ${Math.round(segment.power * 100)}% FTP`;
-                    break;
-                case 'Interval (Off)':
-                    message = `Recovery - ${Math.round(segment.power * 100)}% FTP`;
-                    break;
-                case 'Ramp':
-                    message = `Ramp from ${Math.round(segment.powerLow * 100)}% to ${Math.round(segment.powerHigh * 100)}% FTP`;
-                    break;
-                case 'FreeRide':
-                    message = 'Free ride - choose your own effort';
-                    break;
+            case 'Warmup':
+                message = 'Warmup - gradually increase effort';
+                break;
+            case 'Cooldown':
+                message = 'Cooldown - gradually decrease effort';
+                break;
+            case 'SteadyState':
+                message = `Steady effort at ${Math.round(segment.power * 100)}% FTP`;
+                break;
+            case 'Interval (On)':
+                message = `Interval ON - ${Math.round(segment.power * 100)}% FTP`;
+                break;
+            case 'Interval (Off)':
+                message = `Recovery - ${Math.round(segment.power * 100)}% FTP`;
+                break;
+            case 'Ramp':
+                message = `Ramp from ${Math.round(segment.powerLow * 100)}% to ${Math.round(segment.powerHigh * 100)}% FTP`;
+                break;
+            case 'FreeRide':
+                message = 'Free ride - choose your own effort';
+                break;
             }
             
             if (message) {
@@ -952,23 +952,23 @@ class ZwiftWorkoutVisualizer {
         const duration = segment.duration;
         
         switch (segment.type.toLowerCase()) {
-            case 'warmup':
-                xml += `        <Warmup Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
-                break;
-            case 'cooldown':
-                xml += `        <Cooldown Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
-                break;
-            case 'steadystate':
-                xml += `        <SteadyState Duration="${duration}" Power="${segment.power / 100}"/>\n`;
-                break;
-            case 'intervals':
-                xml += `        <IntervalsT Repeat="${segment.repeat || 1}" OnDuration="${segment.onDuration}" OffDuration="${segment.offDuration}" OnPower="${segment.onPower / 100}" OffPower="${segment.offPower / 100}"/>\n`;
-                break;
-            case 'ramp':
-                xml += `        <Ramp Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
-                break;
-            default:
-                xml += `        <SteadyState Duration="${duration}" Power="${(segment.power || 50) / 100}"/>\n`;
+        case 'warmup':
+            xml += `        <Warmup Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+            break;
+        case 'cooldown':
+            xml += `        <Cooldown Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+            break;
+        case 'steadystate':
+            xml += `        <SteadyState Duration="${duration}" Power="${segment.power / 100}"/>\n`;
+            break;
+        case 'intervals':
+            xml += `        <IntervalsT Repeat="${segment.repeat || 1}" OnDuration="${segment.onDuration}" OffDuration="${segment.offDuration}" OnPower="${segment.onPower / 100}" OffPower="${segment.offPower / 100}"/>\n`;
+            break;
+        case 'ramp':
+            xml += `        <Ramp Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+            break;
+        default:
+            xml += `        <SteadyState Duration="${duration}" Power="${(segment.power || 50) / 100}"/>\n`;
         }
         
         return xml;
@@ -1143,7 +1143,7 @@ class ZwiftWorkoutVisualizer {
     showSegmentEditForm(segmentIndex, segment) {
         const editBox = document.getElementById('segmentEditBox');
         if (!editBox) return;
-        let html = `<form id="segmentEditForm">`;
+        let html = '<form id="segmentEditForm">';
         html += `<div><b>Edit Segment:</b> <span>${segment.type}</span></div><br/>`;
         // Duration
         html += `<div><label for="segEditDuration">Duration (sec):</label><input type="number" id="segEditDuration" value="${segment.duration}" min="1" max="7200" required></div>`;
@@ -1154,12 +1154,12 @@ class ZwiftWorkoutVisualizer {
             html += `<div><label for="segEditPowerLow">Power Low (% FTP):</label><input type="number" id="segEditPowerLow" value="${segment.powerLow}" min="1" max="300" required></div>`;
             html += `<div><label for="segEditPowerHigh">Power High (% FTP):</label><input type="number" id="segEditPowerHigh" value="${segment.powerHigh}" min="1" max="300" required></div>`;
         }
-        html += `<div id="segEditError" style="color:#c62828;font-weight:600;margin:8px 0 0 0;display:none;"></div>`;
+        html += '<div id="segEditError" style="color:#c62828;font-weight:600;margin:8px 0 0 0;display:none;"></div>';
         html += `<div class="edit-btns">
             <button type="submit" class="apply-btn">Apply</button>
             <button type="button" class="cancel-btn" id="segEditCancel">Cancel</button>
         </div>`;
-        html += `</form>`;
+        html += '</form>';
         editBox.innerHTML = html;
         editBox.style.display = 'block';
 

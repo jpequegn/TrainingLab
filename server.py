@@ -136,10 +136,10 @@ def main():
     os.chdir(Path(__file__).parent)
     
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
-        print(f"🚴‍♂️ Zwift Workout Visualizer server running at:")
+        print("🚴‍♂️ Zwift Workout Visualizer server running at:")
         print(f"   Local: http://localhost:{port}")
-        print(f"   Network: https://work-1-jpkjjijvsbmtuklc.prod-runtime.all-hands.dev")
-        print(f"\nPress Ctrl+C to stop the server")
+        print("   Network: https://work-1-jpkjjijvsbmtuklc.prod-runtime.all-hands.dev")
+        print("\nPress Ctrl+C to stop the server")
         
         try:
             httpd.serve_forever()
