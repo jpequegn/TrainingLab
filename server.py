@@ -15,11 +15,12 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
-from mcp_tools import load_mcp_tools
+from mcp_tools import load_mcp_tools, terminate_mcp_processes
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     llm = None
     agent_executor = None
+    mcp_processes = [] # Store MCP server processes
 
     @classmethod
     def initialize_agent(cls):
@@ -32,7 +33,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         cls.llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
-        mcp_tools = load_mcp_tools()
+        mcp_tools, cls.mcp_processes = load_mcp_tools()
 
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -169,6 +170,7 @@ def main():
             httpd.serve_forever()
         except KeyboardInterrupt:
             print("\n\nServer stopped.")
+            terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
             sys.exit(0)
 
 if __name__ == "__main__":
