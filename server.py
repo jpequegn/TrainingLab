@@ -26,8 +26,10 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         load_dotenv()
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
-            print("Warning: OPENAI_API_KEY not set. LLM functionality may be limited.")
-            # In a production environment, you might want to raise an error or use a dummy LLM
+            print("Error: OPENAI_API_KEY not set. LLM functionality will be disabled.")
+            cls.llm = None # Explicitly set LLM to None if API key is missing
+            cls.agent_executor = None
+            return
 
         cls.llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
         mcp_tools = load_mcp_tools()
