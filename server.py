@@ -11,6 +11,40 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 import requests
+from langchain_openai import ChatOpenAI
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage
+from mcp_tools import load_mcp_tools
+
+class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    llm = None
+    agent_executor = None
+
+    @classmethod
+    def initialize_agent(cls):
+        load_dotenv()
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            print("Warning: OPENAI_API_KEY not set. LLM functionality may be limited.")
+            # In a production environment, you might want to raise an error or use a dummy LLM
+
+        cls.llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
+        mcp_tools = load_mcp_tools()
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", "You are a helpful assistant for Zwift workouts. You have access to the following tools:"),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("human", "{input}"),
+                MessagesPlaceholder(variable_name="agent_scratchpad"),
+            ]
+        )
+
+        agent = create_tool_calling_agent(cls.llm, mcp_tools, prompt)
+        cls.agent_executor = AgentExecutor(agent=agent, tools=mcp_tools, verbose=True)
+
+    def end_headers(self):
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -49,37 +83,22 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             user_message = data.get('message', '')
 
-            # Load API key from .env
-            load_dotenv()
-            api_key = os.getenv('OPENAI_API_KEY')
-            if not api_key:
+            if not CORSHTTPRequestHandler.agent_executor:
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'reply': 'LLM API key not set on server.'}).encode('utf-8'))
+                self.wfile.write(json.dumps({'reply': 'LLM agent not initialized.'}).encode('utf-8'))
                 return
 
-            # Call OpenAI API (gpt-3.5-turbo)
             try:
-                response = requests.post(
-                    'https://api.openai.com/v1/chat/completions',
-                    headers={
-                        'Authorization': f'Bearer {api_key}',
-                        'Content-Type': 'application/json'
-                    },
-                    json={
-                        'model': 'gpt-4o-mini',
-                        'messages': [
-                            {'role': 'system', 'content': 'You are a helpful assistant for Zwift workouts.'},
-                            {'role': 'user', 'content': user_message}
-                        ],
-                        'max_tokens': 512
-                    }
+                # For simplicity, we're not maintaining chat history in this example
+                # You would typically load/store chat history here
+                result = CORSHTTPRequestHandler.agent_executor.invoke(
+                    {"input": user_message, "chat_history": []}
                 )
-                result = response.json()
-                reply = result['choices'][0]['message']['content'].strip()
+                reply = result['output']
             except Exception as e:
-                reply = f'Error contacting LLM: {e}'
+                reply = f'Error processing LLM request: {e}'
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -134,6 +153,9 @@ def main():
     
     # Change to the directory containing the HTML files
     os.chdir(Path(__file__).parent)
+
+    # Initialize the LangChain agent
+    CORSHTTPRequestHandler.initialize_agent()
     
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
         print("🚴‍♂️ Zwift Workout Visualizer server running at:")
