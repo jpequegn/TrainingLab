@@ -1,0 +1,34 @@
+{
+  "mcp_servers": [
+    {
+      "name": "PlaywrightMCP",
+      "base_url": "http://localhost:8000/playwright",
+      "tools": [
+        {
+          "name": "navigate_to_url",
+          "description": "Navigates the browser to a specified URL.",
+          "endpoint": "/navigate",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL to navigate to."
+              }
+            },
+            "required": ["url"]
+          }
+        },
+        {
+          "name": "get_page_content",
+          "description": "Retrieves the full HTML content of the current page.",
+          "endpoint": "/content",
+          "parameters": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    }
+  ]
+}
