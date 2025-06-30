@@ -1,6 +1,6 @@
 import json
-import requests
 from langchain.tools import Tool
+from fastmcp.client import FastMCPClient
 
 def load_mcp_tools(config_path="mcp_config.json"):
     tools = []
@@ -10,33 +10,30 @@ def load_mcp_tools(config_path="mcp_config.json"):
 
         for server_config in config.get("mcp_servers", []):
             base_url = server_config["base_url"]
+            client = FastMCPClient(base_url=base_url)
             for tool_config in server_config.get("tools", []):
                 tool_name = tool_config["name"]
                 tool_description = tool_config["description"]
-                endpoint = tool_config["endpoint"]
+                # The endpoint is not directly used by FastMCPClient for tool invocation
+                # FastMCPClient invokes tools by their name
                 parameters = tool_config.get("parameters", {})
 
-                def _run_tool(args, tool_url=f"{base_url}{endpoint}"):
-                    # In a real scenario, you'd parse args based on 'parameters' schema
-                    # and handle different HTTP methods (GET/POST) as defined.
-                    # For simplicity, this example assumes POST with JSON body.
+                def _run_tool(**kwargs):
                     try:
-                        response = requests.post(tool_url, json=args)
-                        response.raise_for_status()  # Raise an exception for HTTP errors
-                        return response.text
-                    except requests.exceptions.RequestException as e:
+                        # FastMCPClient dynamically exposes tools as methods
+                        # We need to get the tool method by name
+                        tool_method = getattr(client, tool_name)
+                        result = tool_method(**kwargs)
+                        return str(result)
+                    except Exception as e:
                         return f"Error calling MCP tool {tool_name}: {e}"
 
-                # LangChain Tool expects a single string argument for _run
-                # We'll need to parse this string into a dictionary inside _run_tool
-                # For now, we'll pass the raw string and handle parsing within _run_tool
-                # This will be refined in Phase 2 when integrating with LangChain agents
                 tools.append(
                     Tool(
                         name=tool_name,
                         description=tool_description,
                         func=_run_tool,
-                        args_schema=parameters # This will be used by LangChain to validate inputs
+                        args_schema=parameters  # This will be used by LangChain to validate inputs
                     )
                 )
     except FileNotFoundError:
