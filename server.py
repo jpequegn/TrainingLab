@@ -48,9 +48,6 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         cls.agent_executor = AgentExecutor(agent=agent, tools=mcp_tools, verbose=True)
 
     def end_headers(self):
-
-class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')

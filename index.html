@@ -8,20 +8,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="directory-panel" id="directoryPanel">
-        <div class="directory-header">📂 Zwift Workouts
-            <button class="panel-toggle" id="toggleDirectoryPanel" title="Minimize">&lt;</button>
-        </div>
-        <div class="directory-actions">
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" accept=".zwo" />
-                <label for="fileInput" class="file-input-label">
-                    📁 Choose Zwift Workout File (.zwo)
-                </label>
-            </div>
-            <button id="loadSample" class="sample-btn">Load Sample Workout</button>
-        </div>
-    </div>
+    
 
     <div class="container">
         <header>
@@ -138,17 +125,9 @@
         </div>
     </div>
 
-    <div class="chat-panel" id="chatPanel">
-        <div class="chat-header">💬 LLM Chat
-            <button class="panel-toggle" id="toggleChatPanel" title="Minimize">&gt;</button>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <form id="chatForm" class="chat-form">
-            <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off" required />
-            <button type="submit">Send</button>
-        </form>
-    </div>
+    
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
+    <div id="toastNotification" class="toast-notification"></div>
 </body>
 </html>

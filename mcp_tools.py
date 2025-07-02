@@ -2,7 +2,7 @@ import json
 import subprocess
 import time
 from langchain.tools import Tool
-from fastmcp.client import FastMCPClient
+from fastmcp import Client
 
 def load_mcp_tools(config_path="mcp_config.json"):
     tools = []
@@ -31,7 +31,7 @@ def load_mcp_tools(config_path="mcp_config.json"):
             time.sleep(5) # Give the server some time to start
 
             try:
-                client = FastMCPClient(base_url=base_url)
+                client = Client(base_url=base_url)
                 # Discover tools from the running MCP server
                 discovered_tools = client.list_tools()
                 print(f"Discovered tools for {server_name}: {discovered_tools}")
