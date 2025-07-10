@@ -1,4 +1,6 @@
 
+import 'chartjs-plugin-annotation';
+
 import { parseWorkoutXML } from './parser.js';
 import { calculateTSS, formatDuration } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
@@ -97,6 +99,43 @@ export class UI {
         document.getElementById('workoutInfo').style.display = 'block';
     }
 
+    createPowerZoneAnnotations(ftp) {
+        const powerZones = {
+            'Zone 1 (Active Recovery)': { min: 0, max: 55, color: '#808080' },
+            'Zone 2 (Endurance)': { min: 56, max: 75, color: '#0000FF' },
+            'Zone 3 (Tempo)': { min: 76, max: 90, color: '#008000' },
+            'Zone 4 (Lactate Threshold)': { min: 91, max: 105, color: '#FFFF00' },
+            'Zone 5 (VO2 Max)': { min: 106, max: 120, color: '#FFA500' },
+            'Zone 6 (Anaerobic Capacity)': { min: 121, max: 150, color: '#FF0000' },
+            'Zone 7 (Neuromuscular Power)': { min: 151, max: 999, color: '#800080' },
+        };
+
+        const annotations = {};
+
+        for (const zone in powerZones) {
+            const { min, max, color } = powerZones[zone];
+            annotations[zone] = {
+                type: 'box',
+                yMin: min,
+                yMax: max,
+                backgroundColor: color + '33',
+                borderColor: color + '33',
+                borderWidth: 1,
+                label: {
+                    content: zone,
+                    enabled: true,
+                    position: 'start',
+                    color: '#000',
+                    font: {
+                        size: 10,
+                    },
+                },
+            };
+        }
+
+        return annotations;
+    }
+
     createChart(workoutData, ftp, selectedSegmentIndex, onSegmentClick) {
         const ctx = document.getElementById('workoutChart').getContext('2d');
         
@@ -114,14 +153,7 @@ export class UI {
             'FreeRide': '#78909C'
         };
 
-        const allSegments = [];
-        workoutData.segments.forEach(segment => {
-            if (Array.isArray(segment)) {
-                allSegments.push(...segment);
-            } else {
-                allSegments.push(segment);
-            }
-        });
+        const allSegments = this.visualizer.workout.getAllSegments();
 
         allSegments.sort((a, b) => a.startTime - b.startTime);
 
@@ -167,6 +199,8 @@ export class UI {
 
         const hoverPowerBox = document.getElementById('hoverPowerBox');
         if (hoverPowerBox) hoverPowerBox.style.display = 'none';
+
+        const annotations = this.createPowerZoneAnnotations(ftp);
 
         this.chart = new Chart(ctx, {
             type: 'line',
@@ -214,7 +248,10 @@ export class UI {
                                 hoverPowerBox.style.display = 'none';
                             }
                         }
-                    }
+                    },
+                    annotation: {
+                        annotations: annotations,
+                    },
                 },
                 onClick: (event, elements, chart) => {
                     const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false }, true);
@@ -271,14 +308,7 @@ export class UI {
         const segmentList = document.getElementById('segmentList');
         segmentList.innerHTML = '';
 
-        const allSegments = [];
-        workoutData.segments.forEach(segment => {
-            if (Array.isArray(segment)) {
-                allSegments.push(...segment);
-            } else {
-                allSegments.push(segment);
-            }
-        });
+        const allSegments = this.visualizer.workout.getAllSegments();
 
         allSegments.forEach((segment, index) => {
             const segmentDiv = document.createElement('div');

@@ -1,20 +1,16 @@
 
 
 import { parseWorkoutXML } from './parser.js';
-import { calculateTSS } from './workout.js';
+import { Workout } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
 import { deployWorkout } from './api.js';
 import { UI } from './ui.js';
 
 class ZwiftWorkoutVisualizer {
     constructor() {
-        this.chart = null;
-        this.workoutData = null;
-        this.originalWorkoutData = null; // Store original for reset functionality
-        this.ftp = 250; // Default FTP value in watts
-        this.selectedSegmentIndex = null; // For chart selection
-        this.undoStack = [];
+        this.workout = null;
         this.ui = new UI(this);
+        this.selectedSegmentIndex = null;
     }
 
     async handleFileUpload(event) {
@@ -65,11 +61,9 @@ class ZwiftWorkoutVisualizer {
                 throw new Error('Invalid XML format');
             }
 
-            this.workoutData = parseWorkoutXML(xmlDoc);
-            this.workoutData.tss = calculateTSS(this.workoutData);
-            this.originalWorkoutData = JSON.parse(JSON.stringify(this.workoutData));
-            this.undoStack = []; // Clear undo stack on new workout load
-            this.ui.updateUndoButton(this.undoStack.length);
+            const workoutData = parseWorkoutXML(xmlDoc);
+            this.workout = new Workout(workoutData);
+            this.ui.updateUndoButton(this.workout.undoStack.length);
             this.displayWorkout();
         } catch (error) {
             console.error('Error parsing workout:', error);
@@ -78,139 +72,82 @@ class ZwiftWorkoutVisualizer {
     }
 
     displayWorkout() {
-        if (!this.workoutData) return;
-        this.ui.displayWorkoutInfo(this.workoutData, this.workoutData.tss);
-        this.ui.createChart(this.workoutData, this.ftp, this.selectedSegmentIndex, this.setSelectedSegmentIndex.bind(this));
-        this.ui.displaySegmentDetails(this.workoutData);
+        if (!this.workout) return;
+        this.ui.displayWorkoutInfo(this.workout.workoutData, this.workout.workoutData.tss);
+        this.ui.createChart(this.workout.workoutData, this.workout.ftp, this.selectedSegmentIndex, this.setSelectedSegmentIndex.bind(this));
+        this.ui.displaySegmentDetails(this.workout.workoutData);
     }
 
     updateFTP(newFTP) {
-        this.ftp = newFTP;
-        if (this.workoutData) {
+        if (this.workout) {
+            this.workout.updateFTP(newFTP);
             this.displayWorkout();
         }
     }
 
     exportToERG() {
-        if (!this.workoutData) {
+        if (!this.workout) {
             this.ui.showToast('Please load a workout first');
             return;
         }
-        const ergContent = generateERGContent(this.workoutData, this.ftp);
-        downloadFile(ergContent, `${this.workoutData.name}.erg`, 'text/plain');
+        const ergContent = generateERGContent(this.workout.workoutData, this.workout.ftp);
+        downloadFile(ergContent, `${this.workout.workoutData.name}.erg`, 'text/plain');
     }
 
     exportToMRC() {
-        if (!this.workoutData) {
+        if (!this.workout) {
             this.ui.showToast('Please load a workout first');
             return;
         }
-        const mrcContent = generateMRCContent(this.workoutData);
-        downloadFile(mrcContent, `${this.workoutData.name}.mrc`, 'text/plain');
+        const mrcContent = generateMRCContent(this.workout.workoutData);
+        downloadFile(mrcContent, `${this.workout.workoutData.name}.mrc`, 'text/plain');
     }
 
     applyScaling() {
-        if (!this.workoutData) {
+        if (!this.workout) {
             this.ui.showToast('Please load a workout first');
             return;
         }
 
-        this.undoStack.push(JSON.parse(JSON.stringify(this.workoutData)));
-        this.ui.updateUndoButton(this.undoStack.length);
-
         const scaleFactor = parseFloat(document.getElementById('scaleSlider').value);
-        
-        this.workoutData.segments.forEach(segment => {
-            if (Array.isArray(segment)) { // Handle intervals
-                segment.forEach(interval => {
-                    if (this.shouldScaleSegment(interval)) {
-                        this.scaleSegmentPower(interval, scaleFactor);
-                    }
-                });
-            } else { // Handle single segments
-                if (this.shouldScaleSegment(segment)) {
-                    this.scaleSegmentPower(segment, scaleFactor);
-                }
-            }
-        });
-
-        // Re-generate power data for all segments after scaling
-        this.workoutData.segments.forEach(segment => {
-            if (Array.isArray(segment)) {
-                segment.forEach(interval => {
-                    if (interval.type.includes('Interval') || interval.type === 'SteadyState' || interval.type === 'FreeRide') {
-                        interval.powerData = this.generateSteadyData(interval);
-                    } else if (interval.type === 'Warmup' || interval.type === 'Cooldown' || interval.type === 'Ramp') {
-                        interval.powerData = this.generateRampData(interval);
-                    }
-                });
-            } else {
-                if (segment.type === 'SteadyState' || segment.type === 'FreeRide') {
-                    segment.powerData = this.generateSteadyData(segment);
-                } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
-                    segment.powerData = this.generateRampData(segment);
-                }
-            }
-        });
-
-        this.workoutData.tss = calculateTSS(this.workoutData);
+        this.workout.applyScaling(scaleFactor);
+        this.ui.updateUndoButton(this.workout.undoStack.length);
         this.displayWorkout();
         this.ui.showToast('Workout scaled!');
     }
 
-    shouldScaleSegment(segment) {
-        const type = segment.type.toLowerCase();
-        return type !== 'warmup' && type !== 'cooldown';
-    }
-
-    scaleSegmentPower(segment, scaleFactor) {
-        if (segment.power !== undefined) {
-            segment.power = parseFloat((segment.power * scaleFactor).toFixed(2));
-        }
-        if (segment.powerLow !== undefined) {
-            segment.powerLow = parseFloat((segment.powerLow * scaleFactor).toFixed(2));
-        }
-        if (segment.powerHigh !== undefined) {
-            segment.powerHigh = parseFloat((segment.powerHigh * scaleFactor).toFixed(2));
-        }
-    }
-
     resetWorkout() {
-        if (!this.originalWorkoutData) {
-            this.ui.showToast('No original workout data to reset to');
+        if (!this.workout) {
+            this.ui.showToast('No workout to reset');
             return;
         }
 
-        this.undoStack.push(JSON.parse(JSON.stringify(this.workoutData)));
-        this.ui.updateUndoButton(this.undoStack.length);
-
-        this.workoutData = JSON.parse(JSON.stringify(this.originalWorkoutData));
-        
+        this.workout.reset();
+        this.ui.updateUndoButton(this.workout.undoStack.length);
         document.getElementById('scaleSlider').value = 1.0;
         this.ui.updateScaleValue(1.0);
-        
         this.displayWorkout();
         this.ui.showToast('Workout reset!');
     }
 
     exportModifiedZWO() {
-        if (!this.workoutData) {
+        if (!this.workout) {
             this.ui.showToast('Please load a workout first');
             return;
         }
 
-        const zwoContent = generateZWOContent(this.workoutData);
-        downloadFile(zwoContent, `${this.workoutData.name.replace(/[^a-z0-9]/gi, '_')}_modified.zwo`, 'application/xml');
+        const zwoContent = generateZWOContent(this.workout.workoutData);
+        downloadFile(zwoContent, `${this.workout.workoutData.name.replace(/[^a-z0-9]/gi, '_')}_modified.zwo`, 'application/xml');
     }
 
     async deployWorkout() {
-        if (!this.workoutData) {
+        if (!this.workout) {
             this.ui.showToast('Please load a workout first');
             return;
         }
 
-        const zwoContent = generateZWOContent(this.workoutData);
-        const workoutName = this.workoutData.name.replace(/[^a-z0-9]/gi, '_');
+        const zwoContent = generateZWOContent(this.workout.workoutData);
+        const workoutName = this.workout.workoutData.name.replace(/[^a-z0-9]/gi, '_');
 
         try {
             const deployedPath = await deployWorkout(workoutName, zwoContent);
@@ -223,92 +160,26 @@ class ZwiftWorkoutVisualizer {
 
     setSelectedSegmentIndex(index) {
         this.selectedSegmentIndex = index;
-        this.ui.createChart(this.workoutData, this.ftp, this.selectedSegmentIndex, this.setSelectedSegmentIndex.bind(this));
+        this.displayWorkout();
     }
 
     applySegmentEdit(segmentIndex, newDuration, newPower, newPowerLow, newPowerHigh) {
-        this.undoStack.push(JSON.parse(JSON.stringify(this.workoutData)));
-        this.ui.updateUndoButton(this.undoStack.length);
+        if (!this.workout) return;
 
-        // Flatten all segments to find the correct one by index
-        const allSegments = [];
-        this.workoutData.segments.forEach(seg => {
-            if (Array.isArray(seg)) {
-                allSegments.push(...seg);
-            } else {
-                allSegments.push(seg);
-            }
-        });
-
-        const segment = allSegments[segmentIndex];
-        if (!segment) return; // Should not happen
-
-        segment.duration = newDuration;
-        if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
-            segment.power = newPower / 100; // Convert back to 0-1 scale
-        } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
-            segment.powerLow = newPowerLow / 100;
-            segment.powerHigh = newPowerHigh / 100;
-        }
-
-        // Re-generate powerData for this specific segment
-        if (segment.type === 'SteadyState' || segment.type === 'Interval (On)' || segment.type === 'Interval (Off)' || segment.type === 'FreeRide') {
-            segment.powerData = this.generateSteadyData(segment);
-        } else if (segment.type === 'Warmup' || segment.type === 'Cooldown' || segment.type === 'Ramp') {
-            segment.powerData = this.generateRampData(segment);
-        }
-
-        // Recalculate start times for all segments in the main workoutData structure
-        let currentTime = 0;
-        this.workoutData.segments.forEach(seg => {
-            if (Array.isArray(seg)) {
-                seg.forEach(interval => {
-                    interval.startTime = currentTime;
-                    currentTime += interval.duration;
-                });
-            } else {
-                seg.startTime = currentTime;
-                currentTime += seg.duration;
-            }
-        });
-        this.workoutData.totalDuration = currentTime; // Update total duration
-        this.workoutData.tss = calculateTSS(this.workoutData);
-        
+        this.workout.applySegmentEdit(segmentIndex, newDuration, newPower, newPowerLow, newPowerHigh);
+        this.ui.updateUndoButton(this.workout.undoStack.length);
         this.displayWorkout();
         this.ui.showToast('Segment updated!');
     }
 
     undoLastEdit() {
-        if (this.undoStack.length > 0) {
-            this.workoutData = this.undoStack.pop();
+        if (this.workout && this.workout.undoStack.length > 0) {
+            this.workout.undoLastEdit();
             this.selectedSegmentIndex = null;
             this.displayWorkout();
-            this.ui.updateUndoButton(this.undoStack.length);
+            this.ui.updateUndoButton(this.workout.undoStack.length);
             this.ui.showToast('Undo successful');
         }
-    }
-
-    // Helper functions for generating power data (copied from parser.js for now, consider moving to workout.js)
-    generateSteadyData(segment) {
-        const points = Math.max(2, Math.floor(segment.duration / 10));
-        const data = [];
-        for (let i = 0; i < points; i++) {
-            const time = segment.startTime + (i * segment.duration / (points - 1));
-            data.push({ x: time, y: segment.power * 100 });
-        }
-        return data;
-    }
-
-    generateRampData(segment) {
-        const points = Math.max(2, Math.floor(segment.duration / 10));
-        const data = [];
-        for (let i = 0; i < points; i++) {
-            const progress = i / (points - 1);
-            const time = segment.startTime + (i * segment.duration / (points - 1));
-            const power = segment.powerLow + (segment.powerHigh - segment.powerLow) * progress;
-            data.push({ x: time, y: power * 100 });
-        }
-        return data;
     }
 }
 

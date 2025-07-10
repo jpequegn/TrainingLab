@@ -1,4 +1,7 @@
 
+import { generateSteadyData, generateRampData } from './workout.js';
+
+
 export function parseWorkoutXML(xmlDoc) {
     const workoutFile = xmlDoc.querySelector('workout_file');
     if (!workoutFile) {
@@ -136,37 +139,7 @@ function parseIntervals(segment, startTime) {
     return intervals;
 }
 
-function generateSteadyData(segment) {
-    const points = Math.max(2, Math.floor(segment.duration / 10)); // Point every 10 seconds, minimum 2 points
-    const data = [];
-    
-    for (let i = 0; i < points; i++) {
-        const time = segment.startTime + (i * segment.duration / (points - 1));
-        data.push({
-            x: time,
-            y: segment.power * 100 // Convert to percentage
-        });
-    }
-    
-    return data;
-}
 
-function generateRampData(segment) {
-    const points = Math.max(2, Math.floor(segment.duration / 10));
-    const data = [];
-    
-    for (let i = 0; i < points; i++) {
-        const progress = i / (points - 1);
-        const time = segment.startTime + (i * segment.duration / (points - 1));
-        const power = segment.powerLow + (segment.powerHigh - segment.powerLow) * progress;
-        data.push({
-            x: time,
-            y: power * 100
-        });
-    }
-    
-    return data;
-}
 
 function getElementText(parent, tagName) {
     const element = parent.querySelector(tagName);
