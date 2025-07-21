@@ -1,6 +1,4 @@
 
-import 'chartjs-plugin-annotation';
-
 import { parseWorkoutXML } from './parser.js';
 import { calculateTSS, formatDuration } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';

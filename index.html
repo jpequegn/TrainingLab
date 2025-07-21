@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zwift Workout Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,6 +16,16 @@
             <h1>🚴‍♂️ Zwift Workout Visualizer</h1>
             <p>Load and visualize your Zwift workout files (.zwo)</p>
         </header>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".zwo" />
+                <label for="fileInput" class="file-input-label">
+                    📁 Choose Zwift Workout File (.zwo)
+                </label>
+            </div>
+            <button id="loadSample" class="sample-btn">Load Sample Workout</button>
+        </div>
 
         <div class="chart-container" style="display: none;">
             <canvas id="workoutChart"></canvas>
