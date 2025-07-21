@@ -4,141 +4,310 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zwift Workout Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 min-h-screen">
     
 
-    <div class="container">
-        <header>
-            <h1>🚴‍♂️ Zwift Workout Visualizer</h1>
-            <p>Load and visualize your Zwift workout files (.zwo)</p>
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mb-6 shadow-lg">
+                <span class="text-4xl">🚴‍♂️</span>
+            </div>
+            <h1 class="text-5xl font-bold text-white mb-4 tracking-tight">
+                Zwift Workout Visualizer
+            </h1>
+            <p class="text-xl text-indigo-200 font-medium">
+                Load and visualize your Zwift workout files (.zwo) with advanced analytics
+            </p>
         </header>
 
-        <div class="upload-section">
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" accept=".zwo" />
-                <label for="fileInput" class="file-input-label">
-                    📁 Choose Zwift Workout File (.zwo)
-                </label>
-            </div>
-            <button id="loadSample" class="sample-btn">Load Sample Workout</button>
-        </div>
-
-        <div class="chart-container" style="display: none;">
-            <canvas id="workoutChart"></canvas>
-        </div>
-        <button id="undoEditBtn" class="undo-btn" style="display:none;margin:0 auto 10px auto;">Undo Last Edit</button>
-        <div id="hoverPowerBox" class="hover-power-box" style="display:none;"></div>
-        <div id="segmentEditBox" class="segment-edit-box" style="display:none;"></div>
-
-        <div id="workoutInfo" class="workout-info" style="display: none;">
-            <h2 id="workoutName"></h2>
-            <p id="workoutDescription"></p>
-            <div class="workout-stats">
-                <div class="stat">
-                    <span class="stat-label">Duration:</span>
-                    <span id="totalDuration" class="stat-value"></span>
+        <!-- Upload Section -->
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8 border border-white/20">
+            <div class="text-center">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Get Started</h2>
+                    <p class="text-gray-600">Upload your workout file or try our sample</p>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">TSS:</span>
-                    <span id="workoutTSS" class="stat-value"></span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Author:</span>
-                    <span id="workoutAuthor" class="stat-value"></span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Sport:</span>
-                    <span id="workoutSport" class="stat-value"></span>
-                </div>
-            </div>
-            
-            <div class="editing-section">
-                <h3>✏️ Edit Workout</h3>
-                <p>Modify workout intensity and scale segments (excluding warmup/cooldown).</p>
                 
-                <div class="editing-controls">
-                    <div class="scale-controls">
-                        <label for="scaleSlider">Scale Factor:</label>
-                        <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-                        <span class="scale-value">1.0</span>
-                        <div class="scale-info">Multiplier for main workout segments (excludes warmup/cooldown)</div>
-                        <button id="applyScale" class="action-btn">Apply Scale</button>
-                        <button id="resetWorkout" class="action-btn secondary">Reset</button>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <!-- File Upload Button -->
+                    <div class="relative">
+                        <input type="file" id="fileInput" accept=".zwo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        <label for="fileInput" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 cursor-pointer">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Workout File
+                        </label>
                     </div>
                     
-                    <div class="export-controls">
-                        <button id="exportModified" class="export-btn">
-                            📥 Download Modified ZWO
-                            <span class="format-info">Save your edited workout</span>
+                    <!-- Divider -->
+                    <div class="flex items-center">
+                        <div class="border-t border-gray-300 flex-grow sm:w-8"></div>
+                        <span class="px-3 text-gray-500 text-sm font-medium">or</span>
+                        <div class="border-t border-gray-300 flex-grow sm:w-8"></div>
+                    </div>
+                    
+                    <!-- Sample Button -->
+                    <button id="loadSample" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Try Sample Workout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="chart-container bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-8 border border-white/20" style="display: none;">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Workout Power Profile</h3>
+                <button id="undoEditBtn" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105" style="display:none;">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                    Undo Last Edit
+                </button>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4">
+                <canvas id="workoutChart" class="w-full h-96"></canvas>
+            </div>
+        </div>
+
+        <!-- Power Info Box -->
+        <div id="hoverPowerBox" class="fixed top-4 right-4 bg-gray-900/90 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg z-50" style="display:none;"></div>
+        
+        <!-- Segment Edit Box -->
+        <div id="segmentEditBox" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="display:none;">
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"></div>
+        </div>
+
+        <!-- Workout Info Panel -->
+        <div id="workoutInfo" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-hidden mb-8" style="display: none;">
+            <!-- Workout Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-6 text-white">
+                <h2 id="workoutName" class="text-2xl font-bold mb-2"></h2>
+                <p id="workoutDescription" class="text-indigo-100 opacity-90"></p>
+            </div>
+
+            <!-- Workout Stats -->
+            <div class="p-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                        <div class="text-xs font-medium text-blue-600 uppercase tracking-wide">Duration</div>
+                        <div id="totalDuration" class="text-2xl font-bold text-blue-900 mt-1"></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
+                        <div class="text-xs font-medium text-orange-600 uppercase tracking-wide">TSS</div>
+                        <div id="workoutTSS" class="text-2xl font-bold text-orange-900 mt-1"></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                        <div class="text-xs font-medium text-green-600 uppercase tracking-wide">Author</div>
+                        <div id="workoutAuthor" class="text-2xl font-bold text-green-900 mt-1"></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                        <div class="text-xs font-medium text-purple-600 uppercase tracking-wide">Sport</div>
+                        <div id="workoutSport" class="text-2xl font-bold text-purple-900 mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Edit Workout Section -->
+                <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Edit Workout</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Modify workout intensity and scale segments (excluding warmup/cooldown).</p>
+                    
+                    <div class="space-y-6">
+                        <!-- Scale Controls -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <label for="scaleSlider" class="text-sm font-medium text-gray-700">Scale Factor:</label>
+                                <span class="scale-value text-lg font-semibold text-indigo-600 bg-indigo-100 px-2 py-1 rounded">1.0</span>
+                            </div>
+                            <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider mb-2">
+                            <div class="text-xs text-gray-500 mb-4">Multiplier for main workout segments (excludes warmup/cooldown)</div>
+                            <div class="flex gap-3">
+                                <button id="applyScale" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                                    Apply Scale
+                                </button>
+                                <button id="resetWorkout" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Export Controls -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button id="exportModified" class="group bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-indigo-400 rounded-xl p-4 transition-all duration-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-lg font-semibold text-gray-800">📥 Download ZWO</span>
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm text-gray-500">Save your edited workout</span>
+                            </button>
+                            <button id="deployWorkout" class="group bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-lg font-semibold">🚀 Deploy to Zwift</span>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm text-indigo-200">Save directly to Zwift workouts folder</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Conversion Section -->
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Convert for Other Platforms</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Convert this workout to formats compatible with MyWhoosh, Rouvy, and other training platforms.</p>
+                    
+                    <!-- FTP Input -->
+                    <div class="bg-white p-4 rounded-lg border border-purple-200 mb-6">
+                        <label for="ftpInput" class="block text-sm font-medium text-gray-700 mb-2">Your FTP (watts):</label>
+                        <div class="flex items-center space-x-3">
+                            <input type="number" id="ftpInput" value="250" min="100" max="500" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+                            <span class="text-xs text-gray-500">Used for ERG file conversion</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Export Buttons -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <button id="exportERG" class="group bg-white hover:bg-gray-50 border-2 border-green-300 hover:border-green-400 rounded-xl p-4 transition-all duration-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-lg font-semibold text-gray-800">📥 ERG File</span>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-500">Compatible with most platforms</span>
                         </button>
-                        <button id="deployWorkout" class="export-btn primary">
-                            🚀 Deploy to Zwift
-                            <span class="format-info">Save directly to Zwift workouts folder</span>
+                        <button id="exportMRC" class="group bg-white hover:bg-gray-50 border-2 border-orange-300 hover:border-orange-400 rounded-xl p-4 transition-all duration-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-lg font-semibold text-gray-800">📥 MRC File</span>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-500">TrainerRoad format</span>
                         </button>
+                    </div>
+                    
+                    <!-- Platform Compatibility -->
+                    <div class="bg-white p-4 rounded-lg border border-purple-200">
+                        <h4 class="font-semibold text-gray-800 mb-3">Platform Compatibility:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                                <span><strong>MyWhoosh:</strong> ERG/MRC files</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <span><strong>Rouvy:</strong> ERG/MRC/ZWO files</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                                <span><strong>TrainerRoad:</strong> ERG/MRC files</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                                <span><strong>Others:</strong> Most support ERG</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="conversion-section">
-                <h3>🔄 Convert for Other Platforms</h3>
-                <p>Convert this workout to formats compatible with MyWhoosh, Rouvy, and other training platforms.</p>
-                
-                <div class="ftp-input-section">
-                    <label for="ftpInput">Your FTP (watts):</label>
-                    <input type="number" id="ftpInput" value="250" min="100" max="500" />
-                    <span class="ftp-help">Used for ERG file conversion (absolute watts)</span>
+        </div>
+
+        <!-- Segment Details Panel -->
+        <div id="segmentDetails" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-hidden mb-8" style="display: none;">
+            <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-white">Workout Segments</h3>
                 </div>
-                
-                <div class="export-buttons">
-                    <button id="exportERG" class="export-btn">
-                        📥 Download ERG File
-                        <span class="format-info">Compatible with most platforms</span>
-                    </button>
-                    <button id="exportMRC" class="export-btn">
-                        📥 Download MRC File
-                        <span class="format-info">TrainerRoad format</span>
-                    </button>
-                </div>
-                
-                <div class="platform-compatibility">
-                    <h4>Platform Compatibility:</h4>
-                    <ul>
-                        <li><strong>MyWhoosh:</strong> Import ERG or MRC files via workout builder</li>
-                        <li><strong>Rouvy:</strong> Import ERG, MRC, or ZWO files directly</li>
-                        <li><strong>TrainerRoad:</strong> Import ERG or MRC files via Workout Creator</li>
-                        <li><strong>Other platforms:</strong> Most support ERG format</li>
-                    </ul>
-                </div>
+                <button id="toggleSegments" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200" title="Collapse">−</button>
+            </div>
+            <div class="p-6">
+                <div id="segmentList" class="space-y-3"></div>
             </div>
         </div>
 
-        <div id="segmentDetails" class="segment-details" style="display: none;">
-            <div class="segment-header">
-                <h3>Workout Segments</h3>
-                <button id="toggleSegments" class="panel-toggle" title="Collapse">−</button>
+        <!-- Instructions Panel -->
+        <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
+            <div class="flex items-center mb-6">
+                <svg class="w-6 h-6 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-2xl font-bold text-gray-800">How to Use</h3>
             </div>
-            <div id="segmentList"></div>
-        </div>
-
-        <div class="instructions">
-            <h3>How to use:</h3>
-            <ol>
-                <li>Click "Choose Zwift Workout File" to upload your .zwo file</li>
-                <li>Or click "Load Sample Workout" to see a demo</li>
-                <li>View the power profile graph and segment details</li>
-                <li>Hover over the chart to see detailed information</li>
-            </ol>
-            <p><strong>Note:</strong> Power values are shown as percentage of FTP (Functional Threshold Power). TSS (Training Stress Score) quantifies the training load of the workout.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <ol class="space-y-4 text-gray-600">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 mt-0.5">1</span>
+                            <span>Upload your Zwift workout file (.zwo) or try the sample workout</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 mt-0.5">2</span>
+                            <span>View the interactive power profile graph with power zone visualization</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 mt-0.5">3</span>
+                            <span>Hover over the chart to see detailed segment information</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white text-sm font-bold rounded-full flex items-center justify-center mr-3 mt-0.5">4</span>
+                            <span>Edit, scale, and export your workouts to different formats</span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+                    <h4 class="font-semibold text-gray-800 mb-3">📊 Understanding the Data</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div><strong>Power Values:</strong> Shown as percentage of FTP (Functional Threshold Power)</div>
+                        <div><strong>TSS:</strong> Training Stress Score quantifies workout intensity</div>
+                        <div><strong>Zones:</strong> Color-coded power zones from recovery to neuromuscular</div>
+                        <div><strong>Segments:</strong> Individual workout intervals with specific power targets</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     
 
     <script type="module" src="script.js"></script>
-    <div id="toastNotification" class="toast-notification"></div>
+    
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900/95 text-white px-4 py-3 rounded-lg shadow-2xl backdrop-blur-sm transition-all duration-300 opacity-0 pointer-events-none z-50">
+        <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="font-medium"></span>
+        </div>
+    </div>
 </body>
 </html>
