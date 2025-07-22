@@ -2,7 +2,7 @@
 import { parseWorkoutXML } from './parser.js';
 import { calculateTSS, formatDuration } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
-import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage } from './api.js';
+import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage, getZwiftWorkoutDirectory, saveAsWorkout, selectFolder } from './api.js';
 import { WorkoutGenerator } from './workout-generator.js';
 
 export class UI {
@@ -57,6 +57,10 @@ export class UI {
 
         document.getElementById('deployWorkout').addEventListener('click', () => {
             this.visualizer.deployWorkout();
+        });
+
+        document.getElementById('saveAsWorkout').addEventListener('click', () => {
+            this.showSaveAsDialog();
         });
     }
 
@@ -577,6 +581,228 @@ export class UI {
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages.lastChild) {
             chatMessages.removeChild(chatMessages.lastChild);
+        }
+    }
+
+    async showSaveAsDialog() {
+        if (!this.visualizer.workout) {
+            this.showToast('Please load a workout first');
+            return;
+        }
+
+        try {
+            // Get the default Zwift directory
+            const zwiftDirectory = await getZwiftWorkoutDirectory();
+            
+            // Create and show the save dialog
+            const dialog = this.createSaveAsDialog(zwiftDirectory);
+            document.body.appendChild(dialog);
+        } catch (error) {
+            console.error('Error showing save dialog:', error);
+            this.showToast('Error opening save dialog');
+        }
+    }
+
+    createSaveAsDialog(defaultDirectory) {
+        const dialog = document.createElement('div');
+        dialog.id = 'saveAsDialog';
+        dialog.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        
+        const workoutName = this.visualizer.workout.workoutData.name || 'Custom Workout';
+        const sanitizedName = workoutName.replace(/[^a-z0-9\s-]/gi, '').replace(/\s+/g, '_');
+        
+        dialog.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <div class="flex items-center mb-4">
+                    <svg class="w-6 h-6 text-emerald-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <h3 class="text-xl font-semibold text-gray-800">Save Workout As</h3>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="saveAsFilename" class="block text-sm font-medium text-gray-700 mb-2">
+                            Filename:
+                        </label>
+                        <input 
+                            type="text" 
+                            id="saveAsFilename" 
+                            value="${sanitizedName}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            placeholder="Enter filename (without .zwo)"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">.zwo extension will be added automatically</p>
+                    </div>
+                    
+                    <div>
+                        <label for="saveAsDirectory" class="block text-sm font-medium text-gray-700 mb-2">
+                            Save Location:
+                        </label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                id="saveAsDirectory" 
+                                value="${defaultDirectory || ''}"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Choose directory path"
+                            />
+                            <button 
+                                type="button"
+                                id="browseFolder" 
+                                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg text-gray-700 font-medium transition-all duration-200 flex items-center"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                                </svg>
+                                Browse...
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Click "Browse..." to select a folder or use the default Zwift workout directory</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-xs text-blue-800">File will be saved as: <strong id="previewFilename">${sanitizedName}.zwo</strong></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button 
+                        id="saveAsCancel" 
+                        class="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded-lg transition-all duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        id="saveAsConfirm" 
+                        class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all duration-200"
+                    >
+                        Save Workout
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners
+        const filenameInput = dialog.querySelector('#saveAsFilename');
+        const previewFilename = dialog.querySelector('#previewFilename');
+        
+        filenameInput.addEventListener('input', (e) => {
+            const sanitized = e.target.value.replace(/[^a-z0-9\s-]/gi, '').replace(/\s+/g, '_');
+            previewFilename.textContent = `${sanitized}.zwo`;
+        });
+
+        dialog.querySelector('#saveAsCancel').addEventListener('click', () => {
+            document.body.removeChild(dialog);
+        });
+
+        dialog.querySelector('#saveAsConfirm').addEventListener('click', () => {
+            this.handleSaveAsConfirm(dialog);
+        });
+
+        dialog.querySelector('#browseFolder').addEventListener('click', () => {
+            this.handleBrowseFolder(dialog);
+        });
+
+        // Close on background click
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                document.body.removeChild(dialog);
+            }
+        });
+
+        return dialog;
+    }
+
+    async handleBrowseFolder(dialog) {
+        try {
+            const browseBtn = dialog.querySelector('#browseFolder');
+            const directoryInput = dialog.querySelector('#saveAsDirectory');
+            
+            // Show loading state
+            const originalText = browseBtn.innerHTML;
+            browseBtn.innerHTML = `
+                <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Loading...
+            `;
+            browseBtn.disabled = true;
+
+            // Request folder selection from backend
+            const selectedFolder = await selectFolder();
+            
+            // Restore button state
+            browseBtn.innerHTML = originalText;
+            browseBtn.disabled = false;
+            
+            if (selectedFolder) {
+                directoryInput.value = selectedFolder;
+                this.showToast('Folder selected successfully');
+            }
+        } catch (error) {
+            console.error('Error browsing folders:', error);
+            this.showToast('Error opening folder dialog');
+            
+            // Restore button state
+            const browseBtn = dialog.querySelector('#browseFolder');
+            if (browseBtn) {
+                browseBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                    </svg>
+                    Browse...
+                `;
+                browseBtn.disabled = false;
+            }
+        }
+    }
+
+    async handleSaveAsConfirm(dialog) {
+        const filename = dialog.querySelector('#saveAsFilename').value.trim();
+        const directory = dialog.querySelector('#saveAsDirectory').value.trim();
+
+        if (!filename) {
+            this.showToast('Please enter a filename');
+            return;
+        }
+
+        // Sanitize filename
+        const sanitizedFilename = filename.replace(/[^a-z0-9\s-]/gi, '').replace(/\s+/g, '_');
+        const fullFilename = sanitizedFilename.endsWith('.zwo') ? sanitizedFilename : `${sanitizedFilename}.zwo`;
+
+        try {
+            // Show loading state
+            const confirmBtn = dialog.querySelector('#saveAsConfirm');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.textContent = 'Saving...';
+            confirmBtn.disabled = true;
+
+            // Generate ZWO content
+            const zwoContent = generateZWOContent(this.visualizer.workout.workoutData);
+            
+            // Save the file
+            const savedPath = await saveAsWorkout(fullFilename, zwoContent, directory);
+            
+            // Close dialog and show success message
+            document.body.removeChild(dialog);
+            this.showToast(`Workout saved successfully to: ${savedPath}`);
+            
+        } catch (error) {
+            console.error('Error saving workout:', error);
+            this.showToast(`Error saving workout: ${error.message}`);
+            
+            // Restore button state
+            const confirmBtn = dialog.querySelector('#saveAsConfirm');
+            if (confirmBtn) {
+                confirmBtn.textContent = 'Save Workout';
+                confirmBtn.disabled = false;
+            }
         }
     }
 }
