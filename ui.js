@@ -158,28 +158,57 @@ export class UI {
         };
 
         const allSegments = this.visualizer.workout.getAllSegments();
-
         allSegments.sort((a, b) => a.startTime - b.startTime);
 
-        const typeDataMap = {};
+        // Create a single continuous dataset for the entire workout
+        const continuousWorkoutData = [];
+        
         allSegments.forEach(segment => {
-            const type = segment.type;
-            if (!typeDataMap[type]) typeDataMap[type] = [];
-            segment.powerData.forEach(point => typeDataMap[type].push(point));
+            segment.powerData.forEach((point, index) => {
+                continuousWorkoutData.push({
+                    x: point.x,
+                    y: point.y,
+                    segmentType: segment.type,
+                    segmentIndex: allSegments.indexOf(segment)
+                });
+            });
         });
+        
+        // Sort by time to ensure continuity
+        continuousWorkoutData.sort((a, b) => a.x - b.x);
 
-        const datasets = Object.keys(typeDataMap).map((type, idx) => ({
-            label: type,
-            data: typeDataMap[type],
-            borderColor: colors[type] || '#999',
-            backgroundColor: (colors[type] ? colors[type] + '60' : '#99960'),
-            borderWidth: 1,
-            fill: true,
+        // Create the main workout profile dataset
+        const datasets = [{
+            label: 'Workout Profile',
+            data: continuousWorkoutData,
+            borderColor: '#2563eb', // Primary blue color
+            backgroundColor: 'rgba(37, 99, 235, 0.1)', // Light blue fill
+            borderWidth: 2,
+            fill: 'origin', // Fill to zero baseline
             tension: 0.1,
             pointRadius: 0,
             pointHoverRadius: 4,
-            order: idx
-        }));
+            pointBackgroundColor: (context) => {
+                // Color points based on segment type
+                const point = context.parsed || context.dataPoint;
+                if (point && continuousWorkoutData[context.dataIndex]) {
+                    const segmentType = continuousWorkoutData[context.dataIndex].segmentType;
+                    return colors[segmentType] || '#999';
+                }
+                return '#2563eb';
+            },
+            segment: {
+                borderColor: (context) => {
+                    // Color line segments based on workout segment type
+                    const point = context.p1DataIndex;
+                    if (point !== undefined && continuousWorkoutData[point]) {
+                        const segmentType = continuousWorkoutData[point].segmentType;
+                        return colors[segmentType] || '#2563eb';
+                    }
+                    return '#2563eb';
+                }
+            }
+        }];
 
         if (selectedSegmentIndex !== null && allSegments[selectedSegmentIndex]) {
             const seg = allSegments[selectedSegmentIndex];
@@ -224,7 +253,20 @@ export class UI {
                     },
                     legend: {
                         display: true,
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            generateLabels: (chart) => {
+                                // Create custom legend showing segment types
+                                const segmentTypes = [...new Set(continuousWorkoutData.map(point => point.segmentType))];
+                                return segmentTypes.map(type => ({
+                                    text: type,
+                                    fillStyle: colors[type] || '#999',
+                                    strokeStyle: colors[type] || '#999',
+                                    lineWidth: 2,
+                                    hidden: false
+                                }));
+                            }
+                        }
                     },
                     tooltip: {
                         enabled: true,
@@ -236,7 +278,9 @@ export class UI {
                             label: (context) => {
                                 const percent = context.parsed.y;
                                 const actual = Math.round((percent / 100) * ftp);
-                                return `${context.dataset.label}: ${percent.toFixed(1)}% FTP (${actual} W)`;
+                                const dataIndex = context.dataIndex;
+                                const segmentType = continuousWorkoutData[dataIndex]?.segmentType || 'Unknown';
+                                return `${segmentType}: ${percent.toFixed(1)}% FTP (${actual} W)`;
                             }
                         },
                         external: (context) => {
@@ -261,17 +305,12 @@ export class UI {
                     const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false }, true);
                     if (points && points.length > 0) {
                         const point = points[0];
-                        const clickedX = point.element.parsed.x;
-                        let foundIndex = null;
-                        for (let i = 0; i < allSegments.length; i++) {
-                            const seg = allSegments[i];
-                            if (clickedX >= seg.startTime && clickedX <= seg.startTime + seg.duration) {
-                                foundIndex = i;
-                                break;
-                            }
-                        }
-                        if (foundIndex !== null) {
-                            onSegmentClick(foundIndex);
+                        const dataIndex = point.index;
+                        
+                        // Get segment index from the clicked data point
+                        if (dataIndex !== undefined && continuousWorkoutData[dataIndex]) {
+                            const segmentIndex = continuousWorkoutData[dataIndex].segmentIndex;
+                            onSegmentClick(segmentIndex);
                         }
                     } else {
                         onSegmentClick(null);
@@ -299,7 +338,11 @@ export class UI {
                             text: 'Power (% FTP)'
                         },
                         min: 0,
-                        max: Math.max(120, Math.max(...datasets.flatMap(d => d.data.map(p => p.y))) + 10)
+                        max: Math.max(120, Math.max(...continuousWorkoutData.map(p => p.y)) + 10),
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            lineWidth: 1
+                        }
                     }
                 }
             }
