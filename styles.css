@@ -155,7 +155,73 @@
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Chat Interface Styles */
+.chat-message {
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.chat-message.user {
+    align-self: flex-end;
+    background: #4f46e5;
+    color: white;
+    border-radius: 1rem 1rem 0.25rem 1rem;
+    padding: 0.75rem;
+    margin-left: auto;
+}
+
+.chat-message.llm {
+    align-self: flex-start;
+    background: #e0f2fe;
+    color: #0f172a;
+    border-radius: 1rem 1rem 1rem 0.25rem;
+    padding: 0.75rem;
+    border: 1px solid #bae6fd;
+}
+
+.chat-message.llm.thinking {
+    background: #f1f5f9;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Chat panel minimized state */
+#chatPanel.minimized {
+    transform: translateX(calc(100% - 3rem));
+}
+
+#chatPanel.minimized #toggleChatPanel {
+    transform: rotate(180deg);
+}
+
+/* Main content adjustment when chat is open/closed */
+.container.chat-open {
+    margin-right: 20rem;
+    transition: margin-right 0.3s ease;
+}
+
+.container.chat-closed {
+    margin-right: 3rem;
+    transition: margin-right 0.3s ease;
+}
+
 /* Dark mode support (optional) */
 @media (prefers-color-scheme: dark) {
     /* Preserve light theme for consistency with Tailwind classes */
+}
+
+/* Responsive chat panel */
+@media (max-width: 1024px) {
+    #chatPanel {
+        width: 100vw;
+        z-index: 50;
+    }
+    
+    #chatPanel.minimized {
+        transform: translateX(100%);
+    }
+    
+    .container {
+        margin-right: 0 !important;
+    }
 }

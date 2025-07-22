@@ -181,6 +181,17 @@ class ZwiftWorkoutVisualizer {
             this.ui.showToast('Undo successful');
         }
     }
+
+    createWorkoutFromData(workoutData) {
+        try {
+            this.workout = new Workout(workoutData);
+            this.ui.updateUndoButton(this.workout.undoStack.length);
+            this.displayWorkout();
+        } catch (error) {
+            console.error('Error creating workout from data:', error);
+            this.ui.showToast('Error creating workout from generated data');
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

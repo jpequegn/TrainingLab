@@ -3,11 +3,13 @@ import { parseWorkoutXML } from './parser.js';
 import { calculateTSS, formatDuration } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
 import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage } from './api.js';
+import { WorkoutGenerator } from './workout-generator.js';
 
 export class UI {
     constructor(visualizer) {
         this.visualizer = visualizer;
         this.chart = null;
+        this.workoutGenerator = new WorkoutGenerator();
         this.initializeEventListeners();
         this.setupUndoButton();
         this.renderDirectoryTree();
@@ -491,12 +493,21 @@ export class UI {
 
         const chatPanel = document.getElementById('chatPanel');
         const chatToggle = document.getElementById('toggleChatPanel');
-        if (chatToggle) {
+        const container = document.querySelector('.container');
+        
+        if (chatToggle && chatPanel && container) {
             chatToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 chatPanel.classList.toggle('minimized');
                 chatToggle.textContent = chatPanel.classList.contains('minimized') ? '<' : '>';
                 chatToggle.title = chatPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
+                
+                // Adjust main content margin
+                if (chatPanel.classList.contains('minimized')) {
+                    container.style.paddingRight = '3rem';
+                } else {
+                    container.style.paddingRight = '20rem';
+                }
             });
         }
     }
@@ -522,17 +533,33 @@ export class UI {
                 const input = document.getElementById('chatInput');
                 const message = input.value.trim();
                 if (!message) return;
+                
                 this.appendChatMessage(message, 'user');
                 input.value = '';
-                this.appendChatMessage('Thinking...', 'llm');
-                try {
-                    const reply = await sendChatMessage(message);
-                    this.removeLastChatMessage();
-                    this.appendChatMessage(reply, 'llm');
-                } catch (_err) {
-                    this.removeLastChatMessage();
-                    this.appendChatMessage('Error: Could not reach LLM backend.', 'llm');
-                }
+                
+                // Show thinking message
+                const thinkingMsg = this.appendChatMessage('🤔 Creating your workout...', 'llm thinking');
+                
+                // Generate workout locally
+                setTimeout(() => {
+                    try {
+                        const workoutData = this.workoutGenerator.generateWorkout(message);
+                        this.removeLastChatMessage(); // Remove thinking message
+                        
+                        // Create workout from generated data
+                        this.visualizer.createWorkoutFromData(workoutData);
+                        
+                        // Show success message
+                        const duration = Math.round(workoutData.totalDuration / 60);
+                        const successMsg = `✅ Created "${workoutData.name}" - ${duration} minutes, TSS: ${workoutData.tss}`;
+                        this.appendChatMessage(successMsg, 'llm');
+                        
+                    } catch (error) {
+                        this.removeLastChatMessage();
+                        console.error('Error generating workout:', error);
+                        this.appendChatMessage('❌ Sorry, I had trouble understanding your request. Try describing your workout like: "Create a 45-minute endurance ride" or "4x5 minute threshold intervals".', 'llm');
+                    }
+                }, 500); // Small delay to show thinking state
             });
         }
     }
