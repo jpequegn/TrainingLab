@@ -4,7 +4,17 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(git commit:*)",
+      "Bash(python:*)",
+      "Bash(taskkill:*)",
+      "Bash(start http://localhost:53218)",
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

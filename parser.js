@@ -126,11 +126,11 @@ function parseIntervals(segment, startTime) {
                 duration: offDuration,
                 totalDuration: offDuration,
                 power: powerOff,
-            powerData: generateSteadyData({
-                startTime: currentTime,
-                duration: offDuration,
-                power: powerOff
-            })
+                powerData: generateSteadyData({
+                    startTime: currentTime,
+                    duration: offDuration,
+                    power: powerOff
+                })
             });
             currentTime += offDuration;
         }
