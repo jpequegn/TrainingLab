@@ -41,21 +41,46 @@ export class WorkoutGenerator {
     }
 
     extractDuration(description) {
-        // Match patterns like "45 minutes", "1 hour", "90 min", etc.
+        // First check for interval patterns and handle specially
+        if (/\d+\s*x\s*\d+/i.test(description)) {
+            // Look for explicit total duration OUTSIDE of the interval pattern  
+            // Match things like "60 minute workout with 4x5 intervals"
+            let nonIntervalText = description.replace(/\d+\s*x\s*\d+\s*(?:min|minutes?|sec|seconds?)/gi, '');
+            // Also remove common false matches like "VO2max" "vo2max"
+            nonIntervalText = nonIntervalText.replace(/vo2max?/gi, '');
+            const totalDurationMatch = nonIntervalText.match(/(\d+)\s*(?:hour|hr|h|minute|min|m)(?:s?)\b/i);
+            if (totalDurationMatch) {
+                const duration = parseInt(totalDurationMatch[1]);
+                if (totalDurationMatch[0].match(/hour|hr|h/i)) {
+                    return duration * 60;
+                }
+                return duration;
+            }
+            
+            // For intervals without explicit total, use intelligent defaults based on type
+            const workoutType = this.extractWorkoutType(description);
+            if (workoutType === 'sprint') return 45; // Short sprint sessions
+            if (workoutType === 'vo2max') return 60; // Standard VO2max sessions  
+            if (workoutType === 'threshold') return 75; // Longer threshold sessions
+            return 60; // Default for intervals
+        }
+        
+        // Match patterns like "45 minutes", "1 hour", "90 min", "45-minute", etc.
         const patterns = [
-            /(\d+)\s*(?:hours?|hrs?)/i,
-            /(\d+)\s*(?:minutes?|mins?)/i,
-            /(\d+)\s*(?:h)\s*(\d+)?\s*(?:m)?/i
+            /(\d+)\s*(?:hours?|hrs?|h)\b/i,                    // "2 hours", "1 hr", "1h"
+            /(\d+)\s*(?:minutes?|mins?|m)\b/i,                 // "45 minutes", "30 min", "45m"
+            /(\d+)[-\s](?:minute|min)\b/i,                     // "45-minute", "30-min"
+            /(\d+)\s*(?:h)\s*(\d+)\s*(?:m|minutes?)?/i        // "1h 30m", "1h 30 minutes"
         ];
         
-        for (const pattern of patterns) {
-            const match = description.match(pattern);
+        for (let i = 0; i < patterns.length; i++) {
+            const match = description.match(patterns[i]);
             if (match) {
-                if (pattern === patterns[0]) { // hours
+                if (i === 0) { // hours
                     return parseInt(match[1]) * 60;
-                } else if (pattern === patterns[1]) { // minutes
+                } else if (i === 1 || i === 2) { // minutes
                     return parseInt(match[1]);
-                } else if (pattern === patterns[2]) { // h m format
+                } else if (i === 3) { // h m format
                     const hours = parseInt(match[1]);
                     const minutes = parseInt(match[2]) || 0;
                     return hours * 60 + minutes;
@@ -64,21 +89,58 @@ export class WorkoutGenerator {
         }
         
         // Default duration based on workout type
+        const workoutType = this.extractWorkoutType(description);
+        if (workoutType === 'sprint') return 45;
+        if (workoutType === 'recovery') return 45;
         return 60; // 1 hour default
     }
 
     extractWorkoutType(description) {
-        const types = ['endurance', 'interval', 'recovery', 'tempo', 'threshold', 'vo2max', 'sprint'];
+        const lower = description.toLowerCase();
         
-        for (const type of types) {
-            if (description.toLowerCase().includes(type)) {
-                return type;
+        // Direct type matches - order matters for precedence
+        const typeKeywords = {
+            'sprint': ['sprint', 'neuromuscular', 'anaerobic power'],
+            'vo2max': ['vo2max', 'vo2', 'v02', 'aerobic power', 'max aerobic'],
+            'threshold': ['threshold', 'lactate threshold', 'sweet spot', 'sweetspot'],
+            'tempo': ['tempo', 'sub-threshold', 'subthreshold'],
+            'recovery': ['recovery', 'easy', 'active recovery', 'rest'],
+            'endurance': ['endurance', 'aerobic', 'base', 'steady', 'zone 2', 'ride'],
+            'interval': ['interval', 'intervals', 'session', 'training', 'sets', 'reps']
+        };
+        
+        // Check for specific type keywords
+        for (const [type, keywords] of Object.entries(typeKeywords)) {
+            for (const keyword of keywords) {
+                if (lower.includes(keyword)) {
+                    return type;
+                }
             }
         }
         
-        // Check for interval patterns
+        // Check for interval patterns (like "4x5", "8x30")
         if (/\d+\s*x\s*\d+/i.test(description)) {
             return 'interval';
+        }
+        
+        // Check for power/intensity indicators (only if no other type found)
+        if (lower.includes('power') || lower.includes('watts')) {
+            if (lower.includes('high') || lower.includes('hard') || lower.includes('max')) {
+                return 'vo2max';
+            }
+            return 'threshold';
+        }
+        
+        // FTP percentage indicators (only specific high intensities)
+        if (lower.includes('ftp') || /%\s*ftp/.test(lower)) {
+            const percentMatch = lower.match(/(\d+)%/);
+            if (percentMatch) {
+                const percent = parseInt(percentMatch[1]);
+                if (percent >= 106) return 'vo2max';
+                if (percent >= 91) return 'threshold'; 
+                if (percent >= 76) return 'tempo';
+                // For lower percentages, let other keywords determine type
+            }
         }
         
         return 'endurance'; // default
@@ -97,20 +159,49 @@ export class WorkoutGenerator {
     }
 
     extractIntervals(description) {
-        // Match patterns like "4x5min", "8 x 30 seconds", etc.
-        const intervalPattern = /(\d+)\s*x\s*(\d+)\s*(?:min|minutes?|sec|seconds?)/i;
-        const match = description.match(intervalPattern);
+        // Match various interval patterns
+        const patterns = [
+            /(\d+)\s*x\s*(\d+)\s*(?:min|minutes?)/i,           // "4x5 min", "8 x 3 minutes"
+            /(\d+)\s*x\s*(\d+)\s*(?:sec|seconds?)/i,           // "8x30 sec", "10 x 15 seconds"
+            /(\d+)\s*x\s*(\d+)(?:\s*(?:min|minutes?))?/i,      // "4x5", "8x30" (assume context)
+            /(\d+)\s+sets?\s+of\s+(\d+)\s*(?:min|minutes?)/i,  // "4 sets of 5 minutes"
+            /(\d+)\s+reps?\s+of\s+(\d+)\s*(?:sec|seconds?)/i   // "8 reps of 30 seconds"
+        ];
         
-        if (match) {
-            const sets = parseInt(match[1]);
-            const duration = parseInt(match[2]);
-            const unit = description.match(/(?:min|minutes?)/i) ? 'minutes' : 'seconds';
-            
-            return {
-                sets: sets,
-                duration: unit === 'minutes' ? duration * 60 : duration,
-                unit: unit
-            };
+        for (const pattern of patterns) {
+            const match = description.match(pattern);
+            if (match) {
+                const sets = parseInt(match[1]);
+                const duration = parseInt(match[2]);
+                
+                // Determine unit based on pattern and context
+                let unit;
+                let durationInSeconds;
+                
+                if (pattern.source.includes('sec')) {
+                    unit = 'seconds';
+                    durationInSeconds = duration;
+                } else if (pattern.source.includes('min')) {
+                    unit = 'minutes';
+                    durationInSeconds = duration * 60;
+                } else {
+                    // Context-based unit detection for patterns like "4x5"
+                    const workoutType = this.extractWorkoutType(description);
+                    if (workoutType === 'sprint' || duration <= 60) {
+                        unit = 'seconds';
+                        durationInSeconds = duration;
+                    } else {
+                        unit = 'minutes';
+                        durationInSeconds = duration * 60;
+                    }
+                }
+                
+                return {
+                    sets: sets,
+                    duration: durationInSeconds,
+                    unit: unit
+                };
+            }
         }
         
         return null;
