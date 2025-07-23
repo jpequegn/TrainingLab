@@ -185,6 +185,22 @@
     font-style: italic;
 }
 
+.chat-message.llm.debug {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+.debug-modal {
+    z-index: 1000;
+}
+
+.debug-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
 /* Chat panel minimized state */
 #chatPanel.minimized {
     transform: translateX(calc(100% - 3rem));

@@ -574,6 +574,19 @@ export class UI {
 
     setupChatInterface() {
         const chatForm = document.getElementById('chatForm');
+        const llmToggle = document.getElementById('llmModeToggle');
+        
+        // Handle LLM mode toggle persistence
+        if (llmToggle) {
+            // Load saved preference
+            llmToggle.checked = localStorage.getItem('useLLM') === 'true';
+            
+            // Save preference on change
+            llmToggle.addEventListener('change', () => {
+                localStorage.setItem('useLLM', llmToggle.checked);
+            });
+        }
+        
         if (chatForm) {
             chatForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -587,27 +600,125 @@ export class UI {
                 // Show thinking message
                 const thinkingMsg = this.appendChatMessage('🤔 Creating your workout...', 'llm thinking');
                 
-                // Generate workout locally
-                setTimeout(() => {
-                    try {
-                        const workoutData = this.workoutGenerator.generateWorkout(message);
-                        this.removeLastChatMessage(); // Remove thinking message
+                // Check if LLM mode is enabled
+                const llmToggle = document.getElementById('llmModeToggle');
+                const useLLM = llmToggle && llmToggle.checked;
+                
+                if (useLLM) {
+                    // Use LLM generation
+                    this.generateWorkoutWithLLM(message);
+                } else {
+                    // Generate workout locally
+                    setTimeout(() => {
+                        try {
+                            const workoutData = this.workoutGenerator.generateWorkout(message);
+                            this.removeLastChatMessage(); // Remove thinking message
                         
-                        // Create workout from generated data
-                        this.visualizer.createWorkoutFromData(workoutData);
+                            // Debug: Log workout structure
+                            console.log('Generated workout data:', workoutData);
                         
-                        // Show success message
-                        const duration = Math.round(workoutData.totalDuration / 60);
-                        const successMsg = `✅ Created "${workoutData.name}" - ${duration} minutes, TSS: ${workoutData.tss}`;
-                        this.appendChatMessage(successMsg, 'llm');
+                            // Generate XML for debugging
+                            const xmlContent = generateZWOContent(workoutData);
+                            console.log('Generated XML:', xmlContent);
                         
-                    } catch (error) {
-                        this.removeLastChatMessage();
-                        console.error('Error generating workout:', error);
-                        this.appendChatMessage('❌ Sorry, I had trouble understanding your request. Try describing your workout like: "Create a 45-minute endurance ride" or "4x5 minute threshold intervals".', 'llm');
-                    }
-                }, 500); // Small delay to show thinking state
+                            // Create workout from generated data
+                            this.visualizer.createWorkoutFromData(workoutData);
+                        
+                            // Show success message with debug option
+                            const duration = Math.round(workoutData.totalDuration / 60);
+                            const successMsg = `✅ Created "${workoutData.name}" - ${duration} minutes, TSS: ${workoutData.tss}`;
+                            this.appendChatMessage(successMsg, 'llm');
+                        
+                            // Add debug button
+                            this.addDebugXMLButton(xmlContent, workoutData);
+                        
+                        } catch (error) {
+                            this.removeLastChatMessage();
+                            console.error('Error generating workout:', error);
+                            this.appendChatMessage('❌ Sorry, I had trouble understanding your request. Try describing your workout like: "Create a 45-minute endurance ride" or "4x5 minute threshold intervals".', 'llm');
+                        }
+                    }, 500); // Small delay to show thinking state
+                }
             });
+        }
+    }
+
+    async generateWorkoutWithLLM(message) {
+        try {
+            // Load instructions and create enhanced prompt
+            const response = await fetch('WORKOUT_CREATION_INSTRUCTIONS.md');
+            const instructions = await response.text();
+            
+            const enhancedPrompt = `${instructions}
+            
+Please create a workout based on this request: "${message}"
+
+IMPORTANT: Return ONLY a valid JSON object that follows the exact structure shown in the instructions. Do not include any other text, explanations, or markdown formatting. The response should start with { and end with }.
+
+The JSON should have this exact structure:
+{
+    "name": "workout name",
+    "description": "description", 
+    "author": "Workout Creator",
+    "sportType": "bike",
+    "totalDuration": duration_in_seconds,
+    "segments": [array of segment objects],
+    "tss": calculated_tss_value
+}`;
+
+            const llmResponse = await sendChatMessage(enhancedPrompt);
+            this.removeLastChatMessage(); // Remove thinking message
+            
+            // Try to parse the LLM response as JSON
+            let workoutData;
+            try {
+                // Extract JSON from response (in case LLM adds extra text)
+                const jsonMatch = llmResponse.match(/\{[\s\S]*\}/);
+                const jsonStr = jsonMatch ? jsonMatch[0] : llmResponse;
+                workoutData = JSON.parse(jsonStr);
+            } catch (parseError) {
+                console.error('LLM returned invalid JSON:', llmResponse);
+                throw new Error('LLM returned invalid JSON format');
+            }
+            
+            // Debug: Log workout structure
+            console.log('LLM Generated workout data:', workoutData);
+            
+            // Generate XML for debugging
+            const xmlContent = generateZWOContent(workoutData);
+            console.log('LLM Generated XML:', xmlContent);
+            
+            // Create workout from generated data
+            this.visualizer.createWorkoutFromData(workoutData);
+            
+            // Show success message with debug option
+            const duration = Math.round(workoutData.totalDuration / 60);
+            const successMsg = `✅ Created "${workoutData.name}" (LLM) - ${duration} minutes, TSS: ${workoutData.tss}`;
+            this.appendChatMessage(successMsg, 'llm');
+            
+            // Add debug button
+            this.addDebugXMLButton(xmlContent, workoutData);
+            
+        } catch (error) {
+            this.removeLastChatMessage();
+            console.error('Error with LLM generation:', error);
+            this.appendChatMessage('❌ LLM generation failed. Falling back to local generation...', 'llm');
+            
+            // Fallback to local generation
+            setTimeout(() => {
+                try {
+                    const workoutData = this.workoutGenerator.generateWorkout(message);
+                    this.visualizer.createWorkoutFromData(workoutData);
+                    const duration = Math.round(workoutData.totalDuration / 60);
+                    const successMsg = `✅ Created "${workoutData.name}" (Local) - ${duration} minutes, TSS: ${workoutData.tss}`;
+                    this.appendChatMessage(successMsg, 'llm');
+                    const xmlContent = generateZWOContent(workoutData);
+                    this.addDebugXMLButton(xmlContent, workoutData);
+                } catch (fallbackError) {
+                    console.error('Fallback generation also failed:', fallbackError);
+                    this.appendChatMessage('❌ Both LLM and local generation failed. Please try a simpler request.', 'llm');
+                }
+            }, 500);
         }
     }
 
@@ -625,6 +736,132 @@ export class UI {
         if (chatMessages.lastChild) {
             chatMessages.removeChild(chatMessages.lastChild);
         }
+    }
+
+    addDebugXMLButton(xmlContent, workoutData) {
+        const chatMessages = document.getElementById('chatMessages');
+        const debugDiv = document.createElement('div');
+        debugDiv.className = 'chat-message llm debug';
+        debugDiv.innerHTML = `
+            <button id="showXmlBtn" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 mr-2">
+                🔍 Show XML Debug
+            </button>
+            <button id="showStructureBtn" class="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600">
+                📋 Show Workout Structure
+            </button>
+        `;
+        chatMessages.appendChild(debugDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Add event listeners
+        document.getElementById('showXmlBtn').addEventListener('click', () => {
+            this.showXMLModal(xmlContent);
+        });
+        
+        document.getElementById('showStructureBtn').addEventListener('click', () => {
+            this.showStructureModal(workoutData);
+        });
+    }
+
+    showXMLModal(xmlContent) {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-4xl max-h-96 overflow-auto m-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Generated XML Debug</h3>
+                    <button id="closeXmlModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                </div>
+                <div class="bg-gray-100 p-4 rounded text-xs font-mono overflow-auto max-h-64">
+                    <pre>${this.escapeHtml(xmlContent)}</pre>
+                </div>
+                <div class="mt-4 text-right">
+                    <button id="copyXmlBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">
+                        Copy XML
+                    </button>
+                    <button id="downloadXmlBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Download XML
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+
+        // Add event listeners
+        document.getElementById('closeXmlModal').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+        
+        document.getElementById('copyXmlBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(xmlContent);
+            this.showToast('XML copied to clipboard');
+        });
+        
+        document.getElementById('downloadXmlBtn').addEventListener('click', () => {
+            downloadFile(xmlContent, 'debug_workout.zwo', 'application/xml');
+            this.showToast('XML downloaded');
+        });
+
+        // Close on outside click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    showStructureModal(workoutData) {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-4xl max-h-96 overflow-auto m-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Workout Structure Debug</h3>
+                    <button id="closeStructureModal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                </div>
+                <div class="bg-gray-100 p-4 rounded text-xs font-mono overflow-auto max-h-64">
+                    <pre>${this.escapeHtml(JSON.stringify(workoutData, null, 2))}</pre>
+                </div>
+                <div class="mt-4 text-right">
+                    <button id="copyStructureBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Copy Structure
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+
+        // Add event listeners
+        document.getElementById('closeStructureModal').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+        
+        document.getElementById('copyStructureBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(JSON.stringify(workoutData, null, 2));
+            this.showToast('Structure copied to clipboard');
+        });
+
+        // Close on outside click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            '\'': '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
     }
 
     async showSaveAsDialog() {

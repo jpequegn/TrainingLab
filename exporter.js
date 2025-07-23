@@ -185,26 +185,42 @@ export function generateZWOContent(workoutData) {
 
 function generateSegmentXML(segment) {
     let xml = '';
+    
+    // Handle arrays of segments (intervals)
+    if (Array.isArray(segment)) {
+        segment.forEach(subSegment => {
+            xml += generateSegmentXML(subSegment);
+        });
+        return xml;
+    }
+    
     const duration = segment.duration;
     
     switch (segment.type.toLowerCase()) {
     case 'warmup':
-        xml += `        <Warmup Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+        xml += `        <Warmup Duration="${duration}" PowerLow="${segment.powerLow}" PowerHigh="${segment.powerHigh}"/>\n`;
         break;
     case 'cooldown':
-        xml += `        <Cooldown Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+        xml += `        <Cooldown Duration="${duration}" PowerLow="${segment.powerLow}" PowerHigh="${segment.powerHigh}"/>\n`;
         break;
     case 'steadystate':
-        xml += `        <SteadyState Duration="${duration}" Power="${segment.power / 100}"/>\n`;
+        xml += `        <SteadyState Duration="${duration}" Power="${segment.power}"/>\n`;
+        break;
+    case 'interval (on)':
+        xml += `        <SteadyState Duration="${duration}" Power="${segment.power}"/>\n`;
+        break;
+    case 'interval (off)':
+        xml += `        <SteadyState Duration="${duration}" Power="${segment.power}"/>\n`;
         break;
     case 'intervals':
-        xml += `        <IntervalsT Repeat="${segment.repeat || 1}" OnDuration="${segment.onDuration}" OffDuration="${segment.offDuration}" OnPower="${segment.onPower / 100}" OffPower="${segment.offPower / 100}"/>\n`;
+        xml += `        <IntervalsT Repeat="${segment.repeat || 1}" OnDuration="${segment.onDuration}" OffDuration="${segment.offDuration}" PowerOn="${segment.onPower}" PowerOff="${segment.offPower}"/>\n`;
         break;
     case 'ramp':
-        xml += `        <Ramp Duration="${duration}" PowerLow="${segment.powerLow / 100}" PowerHigh="${segment.powerHigh / 100}"/>\n`;
+        xml += `        <Ramp Duration="${duration}" PowerLow="${segment.powerLow}" PowerHigh="${segment.powerHigh}"/>\n`;
         break;
     default:
-        xml += `        <SteadyState Duration="${duration}" Power="${(segment.power || 50) / 100}"/>\n`;
+        console.warn(`Unknown segment type: ${segment.type}`, segment);
+        xml += `        <SteadyState Duration="${duration}" Power="${segment.power || 0.6}"/>\n`;
     }
     
     return xml;

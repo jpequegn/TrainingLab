@@ -249,7 +249,7 @@ export class WorkoutGenerator {
         
         const segments = [
             this.createWarmup(warmupDuration),
-            intervalSegments,
+            ...intervalSegments,  // Flatten the interval segments
             this.createCooldown(cooldownDuration, currentTime)
         ];
         
