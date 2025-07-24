@@ -37,13 +37,46 @@ export async function deployWorkout(workoutName, zwoContent) {
 }
 
 export async function sendChatMessage(message) {
-    const response = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-    });
-    const data = await response.json();
-    return data.reply;
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        
+        if (!response.ok) {
+            // Handle HTTP errors (500, 404, etc.)
+            const errorData = await response.json().catch(() => ({}));
+            const error = new Error(`Server error (${response.status}): ${response.statusText}`);
+            error.serverResponse = errorData;
+            error.status = response.status;
+            throw error;
+        }
+        
+        const data = await response.json();
+        
+        // Check if the server returned an error message in the reply
+        if (data.reply && data.reply.includes('❌')) {
+            // This is a server-side diagnostic message
+            const error = new Error('Server-side LLM error');
+            error.serverResponse = data;
+            throw error;
+        }
+        
+        return data.reply;
+        
+    } catch (error) {
+        // Network or parsing errors
+        if (error.serverResponse) {
+            // Re-throw server errors with diagnostic info
+            throw error;
+        } else {
+            // Handle network or other client-side errors
+            const enhancedError = new Error(error.message || 'Network error');
+            enhancedError.originalError = error;
+            throw enhancedError;
+        }
+    }
 }
 
 export async function getZwiftWorkoutDirectory() {

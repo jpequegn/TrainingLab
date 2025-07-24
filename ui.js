@@ -635,7 +635,25 @@ export class UI {
                         } catch (error) {
                             this.removeLastChatMessage();
                             console.error('Error generating workout:', error);
-                            this.appendChatMessage('❌ Sorry, I had trouble understanding your request. Try describing your workout like: "Create a 45-minute endurance ride" or "4x5 minute threshold intervals".', 'llm');
+                            
+                            // Provide detailed error information
+                            let errorMessage = '❌ Workout creation failed: ';
+                            if (error.message.includes('complexIntervals')) {
+                                errorMessage += 'Complex interval parsing error. Check your interval format (e.g., "2 x 14\' (4\') as first 2\' @ 105% then 12\' at 100%").';
+                            } else if (error.message.includes('duration')) {
+                                errorMessage += 'Duration parsing error. Use formats like "45 minutes", "1 hour", or "90 min".';
+                            } else if (error.message.includes('power')) {
+                                errorMessage += 'Power calculation error. Check percentage values are realistic (50-300%).';
+                            } else if (error.name === 'TypeError') {
+                                errorMessage += `Missing required data: ${error.message}. Try a simpler workout description.`;
+                            } else {
+                                errorMessage += `${error.message}. Try: "Create a 45-minute endurance ride" or "4x5 minute threshold intervals".`;
+                            }
+                            
+                            this.appendChatMessage(errorMessage, 'llm');
+                            
+                            // Add debug information
+                            this.appendChatMessage('🔍 Debug: Check browser console (F12) for detailed error information.', 'llm debug');
                         }
                     }, 500); // Small delay to show thinking state
                 }
@@ -702,7 +720,29 @@ The JSON should have this exact structure:
         } catch (error) {
             this.removeLastChatMessage();
             console.error('Error with LLM generation:', error);
-            this.appendChatMessage('❌ LLM generation failed. Falling back to local generation...', 'llm');
+            
+            // Check if we have a detailed server-side error message
+            let errorMessage = '❌ **LLM Generation Failed**\n\n';
+            
+            if (error.serverResponse && error.serverResponse.reply) {
+                // Use the detailed diagnostic message from the server
+                errorMessage = error.serverResponse.reply;
+            } else if (error.message) {
+                // Categorize client-side errors with enhanced diagnostics
+                if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+                    errorMessage += "**Connection Error**\n\nCannot connect to the LLM server.\n\n**Troubleshooting Steps:**\n1. Check if server is running: `python3 server.py`\n2. Verify server is accessible at http://localhost:53218\n3. Check for firewall or network issues\n4. Try using Local mode instead\n\n**Alternative:** Disable 'Use LLM' toggle for local generation";
+                } else if (error.message.includes('timeout')) {
+                    errorMessage += "**Timeout Error**\n\nThe LLM request took too long to complete.\n\n**Troubleshooting Steps:**\n1. Try a simpler workout description\n2. Check your internet connection\n3. Wait a moment and try again\n4. Use Local mode for faster generation\n\n**Technical Details:** Request timeout after waiting for server response";
+                } else if (error.message.includes('JSON') || error.message.includes('parse')) {
+                    errorMessage += "**Response Format Error**\n\nThe LLM returned an invalid response format.\n\n**Troubleshooting Steps:**\n1. Try a different workout description\n2. Check the debug output for malformed data\n3. Restart the server to reset the LLM state\n4. Use Local mode as an alternative\n\n**Technical Details:** " + error.message;
+                } else {
+                    errorMessage += "**Unexpected Error**\n\nAn unexpected error occurred during LLM communication.\n\n**Troubleshooting Steps:**\n1. Check the browser console (F12) for technical details\n2. Verify the server is running and configured correctly\n3. Try refreshing the page and submitting again\n4. Use Local mode as a fallback\n\n**Technical Details:** " + error.message;
+                }
+            } else {
+                errorMessage += "**Unknown Error**\n\nAn unknown error occurred.\n\n**Troubleshooting Steps:**\n1. Check browser console (F12) for details\n2. Verify server is running\n3. Try Local mode instead\n\n**Need Help?** Check server logs for more information";
+            }
+            
+            this.appendChatMessage(errorMessage, 'llm error');
             
             // Fallback to local generation
             setTimeout(() => {
