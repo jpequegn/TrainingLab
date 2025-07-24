@@ -15,12 +15,13 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
-from mcp_tools import load_mcp_tools, terminate_mcp_processes
+from mcp_manager import load_mcp_tools, terminate_mcp_processes, MCPManager
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     llm = None
     agent_executor = None
-    mcp_processes = [] # Store MCP server processes
+    mcp_processes = [] # Store MCP server processes (legacy)
+    mcp_manager = None # Enhanced MCP manager
 
     @classmethod
     def initialize_agent(cls):
@@ -39,6 +40,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             cls.llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
             
             print("🛠️ Loading MCP tools...")
+            cls.mcp_manager = MCPManager()
             mcp_tools, cls.mcp_processes = load_mcp_tools()
 
             print("📝 Creating agent prompt template...")
@@ -164,6 +166,103 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'reply': reply}).encode('utf-8'))
+        elif self.path == '/mcp/status':
+            # Get status of all MCP servers
+            if not CORSHTTPRequestHandler.mcp_manager:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'MCP manager not initialized'}).encode('utf-8'))
+                return
+            
+            servers_status = {}
+            for server_id in CORSHTTPRequestHandler.mcp_manager.servers:
+                servers_status[server_id] = CORSHTTPRequestHandler.mcp_manager.get_server_status(server_id)
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'servers': servers_status}).encode('utf-8'))
+        elif self.path.startswith('/mcp/start/'):
+            # Start specific MCP server
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            server_id = data.get('server_id')
+            
+            if not CORSHTTPRequestHandler.mcp_manager:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'MCP manager not initialized'}).encode('utf-8'))
+                return
+            
+            success = CORSHTTPRequestHandler.mcp_manager.start_server(server_id)
+            status = CORSHTTPRequestHandler.mcp_manager.get_server_status(server_id)
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': success, 'status': status}).encode('utf-8'))
+        elif self.path.startswith('/mcp/stop/'):
+            # Stop specific MCP server
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            server_id = data.get('server_id')
+            
+            if not CORSHTTPRequestHandler.mcp_manager:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'MCP manager not initialized'}).encode('utf-8'))
+                return
+            
+            success = CORSHTTPRequestHandler.mcp_manager.stop_server(server_id)
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': success}).encode('utf-8'))
+        elif self.path.startswith('/mcp/restart/'):
+            # Restart specific MCP server
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            server_id = data.get('server_id')
+            
+            if not CORSHTTPRequestHandler.mcp_manager:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'MCP manager not initialized'}).encode('utf-8'))
+                return
+            
+            success = CORSHTTPRequestHandler.mcp_manager.restart_server(server_id)
+            status = CORSHTTPRequestHandler.mcp_manager.get_server_status(server_id)
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': success, 'status': status}).encode('utf-8'))
+        elif self.path == '/mcp/validate':
+            # Validate MCP configuration
+            if not CORSHTTPRequestHandler.mcp_manager:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'MCP manager not initialized'}).encode('utf-8'))
+                return
+            
+            # Get current configuration validation
+            validation_result = CORSHTTPRequestHandler.mcp_manager.validator.validate_config(
+                CORSHTTPRequestHandler.mcp_manager.config
+            )
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(validation_result).encode('utf-8'))
         else:
             self.send_response(404)
             self.end_headers()

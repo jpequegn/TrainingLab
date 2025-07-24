@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Server Configuration Schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration schema version"
+    },
+    "mcp_servers": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Human-readable server name"
+            },
+            "description": {
+              "type": "string",
+              "description": "Server description and capabilities"
+            },
+            "category": {
+              "type": "string",
+              "enum": ["workout", "testing", "automation", "data", "ai", "custom"],
+              "description": "Server category for organization"
+            },
+            "command": {
+              "type": "string",
+              "description": "Command to start the MCP server"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Command line arguments"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether this server is enabled"
+            },
+            "auto_start": {
+              "type": "boolean",
+              "default": true,
+              "description": "Start server automatically on application startup"
+            },
+            "health_check": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "interval": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "default": 30,
+                  "description": "Health check interval in seconds"
+                },
+                "timeout": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "default": 10,
+                  "description": "Health check timeout in seconds"
+                },
+                "retry_count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "default": 3,
+                  "description": "Number of retries before marking as unhealthy"
+                }
+              }
+            },
+            "connection": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string",
+                  "default": "localhost",
+                  "description": "Server host"
+                },
+                "port": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535,
+                  "description": "Server port (auto-assigned if not specified)"
+                },
+                "base_url": {
+                  "type": "string",
+                  "description": "Base URL override (if server provides custom URL)"
+                },
+                "startup_delay": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 3,
+                  "description": "Seconds to wait after starting before connecting"
+                }
+              }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of server capabilities"
+            },
+            "environment": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Z_][A-Z0-9_]*$": {
+                  "type": "string"
+                }
+              },
+              "description": "Environment variables for the server process"
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 5,
+              "description": "Server loading priority (1=highest, 10=lowest)"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Tags for filtering and organization"
+            }
+          },
+          "required": ["command"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "global_settings": {
+      "type": "object",
+      "properties": {
+        "max_concurrent_servers": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10,
+          "description": "Maximum number of concurrent MCP servers"
+        },
+        "startup_timeout": {
+          "type": "integer",
+          "minimum": 5,
+          "default": 30,
+          "description": "Global startup timeout in seconds"
+        },
+        "log_level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
+          "default": "INFO",
+          "description": "Logging level for MCP operations"
+        },
+        "auto_recovery": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically restart failed servers"
+        },
+        "port_range": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "type": "integer",
+              "minimum": 1024,
+              "default": 8000
+            },
+            "end": {
+              "type": "integer",
+              "maximum": 65535,
+              "default": 9000
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["mcp_servers"],
+  "additionalProperties": false
+}
