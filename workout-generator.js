@@ -34,7 +34,9 @@ export class WorkoutGenerator {
             type: this.extractWorkoutType(description),
             intensity: this.extractIntensity(description),
             intervals: this.extractIntervals(description),
-            zones: this.extractZones(description)
+            complexIntervals: this.extractComplexIntervals(description),
+            zones: this.extractZones(description),
+            remainder: this.extractRemainder(description)
         };
         
         return parsed;
@@ -207,6 +209,96 @@ export class WorkoutGenerator {
         return null;
     }
 
+    extractComplexIntervals(description) {
+        // Match patterns like "2 x 14' (4') as first 2' @ 105% then 12' at 100%"
+        const complexPattern = /(\d+)\s*x\s*(\d+)'?\s*\((\d+)'?\)\s*as\s*(.*?)(?:\.|\s*$)/i;
+        const match = description.match(complexPattern);
+        
+        if (!match) return null;
+        
+        const sets = parseInt(match[1]);
+        const totalDuration = parseInt(match[2]);
+        const recovery = parseInt(match[3]);
+        const subStructure = match[4];
+        
+        // Parse the sub-structure like "first 2' @ 105% then 12' at 100%"
+        const subSegments = this.parseSubStructure(subStructure);
+        
+        return {
+            sets: sets,
+            totalDuration: totalDuration * 60, // convert to seconds
+            recovery: recovery * 60, // convert to seconds
+            subSegments: subSegments
+        };
+    }
+    
+    parseSubStructure(subStructure) {
+        const segments = [];
+        
+        // Match patterns like "first 2' @ 105% then 12' at 100%"
+        const patterns = [
+            /(?:first\s+)?(\d+)'?\s*@\s*(\d+)%/gi,  // "first 2' @ 105%"
+            /then\s+(\d+)'?\s*at\s+(\d+)%/gi,      // "then 12' at 100%"
+            /(\d+)'?\s*@\s*(\d+)%/gi               // Generic "X' @ Y%"
+        ];
+        
+        let totalTime = 0;
+        
+        // Try to parse "first X @ Y% then Z @ W%" structure
+        const firstMatch = subStructure.match(/(?:first\s+)?(\d+)'?\s*@\s*(\d+)%/i);
+        const thenMatch = subStructure.match(/then\s+(\d+)'?\s*at\s+(\d+)%/i);
+        
+        if (firstMatch && thenMatch) {
+            const duration1 = parseInt(firstMatch[1]) * 60;
+            const power1 = parseInt(firstMatch[2]) / 100;
+            const duration2 = parseInt(thenMatch[1]) * 60; 
+            const power2 = parseInt(thenMatch[2]) / 100;
+            
+            segments.push({ duration: duration1, power: power1 });
+            segments.push({ duration: duration2, power: power2 });
+        } else {
+            // Fallback: try to parse any "X' @ Y%" patterns
+            const allMatches = [...subStructure.matchAll(/(\d+)'?\s*@\s*(\d+)%/gi)];
+            for (const match of allMatches) {
+                const duration = parseInt(match[1]) * 60;
+                const power = parseInt(match[2]) / 100;
+                segments.push({ duration: duration, power: power });
+            }
+        }
+        
+        return segments;
+    }
+    
+    extractRemainder(description) {
+        // Look for "remainder" or "rest" instructions
+        const remainderPattern = /remainder.*?(?:zone\s*(\d+)|(\d+)\s*-\s*(\d+)\s*watts?)/i;
+        const match = description.match(remainderPattern);
+        
+        if (match) {
+            if (match[1]) {
+                // Zone specification like "Zone 2"
+                const zone = parseInt(match[1]);
+                const zoneMap = {
+                    1: 0.45,  // Recovery
+                    2: 0.68,  // Endurance  
+                    3: 0.82,  // Tempo
+                    4: 0.98,  // Threshold
+                    5: 1.13   // VO2max
+                };
+                return { power: zoneMap[zone] || 0.68 };
+            } else if (match[2] && match[3]) {
+                // Wattage range like "168 - 180 watts"
+                const lowWatts = parseInt(match[2]);
+                const highWatts = parseInt(match[3]);
+                const avgWatts = (lowWatts + highWatts) / 2;
+                // Convert to FTP percentage (assuming 250W FTP)
+                return { power: avgWatts / 250 };
+            }
+        }
+        
+        return null;
+    }
+
     extractZones(description) {
         const zones = [];
         const zonePattern = /zone\s*(\d+)/gi;
@@ -221,6 +313,12 @@ export class WorkoutGenerator {
 
     generateWorkout(description) {
         const parsed = this.parseWorkoutDescription(description);
+        
+        // Check for complex intervals first
+        if (parsed.complexIntervals) {
+            return this.createComplexIntervalWorkout(parsed, description);
+        }
+        
         const workoutType = parsed.type || 'endurance';
         
         if (this.workoutTypes[workoutType]) {
@@ -440,6 +538,81 @@ export class WorkoutGenerator {
         modifiedParsed.intensity = 'sprint';
         
         return this.createIntervalWorkout(modifiedParsed, description);
+    }
+
+    createComplexIntervalWorkout(parsed, description) {
+        const complex = parsed.complexIntervals;
+        let totalDuration = parsed.duration * 60; // Target total duration in seconds
+        
+        // Calculate warmup and cooldown
+        const warmupDuration = Math.min(600, totalDuration * 0.15); // Max 10 minutes
+        const cooldownDuration = Math.min(600, totalDuration * 0.15); // Max 10 minutes
+        
+        const segments = [];
+        let currentTime = 0;
+        
+        // Add warmup
+        const warmup = this.createWarmup(warmupDuration);
+        warmup.startTime = currentTime;
+        segments.push(warmup);
+        currentTime += warmupDuration;
+        
+        // Add complex intervals
+        for (let i = 0; i < complex.sets; i++) {
+            // Add sub-segments for this interval
+            for (const subSegment of complex.subSegments) {
+                segments.push({
+                    type: 'Interval (On)',
+                    duration: subSegment.duration,
+                    power: subSegment.power,
+                    startTime: currentTime,
+                    powerData: this.generateSteadyData(currentTime, subSegment.duration, subSegment.power)
+                });
+                currentTime += subSegment.duration;
+            }
+            
+            // Add recovery between intervals (except after last one)
+            if (i < complex.sets - 1) {
+                segments.push({
+                    type: 'Interval (Off)',
+                    duration: complex.recovery,
+                    power: 0.6, // 60% FTP recovery
+                    startTime: currentTime,
+                    powerData: this.generateSteadyData(currentTime, complex.recovery, 0.6)
+                });
+                currentTime += complex.recovery;
+            }
+        }
+        
+        // Calculate remaining time
+        const remainingTime = totalDuration - currentTime - cooldownDuration;
+        
+        // Add remainder segment if specified and there's time
+        if (parsed.remainder && remainingTime > 300) { // At least 5 minutes
+            segments.push({
+                type: 'SteadyState',
+                duration: remainingTime,
+                power: parsed.remainder.power,
+                startTime: currentTime,
+                powerData: this.generateSteadyData(currentTime, remainingTime, parsed.remainder.power)
+            });
+            currentTime += remainingTime;
+        }
+        
+        // Add cooldown
+        const cooldown = this.createCooldown(cooldownDuration, currentTime);
+        segments.push(cooldown);
+        currentTime += cooldownDuration;
+        
+        return {
+            name: 'Custom Complex Interval Workout',
+            description: description,
+            author: 'Workout Creator',
+            sportType: 'bike',
+            totalDuration: currentTime,
+            segments: segments,
+            tss: this.calculateTSS(segments)
+        };
     }
 
     // Helper methods

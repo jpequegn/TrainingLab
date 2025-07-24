@@ -51,11 +51,35 @@ const intensityMap = {
 ### Interval Pattern Recognition
 Extract structured interval information from patterns:
 
-**Patterns to Match:**
+**Simple Patterns:**
 - "4x5 min" → 4 sets of 5 minutes
 - "6 x 30 seconds" → 6 sets of 30 seconds  
 - "5x(3min on, 1min off)" → 5 sets with 3min work, 1min rest
 - "8x30sec sprints" → 8 sets of 30-second sprints
+
+**Complex Nested Patterns:**
+- "2 x 14' (4') as first 2' @ 105% then 12' at 100%" → Compound intervals with multiple power zones
+- "3 x (5' @ 95%, 3' @ 102%, 2' @ 110%) with 5' recovery" → Multi-zone intervals
+- "4 x 8' as 2' @ 95%, 4' @ 100%, 2' @ 105%" → Progressive power intervals
+
+**Pattern Parsing Rules:**
+1. **Main Structure**: "N x Duration (Recovery)" defines the overall interval count and recovery
+2. **Sub-Structure**: "as X @ Y% then Z @ W%" defines power progression within each interval
+3. **Recovery**: Time in parentheses "(4')" is recovery between main intervals
+4. **Power Targets**: "@105%" means 105% of FTP, specific wattage overrides percentages
+5. **Remainder**: "Remainder at Zone 2" fills remaining workout time with endurance pace
+
+**Complex Parsing Examples:**
+```
+"2 x 14' (4') as first 2' @ 105% then 12' at 100% @ FTP"
+↓
+- 2 main intervals of 14 minutes each
+- 4 minutes recovery between intervals  
+- Each 14-minute interval: 2 min @ 105% + 12 min @ 100%
+- Total main work: 2×14 = 28 minutes
+- Total recovery: 1×4 = 4 minutes (only between intervals)
+- Segments: Warmup → Int1(2'@105%) → Int1(12'@100%) → Recovery(4') → Int2(2'@105%) → Int2(12'@100%) → Zone2(remainder)
+```
 
 **Default Intervals by Type:**
 - **Threshold**: 4x8 minutes at 95-105% FTP, 50% recovery between
@@ -171,23 +195,35 @@ Extract structured interval information from patterns:
             powerHigh: 0.7,
             startTime: 0
         },
-        // 4 interval sets
-        [
-            // Interval 1
-            {
-                type: 'Interval (On)',
-                duration: 300,    // 5 minutes
-                power: 1.0,       // 100% FTP
-                startTime: 900
-            },
-            {
-                type: 'Interval (Off)', 
-                duration: 150,    // 2.5 minutes recovery
-                power: 0.6,       // 60% FTP
-                startTime: 1200
-            },
-            // Repeat for intervals 2, 3, 4...
-        ],
+        // Interval 1 (On)
+        {
+            type: 'Interval (On)',
+            duration: 300,    // 5 minutes
+            power: 1.0,       // 100% FTP
+            startTime: 900
+        },
+        // Interval 1 (Off) 
+        {
+            type: 'Interval (Off)', 
+            duration: 150,    // 2.5 minutes recovery
+            power: 0.6,       // 60% FTP
+            startTime: 1200
+        },
+        // Interval 2 (On)
+        {
+            type: 'Interval (On)',
+            duration: 300,
+            power: 1.0,
+            startTime: 1350
+        },
+        // Interval 2 (Off)
+        {
+            type: 'Interval (Off)',
+            duration: 150,
+            power: 0.6,
+            startTime: 1650
+        },
+        // Continue for all intervals...
         // Cooldown (10 minutes)
         {
             type: 'Cooldown',
@@ -195,6 +231,69 @@ Extract structured interval information from patterns:
             powerLow: 0.7,
             powerHigh: 0.5, 
             startTime: 2990  // Calculated
+        }
+    ]
+}
+```
+
+### Example 3: Complex Nested Intervals - "2 x 14' (4') as first 2' @ 105% then 12' at 100% FTP"
+```javascript
+{
+    name: "Custom Complex Threshold Intervals",
+    description: "2 x 14' (4') as first 2' @ 105% then 12' at 100% FTP. Remainder at Zone 2",
+    author: "Workout Creator", 
+    sportType: "bike",
+    totalDuration: 3600, // 60 minutes total
+    segments: [
+        // Warmup (10 minutes)
+        {
+            type: 'Warmup',
+            duration: 600,
+            powerLow: 0.5,
+            powerHigh: 0.7,
+            startTime: 0
+        },
+        // Interval 1 - Part 1: 2 minutes @ 105%
+        {
+            type: 'Interval (On)',
+            duration: 120,
+            power: 1.05,
+            startTime: 600
+        },
+        // Interval 1 - Part 2: 12 minutes @ 100%
+        {
+            type: 'Interval (On)',
+            duration: 720,
+            power: 1.0,
+            startTime: 720
+        },
+        // Recovery 1: 4 minutes
+        {
+            type: 'Interval (Off)',
+            duration: 240,
+            power: 0.6,
+            startTime: 1440
+        },
+        // Interval 2 - Part 1: 2 minutes @ 105%
+        {
+            type: 'Interval (On)',
+            duration: 120,
+            power: 1.05,
+            startTime: 1680
+        },
+        // Interval 2 - Part 2: 12 minutes @ 100%
+        {
+            type: 'Interval (On)',
+            duration: 720,
+            power: 1.0,
+            startTime: 1800
+        },
+        // Zone 2 remainder: Fill remaining time
+        {
+            type: 'SteadyState',
+            duration: 840,    // Remaining time to reach 60 minutes
+            power: 0.68,      // Zone 2 (~68% FTP)
+            startTime: 2520
         }
     ]
 }
