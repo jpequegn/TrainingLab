@@ -4,64 +4,121 @@ import { calculateTSS, formatDuration } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
 import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage, getZwiftWorkoutDirectory, saveAsWorkout, selectFolder } from './api.js';
 import { WorkoutGenerator } from './workout-generator.js';
+import { powerZoneManager } from './power-zones.js';
 
+/**
+ * UI Manager Class
+ * Handles all user interface interactions and updates for the workout visualizer
+ * 
+ * @class UI
+ * @description Manages UI components, event handling, and user interactions
+ */
 export class UI {
     constructor(visualizer) {
+        if (!visualizer) {
+            throw new Error('UI: Visualizer instance is required');
+        }
+        
         this.visualizer = visualizer;
         this.chart = null;
-        this.workoutGenerator = new WorkoutGenerator();
-        this.initializeEventListeners();
-        this.setupUndoButton();
-        this.renderDirectoryTree();
-        this.setupPanelToggles();
-        this.setupSegmentToggle();
-        this.setupChatInterface();
+        this.workoutGenerator = new WorkoutGenerator(powerZoneManager);
+        
+        // Cache frequently accessed DOM elements
+        this._domCache = new Map();
+        
+        // Initialize UI components
+        this._initializeComponents();
     }
 
+    /**
+     * Initialize all UI components and event listeners
+     * @private
+     */
+    _initializeComponents() {
+        try {
+            this.initializeEventListeners();
+            this.setupUndoButton();
+            this.renderDirectoryTree();
+            this.setupPanelToggles();
+            this.setupSegmentToggle();
+            this.setupChatInterface();
+        } catch (error) {
+            console.error('UI: Failed to initialize components:', error);
+            this.showToast('Failed to initialize UI components. Some features may not work properly.');
+        }
+    }
+
+    /**
+     * Initialize event listeners with error handling
+     */
     initializeEventListeners() {
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            this.visualizer.handleFileUpload(e);
-        });
+        const eventMappings = [
+            { id: 'fileInput', event: 'change', handler: (e) => this.visualizer.handleFileUpload(e) },
+            { id: 'loadSample', event: 'click', handler: () => this.visualizer.loadSampleWorkout() },
+            { id: 'exportERG', event: 'click', handler: () => this.visualizer.exportToERG() },
+            { id: 'exportMRC', event: 'click', handler: () => this.visualizer.exportToMRC() },
+            { id: 'ftpInput', event: 'input', handler: (e) => this._handleFTPInput(e) },
+            { id: 'scaleSlider', event: 'input', handler: (e) => this.updateScaleValue(e.target.value) },
+            { id: 'applyScale', event: 'click', handler: () => this.visualizer.applyScaling() },
+            { id: 'resetWorkout', event: 'click', handler: () => this.visualizer.resetWorkout() },
+            { id: 'exportModified', event: 'click', handler: () => this.visualizer.exportModifiedZWO() },
+            { id: 'deployWorkout', event: 'click', handler: () => this.visualizer.deployWorkout() },
+            { id: 'saveAsWorkout', event: 'click', handler: () => this.showSaveAsDialog() }
+        ];
 
-        document.getElementById('loadSample').addEventListener('click', () => {
-            this.visualizer.loadSampleWorkout();
+        eventMappings.forEach(({ id, event, handler }) => {
+            this._addEventListenerSafely(id, event, handler);
         });
+    }
 
-        document.getElementById('exportERG').addEventListener('click', () => {
-            this.visualizer.exportToERG();
-        });
+    /**
+     * Safely add event listener with error handling
+     * @private
+     * @param {string} elementId - DOM element ID
+     * @param {string} event - Event type
+     * @param {Function} handler - Event handler function
+     */
+    _addEventListenerSafely(elementId, event, handler) {
+        const element = this._getElement(elementId);
+        if (element) {
+            try {
+                element.addEventListener(event, handler);
+            } catch (error) {
+                console.error(`UI: Failed to add ${event} listener to ${elementId}:`, error);
+            }
+        } else {
+            console.warn(`UI: Element ${elementId} not found, skipping event listener`);
+        }
+    }
 
-        document.getElementById('exportMRC').addEventListener('click', () => {
-            this.visualizer.exportToMRC();
-        });
+    /**
+     * Get DOM element with caching
+     * @private
+     * @param {string} elementId - Element ID
+     * @returns {HTMLElement|null} DOM element or null if not found
+     */
+    _getElement(elementId) {
+        if (!this._domCache.has(elementId)) {
+            const element = document.getElementById(elementId);
+            this._domCache.set(elementId, element);
+        }
+        return this._domCache.get(elementId);
+    }
 
-        document.getElementById('ftpInput').addEventListener('input', (e) => {
-            this.visualizer.updateFTP(parseInt(e.target.value) || 250);
-        });
-
-        document.getElementById('scaleSlider').addEventListener('input', (e) => {
-            this.updateScaleValue(e.target.value);
-        });
-
-        document.getElementById('applyScale').addEventListener('click', () => {
-            this.visualizer.applyScaling();
-        });
-
-        document.getElementById('resetWorkout').addEventListener('click', () => {
-            this.visualizer.resetWorkout();
-        });
-
-        document.getElementById('exportModified').addEventListener('click', () => {
-            this.visualizer.exportModifiedZWO();
-        });
-
-        document.getElementById('deployWorkout').addEventListener('click', () => {
-            this.visualizer.deployWorkout();
-        });
-
-        document.getElementById('saveAsWorkout').addEventListener('click', () => {
-            this.showSaveAsDialog();
-        });
+    /**
+     * Handle FTP input with validation
+     * @private
+     * @param {Event} e - Input event
+     */
+    _handleFTPInput(e) {
+        const value = parseInt(e.target.value);
+        const ftp = isNaN(value) || value <= 0 ? 250 : Math.min(value, 1000); // Cap at reasonable max
+        
+        if (ftp !== value) {
+            e.target.value = ftp;
+        }
+        
+        this.visualizer.updateFTP(ftp);
     }
 
     setupUndoButton() {
@@ -73,23 +130,77 @@ export class UI {
         this.updateUndoButton(0);
     }
 
+    /**
+     * Update undo button visibility and state
+     * @param {number} stackLength - Length of undo stack
+     */
     updateUndoButton(stackLength) {
-        const undoBtn = document.getElementById('undoEditBtn');
-        if (!undoBtn) return;
-        undoBtn.style.display = stackLength > 0 ? 'block' : 'none';
+        const undoBtn = this._getElement('undoEditBtn');
+        if (!undoBtn) {
+            console.warn('UI: Undo button not found');
+            return;
+        }
+        
+        const hasUndoActions = stackLength > 0;
+        undoBtn.style.display = hasUndoActions ? 'block' : 'none';
+        undoBtn.disabled = !hasUndoActions;
+        undoBtn.title = hasUndoActions ? `Undo last edit (${stackLength} actions available)` : 'No actions to undo';
     }
 
-    showToast(msg) {
-        let toast = document.getElementById('toastNotification');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'toastNotification';
-            toast.className = 'toast-notification';
-            document.body.appendChild(toast);
+    /**
+     * Show toast notification with improved error handling
+     * @param {string} msg - Message to display
+     * @param {string} type - Toast type ('info', 'success', 'warning', 'error')
+     * @param {number} duration - Duration in milliseconds (default: 3000)
+     */
+    showToast(msg, type = 'info', duration = 3000) {
+        if (!msg || typeof msg !== 'string') {
+            console.warn('UI: Invalid toast message:', msg);
+            return;
         }
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
+
+        try {
+            let toast = this._getElement('toastNotification');
+            if (!toast) {
+                toast = this._createToastElement();
+                this._domCache.set('toastNotification', toast);
+            }
+            
+            // Clear previous classes and add new type
+            toast.className = `toast-notification toast-${type}`;
+            toast.textContent = msg;
+            toast.classList.add('show');
+            
+            // Clear any existing timeout
+            if (toast._hideTimeout) {
+                clearTimeout(toast._hideTimeout);
+            }
+            
+            // Set new timeout
+            toast._hideTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+                toast._hideTimeout = null;
+            }, duration);
+        } catch (error) {
+            console.error('UI: Failed to show toast:', error);
+            // Fallback to alert if toast fails
+            if (type === 'error') {
+                alert(`Error: ${msg}`);
+            }
+        }
+    }
+
+    /**
+     * Create toast notification element
+     * @private
+     * @returns {HTMLElement} Toast element
+     */
+    _createToastElement() {
+        const toast = document.createElement('div');
+        toast.id = 'toastNotification';
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+        return toast;
     }
 
     displayWorkoutInfo(workoutData, tss) {

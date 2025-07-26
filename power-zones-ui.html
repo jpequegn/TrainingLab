@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Zones Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        input, select {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .zones-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .zones-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .zones-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .zone-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .zone-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .zone-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .zone-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            flex: 1;
+        }
+
+        .zone-range {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .zone-description {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+        }
+
+        .zone-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .zone-form {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .zone-form.editing {
+            display: grid;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .visualization {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .power-scale {
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            border: 2px solid #e5e7eb;
+        }
+
+        .power-zone-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            min-width: 30px;
+        }
+
+        .error {
+            background-color: #fef2f2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #dc2626;
+        }
+
+        .success {
+            background-color: #f0fdf4;
+            color: #059669;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #059669;
+        }
+
+        .warning {
+            background-color: #fefce8;
+            color: #d97706;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #d97706;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .zone-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Power Zones Configuration</h1>
+            <p>Customize your training zones for precise workout targeting</p>
+        </div>
+
+        <!-- FTP and Model Controls -->
+        <div class="controls-section">
+            <h2>General Settings</h2>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="ftp-input">Functional Threshold Power (FTP)</label>
+                    <input type="number" id="ftp-input" min="100" max="600" placeholder="250">
+                    <small>Your sustainable power for 1 hour (watts)</small>
+                </div>
+
+                <div class="control-group">
+                    <label for="zone-model-select">Zone Model</label>
+                    <select id="zone-model-select">
+                        <option value="coggan">Coggan 7-Zone Model</option>
+                        <option value="polarized">Polarized 3-Zone Model</option>
+                        <option value="custom">Custom Zones</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Display Mode</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span>% FTP</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="watts-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Watts</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>&nbsp;</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary" onclick="updateFTP()">Update FTP</button>
+                        <button class="btn btn-secondary" onclick="resetZones()">Reset to Defaults</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-zones">7</div>
+                <div class="stat-label">Total Zones</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="power-range">0-300%</div>
+                <div class="stat-label">Power Range</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="watts-range">0-750W</div>
+                <div class="stat-label">Watts Range</div>
+            </div>
+        </div>
+
+        <!-- Zone Visualization -->
+        <div class="visualization">
+            <h2>Zone Visualization</h2>
+            <div class="power-scale" id="power-scale"></div>
+            <div id="zone-warnings"></div>
+        </div>
+
+        <!-- Zones Management -->
+        <div class="zones-section">
+            <div class="zones-header">
+                <h2>Power Zones</h2>
+                <div>
+                    <button class="btn btn-success" onclick="showAddZoneModal()">+ Add Zone</button>
+                    <button class="btn btn-secondary" onclick="exportZones()">Export</button>
+                    <button class="btn btn-secondary" onclick="importZones()">Import</button>
+                </div>
+            </div>
+            
+            <div class="zones-grid" id="zones-container">
+                <!-- Zones will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Zone Modal -->
+    <div id="zone-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Zone</h3>
+                <span class="close" onclick="closeZoneModal()">&times;</span>
+            </div>
+            
+            <form id="zone-form">
+                <div class="control-group">
+                    <label for="zone-name">Zone Name</label>
+                    <input type="text" id="zone-name" required placeholder="e.g., Endurance">
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="zone-min">Minimum Power (%)</label>
+                        <input type="number" id="zone-min" min="0" max="500" step="0.01" required>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="zone-max">Maximum Power (%)</label>
+                        <input type="number" id="zone-max" min="0" max="500" step="0.01" required>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="zone-color">Zone Color</label>
+                    <input type="color" id="zone-color" required>
+                </div>
+                
+                <div class="control-group">
+                    <label for="zone-description">Description</label>
+                    <input type="text" id="zone-description" required placeholder="Training purpose and characteristics">
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">Save Zone</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeZoneModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+
+    <script type="module">
+        import { powerZoneManager } from './power-zones.js';
+        
+        // Make powerZoneManager globally available
+        window.powerZoneManager = powerZoneManager;
+        
+        let editingZoneId = null;
+
+        // Initialize UI
+        function initializeUI() {
+            loadFTPInput();
+            loadZoneModel();
+            loadWattsMode();
+            renderZones();
+            renderStatistics();
+            renderVisualization();
+            
+            // Listen for zone changes
+            window.addEventListener('powerZonesChanged', () => {
+                renderZones();
+                renderStatistics();
+                renderVisualization();
+            });
+        }
+
+        function loadFTPInput() {
+            document.getElementById('ftp-input').value = powerZoneManager.getFTP();
+        }
+
+        function loadZoneModel() {
+            document.getElementById('zone-model-select').value = powerZoneManager.getZoneModel();
+        }
+
+        function loadWattsMode() {
+            document.getElementById('watts-mode-toggle').checked = powerZoneManager.getWattsMode();
+        }
+
+        function renderZones() {
+            const container = document.getElementById('zones-container');
+            const zones = powerZoneManager.getZones();
+            const wattsMode = powerZoneManager.getWattsMode();
+            
+            container.innerHTML = '';
+            
+            Object.entries(zones).forEach(([zoneId, zone]) => {
+                const zoneCard = document.createElement('div');
+                zoneCard.className = 'zone-card';
+                
+                const minDisplay = wattsMode ? `${powerZoneManager.percentToWatts(zone.min)}W` : `${(zone.min * 100).toFixed(0)}%`;
+                const maxDisplay = wattsMode ? `${powerZoneManager.percentToWatts(zone.max)}W` : `${(zone.max * 100).toFixed(0)}%`;
+                
+                zoneCard.innerHTML = `
+                    <div class="zone-header">
+                        <div style="display: flex; align-items: center;">
+                            <div class="zone-color" style="background-color: ${zone.color};"></div>
+                            <div class="zone-name">${zone.name}</div>
+                        </div>
+                        <div class="zone-actions">
+                            <button class="btn btn-secondary" onclick="editZone('${zoneId}')">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteZone('${zoneId}')">Delete</button>
+                        </div>
+                    </div>
+                    <div class="zone-range">${minDisplay} - ${maxDisplay}</div>
+                    <div class="zone-description">${zone.description}</div>
+                `;
+                
+                container.appendChild(zoneCard);
+            });
+        }
+
+        function renderStatistics() {
+            const stats = powerZoneManager.getZoneStatistics();
+            const wattsMode = powerZoneManager.getWattsMode();
+            
+            document.getElementById('total-zones').textContent = stats.totalZones;
+            
+            if (wattsMode) {
+                document.getElementById('power-range').textContent = `${stats.wattsRange.min}-${stats.wattsRange.max}W`;
+                document.getElementById('watts-range').textContent = `${stats.wattsRange.min}-${stats.wattsRange.max}W`;
+            } else {
+                document.getElementById('power-range').textContent = `${Math.round(stats.powerRange.min * 100)}-${Math.round(stats.powerRange.max * 100)}%`;
+                document.getElementById('watts-range').textContent = `${stats.wattsRange.min}-${stats.wattsRange.max}W`;
+            }
+        }
+
+        function renderVisualization() {
+            const powerScale = document.getElementById('power-scale');
+            const zones = powerZoneManager.getZones();
+            const stats = powerZoneManager.getZoneStatistics();
+            
+            powerScale.innerHTML = '';
+            
+            // Sort zones by minimum power
+            const sortedZones = stats.sortedZones;
+            const totalRange = stats.powerRange.max - stats.powerRange.min;
+            
+            sortedZones.forEach(zone => {
+                const segment = document.createElement('div');
+                segment.className = 'power-zone-segment';
+                segment.style.backgroundColor = zone.color;
+                
+                const zoneRange = zone.max - zone.min;
+                const widthPercent = (zoneRange / totalRange) * 100;
+                segment.style.width = `${Math.max(widthPercent, 5)}%`; // Minimum 5% width for visibility
+                
+                // Add zone name if there's enough space
+                if (widthPercent > 10) {
+                    segment.textContent = zone.name.split(' ')[0]; // First word only
+                }
+                
+                powerScale.appendChild(segment);
+            });
+            
+            // Check for warnings
+            checkZoneWarnings();
+        }
+
+        function checkZoneWarnings() {
+            const warningsContainer = document.getElementById('zone-warnings');
+            warningsContainer.innerHTML = '';
+            
+            const zones = powerZoneManager.getZones();
+            const zoneList = Object.entries(zones)
+                .map(([id, zone]) => ({ id, ...zone }))
+                .sort((a, b) => a.min - b.min);
+            
+            const warnings = [];
+            
+            // Check for overlaps
+            for (let i = 1; i < zoneList.length; i++) {
+                const current = zoneList[i];
+                const previous = zoneList[i - 1];
+                
+                if (current.min <= previous.max) {
+                    warnings.push(`Zone overlap: ${previous.name} overlaps with ${current.name}`);
+                }
+            }
+            
+            // Check for gaps
+            for (let i = 1; i < zoneList.length; i++) {
+                const current = zoneList[i];
+                const previous = zoneList[i - 1];
+                
+                if (current.min > previous.max + 0.01) {
+                    warnings.push(`Zone gap: Gap between ${previous.name} and ${current.name}`);
+                }
+            }
+            
+            warnings.forEach(warning => {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'warning';
+                warningDiv.textContent = warning;
+                warningsContainer.appendChild(warningDiv);
+            });
+        }
+
+        // Global functions
+        window.updateFTP = function() {
+            const ftpInput = document.getElementById('ftp-input');
+            const ftp = parseInt(ftpInput.value);
+            
+            try {
+                powerZoneManager.setFTP(ftp);
+                showMessage('FTP updated successfully!', 'success');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        };
+
+        window.resetZones = function() {
+            if (confirm('Reset all zones to default? This will remove any custom zones.')) {
+                powerZoneManager.resetToDefaults();
+                document.getElementById('zone-model-select').value = 'coggan';
+                showMessage('Zones reset to defaults', 'success');
+            }
+        };
+
+        window.showAddZoneModal = function() {
+            editingZoneId = null;
+            document.getElementById('modal-title').textContent = 'Add New Zone';
+            document.getElementById('zone-form').reset();
+            document.getElementById('zone-color').value = '#667eea';
+            document.getElementById('zone-modal').style.display = 'block';
+        };
+
+        window.editZone = function(zoneId) {
+            editingZoneId = zoneId;
+            const zones = powerZoneManager.getZones();
+            const zone = zones[zoneId];
+            
+            document.getElementById('modal-title').textContent = 'Edit Zone';
+            document.getElementById('zone-name').value = zone.name;
+            document.getElementById('zone-min').value = zone.min;
+            document.getElementById('zone-max').value = zone.max;
+            document.getElementById('zone-color').value = zone.color;
+            document.getElementById('zone-description').value = zone.description;
+            document.getElementById('zone-modal').style.display = 'block';
+        };
+
+        window.deleteZone = function(zoneId) {
+            const zones = powerZoneManager.getZones();
+            const zone = zones[zoneId];
+            
+            if (confirm(`Delete zone "${zone.name}"?`)) {
+                try {
+                    powerZoneManager.deleteZone(zoneId);
+                    showMessage('Zone deleted successfully!', 'success');
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                }
+            }
+        };
+
+        window.closeZoneModal = function() {
+            document.getElementById('zone-modal').style.display = 'none';
+            editingZoneId = null;
+        };
+
+        window.exportZones = function() {
+            const config = powerZoneManager.exportZones();
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `power-zones-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showMessage('Zones exported successfully!', 'success');
+        };
+
+        window.importZones = function() {
+            document.getElementById('import-file').click();
+        };
+
+        window.handleImportFile = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    powerZoneManager.importZones(config);
+                    
+                    // Update UI controls
+                    loadFTPInput();
+                    loadZoneModel();
+                    loadWattsMode();
+                    
+                    showMessage('Zones imported successfully!', 'success');
+                } catch (error) {
+                    showMessage(`Import failed: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Event listeners
+        document.getElementById('zone-model-select').addEventListener('change', function() {
+            const model = this.value;
+            if (model !== 'custom') {
+                if (confirm(`Switch to ${powerZoneManager.getAvailableModels()[model].name}? This will replace your current zones.`)) {
+                    powerZoneManager.setZoneModel(model);
+                    showMessage(`Switched to ${powerZoneManager.getAvailableModels()[model].name}`, 'success');
+                } else {
+                    this.value = powerZoneManager.getZoneModel();
+                }
+            }
+        });
+
+        document.getElementById('watts-mode-toggle').addEventListener('change', function() {
+            powerZoneManager.setWattsMode(this.checked);
+        });
+
+        document.getElementById('zone-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const zoneConfig = {
+                name: document.getElementById('zone-name').value,
+                min: parseFloat(document.getElementById('zone-min').value),
+                max: parseFloat(document.getElementById('zone-max').value),
+                color: document.getElementById('zone-color').value,
+                description: document.getElementById('zone-description').value
+            };
+            
+            try {
+                if (editingZoneId) {
+                    powerZoneManager.updateZone(editingZoneId, zoneConfig);
+                    showMessage('Zone updated successfully!', 'success');
+                } else {
+                    const zoneId = `zone${Date.now()}`;
+                    powerZoneManager.createZone(zoneId, zoneConfig);
+                    showMessage('Zone created successfully!', 'success');
+                }
+                closeZoneModal();
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('zone-modal');
+            if (e.target === modal) {
+                closeZoneModal();
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeUI);
+    </script>
+</body>
+</html>

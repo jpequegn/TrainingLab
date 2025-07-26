@@ -1,102 +1,320 @@
-// Workout Generation Module
-// Converts natural language descriptions into structured Zwift workout data
+/**
+ * Workout Generation Module
+ * Converts natural language descriptions into structured Zwift workout data
+ * 
+ * @class WorkoutGenerator
+ * @description Provides intelligent parsing and generation of cycling workouts
+ * with support for complex interval structures and natural language processing
+ */
 
 export class WorkoutGenerator {
-    constructor() {
-        this.intensityMap = {
-            'recovery': { min: 0.35, max: 0.55 },
-            'easy': { min: 0.56, max: 0.75 },
-            'endurance': { min: 0.56, max: 0.75 },
-            'tempo': { min: 0.76, max: 0.90 },
-            'threshold': { min: 0.91, max: 1.05 },
-            'sweetspot': { min: 0.84, max: 0.97 },
-            'vo2max': { min: 1.06, max: 1.20 },
-            'vo2': { min: 1.06, max: 1.20 },
-            'anaerobic': { min: 1.21, max: 1.50 },
-            'neuromuscular': { min: 1.51, max: 3.00 },
-            'sprint': { min: 1.51, max: 3.00 }
-        };
+    // Constants for workout generation
+    static INTENSITY_ZONES = {
+        recovery: { min: 0.35, max: 0.55, description: 'Active Recovery' },
+        easy: { min: 0.56, max: 0.75, description: 'Endurance Base' },
+        endurance: { min: 0.56, max: 0.75, description: 'Endurance Base' },
+        tempo: { min: 0.76, max: 0.90, description: 'Tempo' },
+        threshold: { min: 0.91, max: 1.05, description: 'Lactate Threshold' },
+        sweetspot: { min: 0.84, max: 0.97, description: 'Sweet Spot' },
+        vo2max: { min: 1.06, max: 1.20, description: 'VO2 Max' },
+        vo2: { min: 1.06, max: 1.20, description: 'VO2 Max' },
+        anaerobic: { min: 1.21, max: 1.50, description: 'Anaerobic Capacity' },
+        neuromuscular: { min: 1.51, max: 3.00, description: 'Neuromuscular Power' },
+        sprint: { min: 1.51, max: 3.00, description: 'Sprint Power' }
+    };
+
+    static DEFAULT_DURATIONS = {
+        sprint: 45,
+        recovery: 45,
+        vo2max: 60,
+        threshold: 75,
+        default: 60
+    };
+
+    constructor(powerZoneManager = null) {
+        this.powerZoneManager = powerZoneManager;
+        this.intensityMap = this._initializeIntensityMap();
+        this.workoutTypes = this._initializeWorkoutTypes();
+        this._validateConfiguration();
         
-        this.workoutTypes = {
-            'endurance': this.createEnduranceWorkout.bind(this),
-            'interval': this.createIntervalWorkout.bind(this),
-            'recovery': this.createRecoveryWorkout.bind(this),
-            'tempo': this.createTempoWorkout.bind(this),
-            'threshold': this.createThresholdWorkout.bind(this),
-            'vo2max': this.createVo2MaxWorkout.bind(this),
-            'sprint': this.createSprintWorkout.bind(this)
-        };
+        // Listen for power zone changes if manager is provided
+        if (this.powerZoneManager && typeof window !== 'undefined') {
+            window.addEventListener('powerZonesChanged', () => {
+                this.intensityMap = this._initializeIntensityMap();
+            });
+        }
     }
 
-    parseWorkoutDescription(description) {
-        const parsed = {
-            duration: this.extractDuration(description),
-            type: this.extractWorkoutType(description),
-            intensity: this.extractIntensity(description),
-            intervals: this.extractIntervals(description),
-            complexIntervals: this.extractComplexIntervals(description),
-            zones: this.extractZones(description),
-            remainder: this.extractRemainder(description)
-        };
-        
-        return parsed;
-    }
-
-    extractDuration(description) {
-        // First check for interval patterns and handle specially
-        if (/\d+\s*x\s*\d+/i.test(description)) {
-            // Look for explicit total duration OUTSIDE of the interval pattern  
-            // Match things like "60 minute workout with 4x5 intervals"
-            let nonIntervalText = description.replace(/\d+\s*x\s*\d+\s*(?:min|minutes?|sec|seconds?)/gi, '');
-            // Also remove common false matches like "VO2max" "vo2max"
-            nonIntervalText = nonIntervalText.replace(/vo2max?/gi, '');
-            const totalDurationMatch = nonIntervalText.match(/(\d+)\s*(?:hour|hr|h|minute|min|m)(?:s?)\b/i);
-            if (totalDurationMatch) {
-                const duration = parseInt(totalDurationMatch[1]);
-                if (totalDurationMatch[0].match(/hour|hr|h/i)) {
-                    return duration * 60;
+    /**
+     * Initialize intensity map from power zones or defaults
+     * @private
+     * @returns {Object} Intensity map for workout generation
+     */
+    _initializeIntensityMap() {
+        if (this.powerZoneManager) {
+            try {
+                const zones = this.powerZoneManager.getZones();
+                const intensityMap = {};
+                
+                // Map common zone names to power zones
+                const zoneMapping = {
+                    'recovery': ['recovery', 'active recovery', 'zone1'],
+                    'easy': ['easy', 'endurance', 'base', 'zone2'],
+                    'endurance': ['easy', 'endurance', 'base', 'zone2'],
+                    'tempo': ['tempo', 'aerobic threshold', 'zone3'],
+                    'threshold': ['threshold', 'lactate threshold', 'sweet spot', 'zone4'],
+                    'sweetspot': ['sweet spot', 'threshold', 'zone4'],
+                    'vo2max': ['vo2max', 'vo2 max', 'aerobic power', 'zone5'],
+                    'vo2': ['vo2max', 'vo2 max', 'aerobic power', 'zone5'],
+                    'anaerobic': ['anaerobic', 'anaerobic capacity', 'zone6'],
+                    'neuromuscular': ['neuromuscular', 'sprint', 'zone7'],
+                    'sprint': ['neuromuscular', 'sprint', 'zone7']
+                };
+                
+                // Try to map workout intensities to user's power zones
+                for (const [intensity, aliases] of Object.entries(zoneMapping)) {
+                    let mappedZone = null;
+                    
+                    // Try to find matching zone by name
+                    for (const [zoneId, zone] of Object.entries(zones)) {
+                        const zoneName = zone.name.toLowerCase();
+                        if (aliases.some(alias => zoneName.includes(alias.toLowerCase()))) {
+                            mappedZone = zone;
+                            break;
+                        }
+                    }
+                    
+                    if (mappedZone) {
+                        intensityMap[intensity] = {
+                            min: mappedZone.min,
+                            max: mappedZone.max,
+                            description: mappedZone.description,
+                            color: mappedZone.color
+                        };
+                    }
                 }
-                return duration;
+                
+                // Fall back to defaults for unmapped intensities
+                for (const [intensity, defaultZone] of Object.entries(WorkoutGenerator.INTENSITY_ZONES)) {
+                    if (!intensityMap[intensity]) {
+                        intensityMap[intensity] = defaultZone;
+                    }
+                }
+                
+                return intensityMap;
+            } catch (error) {
+                console.warn('Failed to use custom power zones, falling back to defaults:', error);
             }
-            
-            // For intervals without explicit total, use intelligent defaults based on type
-            const workoutType = this.extractWorkoutType(description);
-            if (workoutType === 'sprint') return 45; // Short sprint sessions
-            if (workoutType === 'vo2max') return 60; // Standard VO2max sessions  
-            if (workoutType === 'threshold') return 75; // Longer threshold sessions
-            return 60; // Default for intervals
         }
         
-        // Match patterns like "45 minutes", "1 hour", "90 min", "45-minute", etc.
+        return { ...WorkoutGenerator.INTENSITY_ZONES };
+    }
+
+    /**
+     * Initialize workout type handlers
+     * @private
+     * @returns {Object} Map of workout types to handler functions
+     */
+    _initializeWorkoutTypes() {
+        return {
+            endurance: this.createEnduranceWorkout.bind(this),
+            interval: this.createIntervalWorkout.bind(this),
+            recovery: this.createRecoveryWorkout.bind(this),
+            tempo: this.createTempoWorkout.bind(this),
+            threshold: this.createThresholdWorkout.bind(this),
+            vo2max: this.createVo2MaxWorkout.bind(this),
+            sprint: this.createSprintWorkout.bind(this)
+        };
+    }
+
+    /**
+     * Validate generator configuration
+     * @private
+     * @throws {Error} If configuration is invalid
+     */
+    _validateConfiguration() {
+        if (!this.intensityMap || Object.keys(this.intensityMap).length === 0) {
+            throw new Error('WorkoutGenerator: Invalid intensity map configuration');
+        }
+        if (!this.workoutTypes || Object.keys(this.workoutTypes).length === 0) {
+            throw new Error('WorkoutGenerator: Invalid workout types configuration');
+        }
+    }
+
+    /**
+     * Parse workout description into structured data
+     * @param {string} description - Natural language workout description
+     * @returns {Object} Parsed workout data structure
+     * @throws {Error} If description is invalid or parsing fails
+     */
+    parseWorkoutDescription(description) {
+        if (!description || typeof description !== 'string') {
+            throw new Error('WorkoutGenerator: Description must be a non-empty string');
+        }
+
+        const cleanDescription = description.trim().toLowerCase();
+        if (cleanDescription.length === 0) {
+            throw new Error('WorkoutGenerator: Description cannot be empty');
+        }
+
+        try {
+            const parsed = {
+                duration: this._safeExtract(() => this.extractDuration(cleanDescription), 'duration'),
+                type: this._safeExtract(() => this.extractWorkoutType(cleanDescription), 'workout type'),
+                intensity: this._safeExtract(() => this.extractIntensity(cleanDescription), 'intensity'),
+                intervals: this._safeExtract(() => this.extractIntervals(cleanDescription), 'intervals'),
+                complexIntervals: this._safeExtract(() => this.extractComplexIntervals(cleanDescription), 'complex intervals'),
+                zones: this._safeExtract(() => this.extractZones(cleanDescription), 'zones'),
+                remainder: this._safeExtract(() => this.extractRemainder(cleanDescription), 'remainder')
+            };
+            
+            this._validateParsedData(parsed);
+            return parsed;
+        } catch (error) {
+            throw new Error(`WorkoutGenerator: Failed to parse description "${description}": ${error.message}`);
+        }
+    }
+
+    /**
+     * Safely execute extraction function with error handling
+     * @private
+     * @param {Function} extractFn - Extraction function to execute
+     * @param {string} fieldName - Name of field being extracted (for error messages)
+     * @returns {*} Extraction result or null if failed
+     */
+    _safeExtract(extractFn, fieldName) {
+        try {
+            return extractFn();
+        } catch (error) {
+            console.warn(`WorkoutGenerator: Failed to extract ${fieldName}: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Validate parsed workout data
+     * @private
+     * @param {Object} parsed - Parsed workout data
+     * @throws {Error} If parsed data is invalid
+     */
+    _validateParsedData(parsed) {
+        if (!parsed.duration || parsed.duration <= 0) {
+            throw new Error('Invalid workout duration');
+        }
+        if (!parsed.type) {
+            throw new Error('Could not determine workout type');
+        }
+        if (parsed.duration > 480) { // 8 hours
+            console.warn('WorkoutGenerator: Very long workout duration detected:', parsed.duration, 'minutes');
+        }
+    }
+
+    /**
+     * Extract workout duration from description
+     * @param {string} description - Workout description
+     * @returns {number} Duration in minutes
+     * @throws {Error} If duration cannot be extracted or is invalid
+     */
+    extractDuration(description) {
+        // First check for interval patterns and handle specially
+        if (this._hasIntervalPattern(description)) {
+            return this._extractIntervalDuration(description);
+        }
+        
+        // Extract from explicit duration patterns
+        const explicitDuration = this._extractExplicitDuration(description);
+        if (explicitDuration) {
+            return explicitDuration;
+        }
+        
+        // Fall back to workout type defaults
+        return this._getDefaultDurationForType(description);
+    }
+
+    /**
+     * Check if description contains interval patterns
+     * @private
+     * @param {string} description - Workout description
+     * @returns {boolean} True if interval pattern found
+     */
+    _hasIntervalPattern(description) {
+        return /\d+\s*x\s*\d+/i.test(description);
+    }
+
+    /**
+     * Extract duration for interval workouts
+     * @private
+     * @param {string} description - Workout description
+     * @returns {number} Duration in minutes
+     */
+    _extractIntervalDuration(description) {
+        // Look for explicit total duration OUTSIDE of the interval pattern  
+        let nonIntervalText = description.replace(/\d+\s*x\s*\d+\s*(?:min|minutes?|sec|seconds?)/gi, '');
+        // Remove common false matches like "VO2max"
+        nonIntervalText = nonIntervalText.replace(/vo2max?/gi, '');
+        
+        const totalDurationMatch = nonIntervalText.match(/(\d+)\s*(?:hour|hr|h|minute|min|m)(?:s?)\b/i);
+        if (totalDurationMatch) {
+            const duration = parseInt(totalDurationMatch[1]);
+            if (totalDurationMatch[0].match(/hour|hr|h/i)) {
+                return duration * 60;
+            }
+            return duration;
+        }
+        
+        // Use intelligent defaults based on workout type
+        return this._getDefaultDurationForType(description);
+    }
+
+    /**
+     * Extract explicit duration from description
+     * @private
+     * @param {string} description - Workout description
+     * @returns {number|null} Duration in minutes or null if not found
+     */
+    _extractExplicitDuration(description) {
         const patterns = [
-            /(\d+)\s*(?:hours?|hrs?|h)\b/i,                    // "2 hours", "1 hr", "1h"
-            /(\d+)\s*(?:minutes?|mins?|m)\b/i,                 // "45 minutes", "30 min", "45m"
-            /(\d+)[-\s](?:minute|min)\b/i,                     // "45-minute", "30-min"
-            /(\d+)\s*(?:h)\s*(\d+)\s*(?:m|minutes?)?/i        // "1h 30m", "1h 30 minutes"
+            { regex: /(\d+)\s*(?:hours?|hrs?|h)\b/i, multiplier: 60 },
+            { regex: /(\d+)\s*(?:minutes?|mins?|m)\b/i, multiplier: 1 },
+            { regex: /(\d+)[-\s](?:minute|min)\b/i, multiplier: 1 },
+            { regex: /(\d+)\s*(?:h)\s*(\d+)\s*(?:m|minutes?)?/i, isComplex: true }
         ];
         
-        for (let i = 0; i < patterns.length; i++) {
-            const match = description.match(patterns[i]);
+        for (const pattern of patterns) {
+            const match = description.match(pattern.regex);
             if (match) {
-                if (i === 0) { // hours
-                    return parseInt(match[1]) * 60;
-                } else if (i === 1 || i === 2) { // minutes
-                    return parseInt(match[1]);
-                } else if (i === 3) { // h m format
+                if (pattern.isComplex) {
                     const hours = parseInt(match[1]);
                     const minutes = parseInt(match[2]) || 0;
                     return hours * 60 + minutes;
+                } else {
+                    const value = parseInt(match[1]);
+                    if (value > 0) {
+                        return value * pattern.multiplier;
+                    }
                 }
             }
         }
         
-        // Default duration based on workout type
-        const workoutType = this.extractWorkoutType(description);
-        if (workoutType === 'sprint') return 45;
-        if (workoutType === 'recovery') return 45;
-        return 60; // 1 hour default
+        return null;
     }
 
+    /**
+     * Get default duration based on workout type
+     * @private
+     * @param {string} description - Workout description
+     * @returns {number} Duration in minutes
+     */
+    _getDefaultDurationForType(description) {
+        const workoutType = this.extractWorkoutType(description);
+        return WorkoutGenerator.DEFAULT_DURATIONS[workoutType] || WorkoutGenerator.DEFAULT_DURATIONS.default;
+    }
+
+    /**
+     * Extract workout type from description
+     * @param {string} description - Workout description
+     * @returns {string} Detected workout type
+     */
     extractWorkoutType(description) {
         const lower = description.toLowerCase();
         
@@ -681,5 +899,223 @@ export class WorkoutGenerator {
         const tss = (totalDuration * normalizedPower * intensityFactor) / (1.0 * 3600) * 100;
         
         return Math.round(tss);
+    }
+
+    /**
+     * Get available power zones for workout targeting
+     * @returns {Object} Available power zones with metadata
+     */
+    getAvailablePowerZones() {
+        if (this.powerZoneManager) {
+            const zones = this.powerZoneManager.getZones();
+            const ftp = this.powerZoneManager.getFTP();
+            const wattsMode = this.powerZoneManager.getWattsMode();
+            
+            return {
+                zones,
+                ftp,
+                wattsMode,
+                zonesInWatts: this.powerZoneManager.getZonesInWatts()
+            };
+        }
+        
+        // Return default zones if no power zone manager
+        const defaultZones = {};
+        Object.entries(WorkoutGenerator.INTENSITY_ZONES).forEach(([key, zone], index) => {
+            defaultZones[`zone${index + 1}`] = {
+                ...zone,
+                name: zone.description,
+                color: this._getDefaultZoneColor(index)
+            };
+        });
+        
+        return {
+            zones: defaultZones,
+            ftp: 250, // Default FTP
+            wattsMode: false,
+            zonesInWatts: this._convertZonesToWatts(defaultZones, 250)
+        };
+    }
+
+    /**
+     * Create workout targeting specific power zone
+     * @param {string} targetZone - Target power zone name or ID
+     * @param {number} duration - Workout duration in minutes
+     * @param {Object} options - Additional workout options
+     * @returns {Object} Generated workout targeting the specified zone
+     */
+    createZoneTargetedWorkout(targetZone, duration, options = {}) {
+        if (!this.powerZoneManager) {
+            throw new Error('Power zone manager not available for zone-targeted workouts');
+        }
+        
+        const zones = this.powerZoneManager.getZones();
+        let targetZoneConfig = null;
+        
+        // Find target zone
+        for (const [zoneId, zone] of Object.entries(zones)) {
+            if (zoneId === targetZone || 
+                zone.name.toLowerCase() === targetZone.toLowerCase()) {
+                targetZoneConfig = zone;
+                break;
+            }
+        }
+        
+        if (!targetZoneConfig) {
+            throw new Error(`Target zone "${targetZone}" not found`);
+        }
+        
+        const totalDuration = duration * 60; // Convert to seconds
+        const warmupDuration = Math.min(600, totalDuration * 0.15);
+        const cooldownDuration = Math.min(600, totalDuration * 0.15);
+        const mainDuration = totalDuration - warmupDuration - cooldownDuration;
+        
+        const targetPower = (targetZoneConfig.min + targetZoneConfig.max) / 2;
+        
+        const segments = [
+            this.createWarmup(warmupDuration),
+            {
+                type: 'SteadyState',
+                duration: mainDuration,
+                power: targetPower,
+                startTime: warmupDuration,
+                powerData: this.generateSteadyData(warmupDuration, mainDuration, targetPower),
+                zone: targetZoneConfig
+            },
+            this.createCooldown(cooldownDuration, warmupDuration + mainDuration)
+        ];
+        
+        return {
+            name: `${targetZoneConfig.name} Zone Workout`,
+            description: `${duration}-minute workout in ${targetZoneConfig.name} zone (${Math.round(targetZoneConfig.min * 100)}-${Math.round(targetZoneConfig.max * 100)}% FTP)`,
+            author: 'Workout Creator',
+            sportType: 'bike',
+            totalDuration: totalDuration,
+            segments: segments,
+            tss: this.calculateTSS(segments),
+            targetZone: targetZoneConfig
+        };
+    }
+
+    /**
+     * Get zone recommendation for workout description
+     * @param {string} description - Workout description
+     * @returns {Object|null} Recommended zone or null if not found
+     */
+    getZoneRecommendation(description) {
+        if (!this.powerZoneManager) {
+            return null;
+        }
+        
+        const intensity = this.extractIntensity(description);
+        if (!intensity) {
+            return null;
+        }
+        
+        const intensityZone = this.intensityMap[intensity];
+        if (!intensityZone) {
+            return null;
+        }
+        
+        // Find matching user zone
+        const zones = this.powerZoneManager.getZones();
+        for (const [zoneId, zone] of Object.entries(zones)) {
+            // Check if zone ranges overlap significantly
+            const overlapMin = Math.max(zone.min, intensityZone.min);
+            const overlapMax = Math.min(zone.max, intensityZone.max);
+            const overlapAmount = Math.max(0, overlapMax - overlapMin);
+            const zoneRange = zone.max - zone.min;
+            const overlapPercentage = overlapAmount / zoneRange;
+            
+            if (overlapPercentage > 0.5) { // 50% overlap threshold
+                return {
+                    zoneId,
+                    zone,
+                    overlapPercentage,
+                    recommendationReason: `Best match for ${intensity} intensity`
+                };
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Validate workout against power zones
+     * @param {Object} workout - Workout to validate
+     * @returns {Object} Validation results
+     */
+    validateWorkoutZones(workout) {
+        if (!this.powerZoneManager) {
+            return { valid: true, warnings: [], info: 'No power zone validation available' };
+        }
+        
+        const zones = this.powerZoneManager.getZones();
+        const warnings = [];
+        const info = [];
+        
+        // Check each segment
+        workout.segments.forEach((segment, index) => {
+            if (segment.power !== undefined) {
+                const zone = this.powerZoneManager.getZoneByPower(segment.power);
+                if (zone) {
+                    info.push(`Segment ${index + 1} (${segment.type}): ${zone.name} zone`);
+                } else {
+                    warnings.push(`Segment ${index + 1} power (${Math.round(segment.power * 100)}% FTP) doesn't match any defined zone`);
+                }
+            }
+        });
+        
+        return {
+            valid: warnings.length === 0,
+            warnings,
+            info
+        };
+    }
+
+    /**
+     * Get default zone color for index
+     * @private
+     * @param {number} index - Zone index
+     * @returns {string} Hex color code
+     */
+    _getDefaultZoneColor(index) {
+        const colors = ['#90EE90', '#87CEEB', '#FFD700', '#FFA500', '#FF6347', '#FF4500', '#8B0000'];
+        return colors[index % colors.length];
+    }
+
+    /**
+     * Convert zones to watts
+     * @private
+     * @param {Object} zones - Power zones
+     * @param {number} ftp - FTP value
+     * @returns {Object} Zones with watt ranges
+     */
+    _convertZonesToWatts(zones, ftp) {
+        const wattsZones = {};
+        for (const [zoneId, zone] of Object.entries(zones)) {
+            wattsZones[zoneId] = {
+                ...zone,
+                minWatts: Math.round(zone.min * ftp),
+                maxWatts: Math.round(zone.max * ftp)
+            };
+        }
+        return wattsZones;
+    }
+
+    /**
+     * Set power zone manager
+     * @param {Object} powerZoneManager - Power zone manager instance
+     */
+    setPowerZoneManager(powerZoneManager) {
+        this.powerZoneManager = powerZoneManager;
+        this.intensityMap = this._initializeIntensityMap();
+        
+        // Listen for zone changes
+        if (typeof window !== 'undefined') {
+            window.addEventListener('powerZonesChanged', () => {
+                this.intensityMap = this._initializeIntensityMap();
+            });
+        }
     }
 }
