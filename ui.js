@@ -1,6 +1,6 @@
 
 import { parseWorkoutXML } from './parser.js';
-import { calculateTSS, formatDuration } from './workout.js';
+import { calculateTSS, formatDuration, calculateWorkoutMetrics, calculatePowerCurve } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
 import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage, getZwiftWorkoutDirectory, saveAsWorkout, selectFolder } from './api.js';
 import { WorkoutGenerator } from './workout-generator.js';
@@ -208,10 +208,441 @@ export class UI {
         document.getElementById('workoutDescription').textContent = workoutData.description;
         document.getElementById('workoutAuthor').textContent = workoutData.author;
         document.getElementById('workoutSport').textContent = workoutData.sportType;
-        document.getElementById('totalDuration').textContent = formatDuration(workoutData.totalDuration);
-        document.getElementById('workoutTSS').textContent = tss;
         
         document.getElementById('workoutInfo').style.display = 'block';
+        
+        // Calculate and display workout metrics
+        this.displayWorkoutStats(workoutData, tss);
+    }
+
+    displayWorkoutStats(workoutData, tss) {
+        const metrics = calculateWorkoutMetrics(workoutData);
+        const powerCurve = calculatePowerCurve(workoutData);
+        
+        // Get the stats container
+        const statsContainer = document.getElementById('workoutStats');
+        if (!statsContainer) return;
+
+        // Create summary cards
+        const cards = [
+            {
+                title: 'Duration',
+                value: formatDuration(workoutData.totalDuration),
+                icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                change: null,
+                trend: 'neutral'
+            },
+            {
+                title: 'Training Stress',
+                value: `${tss} TSS`,
+                icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>`,
+                change: null,
+                trend: 'neutral'
+            },
+            {
+                title: 'Average Power',
+                value: `${metrics.avgPower}% FTP`,
+                icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>`,
+                change: null,
+                trend: 'neutral'
+            },
+            {
+                title: 'Intensity Factor',
+                value: metrics.intensityFactor.toFixed(2),
+                icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>`,
+                change: null,
+                trend: 'neutral'
+            }
+        ];
+
+        // Generate HTML for cards
+        statsContainer.innerHTML = cards.map(card => this.createMetricCard(card)).join('');
+        
+        // Create additional analysis sections
+        this.displayTimeInZones(metrics.timeInZones);
+        this.displayPowerCurve(powerCurve);
+    }
+
+    createMetricCard({ title, value, icon, change, trend }) {
+        const trendColors = {
+            up: 'text-green-600 dark:text-green-400',
+            down: 'text-red-600 dark:text-red-400',
+            neutral: 'text-gray-600 dark:text-gray-400'
+        };
+
+        return `
+            <div class="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-muted-foreground">${title}</p>
+                        <p class="text-2xl font-bold tracking-tight">${value}</p>
+                        ${change ? `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
+                            ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} ${change}
+                        </p>` : ''}
+                    </div>
+                    <div class="rounded-full bg-primary/10 p-3 text-primary">
+                        ${icon}
+                    </div>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-x-[-100%] group-hover:translate-x-[100%] transform"></div>
+            </div>
+        `;
+    }
+
+    displayTimeInZones(timeInZones) {
+        // Find a place to display time in zones - let's add it after the chart
+        const chartContainer = document.querySelector('.card-modern');
+        if (!chartContainer) return;
+
+        // Check if time in zones section already exists
+        let timeInZonesSection = document.getElementById('timeInZonesSection');
+        if (!timeInZonesSection) {
+            timeInZonesSection = document.createElement('div');
+            timeInZonesSection.id = 'timeInZonesSection';
+            timeInZonesSection.className = 'card-modern p-6 mt-6';
+            chartContainer.parentNode.insertBefore(timeInZonesSection, chartContainer.nextSibling);
+        }
+
+        const zoneColors = {
+            'Zone 1': '#808080',
+            'Zone 2': '#0000FF', 
+            'Zone 3': '#008000',
+            'Zone 4': '#FFFF00',
+            'Zone 5': '#FFA500',
+            'Zone 6': '#FF0000',
+            'Zone 7': '#800080'
+        };
+
+        const zonesHtml = Object.entries(timeInZones)
+            .filter(([_, zone]) => zone.time > 0)
+            .map(([zoneName, zone]) => {
+                const percentage = zone.percentage.toFixed(1);
+                const duration = formatDuration(zone.time);
+                const color = zoneColors[zoneName];
+                
+                return `
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded-full" style="background-color: ${color}"></div>
+                            <span class="font-medium">${zoneName}</span>
+                            <span class="text-sm text-muted-foreground">(${zone.min}-${zone.max}% FTP)</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">${duration}</div>
+                            <div class="text-sm text-muted-foreground">${percentage}%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        timeInZonesSection.innerHTML = `
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Time in Power Zones</h3>
+                    <p class="text-sm text-muted-foreground">Distribution of time across power zones</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                ${zonesHtml}
+            </div>
+        `;
+    }
+
+    displayPowerCurve(powerCurve) {
+        // Find a place to display power curve - let's add it after time in zones
+        const timeInZonesSection = document.getElementById('timeInZonesSection');
+        if (!timeInZonesSection) return;
+
+        // Check if power curve section already exists
+        let powerCurveSection = document.getElementById('powerCurveSection');
+        if (!powerCurveSection) {
+            powerCurveSection = document.createElement('div');
+            powerCurveSection.id = 'powerCurveSection';
+            powerCurveSection.className = 'card-modern p-6 mt-6';
+            timeInZonesSection.parentNode.insertBefore(powerCurveSection, timeInZonesSection.nextSibling);
+        }
+
+        const durations = [
+            { key: 5, label: '5s' },
+            { key: 10, label: '10s' },
+            { key: 15, label: '15s' },
+            { key: 20, label: '20s' },
+            { key: 30, label: '30s' },
+            { key: 60, label: '1min' },
+            { key: 300, label: '5min' },
+            { key: 600, label: '10min' },
+            { key: 1200, label: '20min' },
+            { key: 3600, label: '60min' }
+        ];
+
+        const curveHtml = durations
+            .filter(d => powerCurve[d.key])
+            .map(d => {
+                const power = powerCurve[d.key];
+                return `
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <span class="font-medium">${d.label}</span>
+                        <span class="font-semibold text-primary">${power}% FTP</span>
+                    </div>
+                `;
+            }).join('');
+
+        powerCurveSection.innerHTML = `
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Power Curve Analysis</h3>
+                    <p class="text-sm text-muted-foreground">Maximum sustained power for different durations</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                ${curveHtml}
+            </div>
+        `;
+    }
+
+    initializeRangeSelection() {
+        // Add range selection controls
+        this.rangeSelectionEnabled = false;
+        this.selectedRange = null;
+        
+        // Add range selection toggle to chart controls
+        const chartContainer = document.querySelector('.card-modern');
+        if (!chartContainer) return;
+
+        const rangeControlsHtml = `
+            <div id="rangeControls" class="flex items-center space-x-2 mt-4 p-3 bg-muted/30 rounded-lg">
+                <button id="enableRangeSelection" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Select Range
+                </button>
+                <button id="clearRangeSelection" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3" disabled>
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Clear
+                </button>
+                <span id="rangeSelectionStatus" class="text-sm text-muted-foreground">Click and drag on chart to select time range</span>
+            </div>
+        `;
+
+        // Add controls after the chart canvas
+        const chartCanvas = chartContainer.querySelector('canvas');
+        if (chartCanvas && chartCanvas.parentNode) {
+            chartCanvas.parentNode.insertAdjacentHTML('afterend', rangeControlsHtml);
+        }
+
+        // Setup event listeners
+        this.setupRangeSelectionEvents();
+    }
+
+    setupRangeSelectionEvents() {
+        const enableBtn = document.getElementById('enableRangeSelection');
+        const clearBtn = document.getElementById('clearRangeSelection');
+        const statusSpan = document.getElementById('rangeSelectionStatus');
+
+        if (enableBtn) {
+            enableBtn.addEventListener('click', () => {
+                this.rangeSelectionEnabled = !this.rangeSelectionEnabled;
+                enableBtn.textContent = this.rangeSelectionEnabled ? 'Disable Range' : 'Select Range';
+                enableBtn.className = this.rangeSelectionEnabled 
+                    ? enableBtn.className.replace('bg-primary text-primary-foreground hover:bg-primary/90', 'bg-destructive text-destructive-foreground hover:bg-destructive/90')
+                    : enableBtn.className.replace('bg-destructive text-destructive-foreground hover:bg-destructive/90', 'bg-primary text-primary-foreground hover:bg-primary/90');
+                
+                if (statusSpan) {
+                    statusSpan.textContent = this.rangeSelectionEnabled 
+                        ? 'Click and drag on chart to select time range'
+                        : 'Range selection disabled';
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                this.clearRangeSelection();
+            });
+        }
+    }
+
+    clearRangeSelection() {
+        this.selectedRange = null;
+        const clearBtn = document.getElementById('clearRangeSelection');
+        const statusSpan = document.getElementById('rangeSelectionStatus');
+        
+        if (clearBtn) clearBtn.disabled = true;
+        if (statusSpan) statusSpan.textContent = 'Range selection cleared';
+        
+        // Remove range metrics display
+        const rangeMetricsSection = document.getElementById('rangeMetricsSection');
+        if (rangeMetricsSection) {
+            rangeMetricsSection.remove();
+        }
+
+        // Update chart to remove range highlighting
+        if (this.chart) {
+            this.updateChartRangeSelection(null);
+        }
+    }
+
+    calculateRangeMetrics(startTime, endTime, workoutData) {
+        if (!workoutData.segments || startTime >= endTime) {
+            return null;
+        }
+
+        // Get all segments in the selected range
+        const allSegments = [];
+        workoutData.segments.forEach(segment => {
+            if (Array.isArray(segment)) {
+                allSegments.push(...segment);
+            } else {
+                allSegments.push(segment);
+            }
+        });
+
+        // Filter segments that overlap with the selected range
+        const rangeSegments = allSegments.filter(segment => {
+            const segmentStart = segment.startTime;
+            const segmentEnd = segment.startTime + segment.duration;
+            return segmentStart < endTime && segmentEnd > startTime;
+        });
+
+        if (rangeSegments.length === 0) {
+            return null;
+        }
+
+        // Calculate metrics for the range
+        let totalPower = 0;
+        let totalWeightedPower = 0;
+        let totalDuration = 0;
+        let maxPower = 0;
+
+        rangeSegments.forEach(segment => {
+            const segmentStart = Math.max(segment.startTime, startTime);
+            const segmentEnd = Math.min(segment.startTime + segment.duration, endTime);
+            const duration = segmentEnd - segmentStart;
+
+            if (duration > 0) {
+                let power;
+                if (segment.power !== undefined) {
+                    power = segment.power * 100;
+                } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
+                    power = ((segment.powerLow + segment.powerHigh) / 2) * 100;
+                } else {
+                    power = 60;
+                }
+
+                totalPower += power * duration;
+                totalWeightedPower += Math.pow(power / 100, 4) * duration;
+                totalDuration += duration;
+                maxPower = Math.max(maxPower, power);
+            }
+        });
+
+        if (totalDuration === 0) {
+            return null;
+        }
+
+        const avgPower = totalPower / totalDuration;
+        const normalizedPower = Math.pow(totalWeightedPower / totalDuration, 0.25) * 100;
+        const intensityFactor = normalizedPower / 100;
+
+        return {
+            duration: totalDuration,
+            avgPower: Math.round(avgPower),
+            normalizedPower: Math.round(normalizedPower),
+            intensityFactor: Math.round(intensityFactor * 100) / 100,
+            maxPower: Math.round(maxPower),
+            startTime,
+            endTime
+        };
+    }
+
+    displayRangeMetrics(rangeMetrics) {
+        if (!rangeMetrics) return;
+
+        // Remove existing range metrics
+        const existingSection = document.getElementById('rangeMetricsSection');
+        if (existingSection) {
+            existingSection.remove();
+        }
+
+        // Find where to insert the range metrics
+        const powerCurveSection = document.getElementById('powerCurveSection');
+        if (!powerCurveSection) return;
+
+        // Create range metrics section
+        const rangeMetricsSection = document.createElement('div');
+        rangeMetricsSection.id = 'rangeMetricsSection';
+        rangeMetricsSection.className = 'card-modern p-6 mt-6 border-l-4 border-l-primary';
+        powerCurveSection.parentNode.insertBefore(rangeMetricsSection, powerCurveSection.nextSibling);
+
+        const startTimeFormatted = formatDuration(rangeMetrics.startTime);
+        const endTimeFormatted = formatDuration(rangeMetrics.endTime);
+        const durationFormatted = formatDuration(rangeMetrics.duration);
+
+        rangeMetricsSection.innerHTML = `
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Selected Range Analysis</h3>
+                    <p class="text-sm text-muted-foreground">${startTimeFormatted} - ${endTimeFormatted} (${durationFormatted})</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-4 rounded-lg bg-muted/50">
+                    <div class="text-sm font-medium text-muted-foreground">Average Power</div>
+                    <div class="text-xl font-bold text-primary">${rangeMetrics.avgPower}% FTP</div>
+                </div>
+                <div class="p-4 rounded-lg bg-muted/50">
+                    <div class="text-sm font-medium text-muted-foreground">Normalized Power</div>
+                    <div class="text-xl font-bold text-primary">${rangeMetrics.normalizedPower}% FTP</div>
+                </div>
+                <div class="p-4 rounded-lg bg-muted/50">
+                    <div class="text-sm font-medium text-muted-foreground">Intensity Factor</div>
+                    <div class="text-xl font-bold text-primary">${rangeMetrics.intensityFactor}</div>
+                </div>
+                <div class="p-4 rounded-lg bg-muted/50">
+                    <div class="text-sm font-medium text-muted-foreground">Max Power</div>
+                    <div class="text-xl font-bold text-primary">${rangeMetrics.maxPower}% FTP</div>
+                </div>
+            </div>
+        `;
+    }
+
+    updateChartRangeSelection(range) {
+        if (!this.chart) return;
+
+        // Remove existing range annotation
+        if (this.chart.options.plugins.annotation.annotations.rangeSelection) {
+            delete this.chart.options.plugins.annotation.annotations.rangeSelection;
+        }
+
+        // Add new range annotation if range is provided
+        if (range) {
+            this.chart.options.plugins.annotation.annotations.rangeSelection = {
+                type: 'box',
+                xMin: range.startTime,
+                xMax: range.endTime,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: 'rgba(59, 130, 246, 0.8)',
+                borderWidth: 2,
+                label: {
+                    content: 'Selected Range',
+                    enabled: true,
+                    position: 'top'
+                }
+            };
+        }
+
+        this.chart.update('none');
     }
 
     createPowerZoneAnnotations(ftp) {
@@ -413,6 +844,40 @@ export class UI {
                     },
                 },
                 onClick: (event, elements, chart) => {
+                    // Handle range selection if enabled
+                    if (this.rangeSelectionEnabled) {
+                        const canvasPosition = Chart.helpers.getRelativePosition(event, chart);
+                        const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
+                        
+                        if (!this.rangeSelectionStart) {
+                            // Start range selection
+                            this.rangeSelectionStart = dataX;
+                            document.getElementById('rangeSelectionStatus').textContent = 'Click to finish range selection';
+                        } else {
+                            // End range selection
+                            const startTime = Math.min(this.rangeSelectionStart, dataX);
+                            const endTime = Math.max(this.rangeSelectionStart, dataX);
+                            
+                            this.selectedRange = { startTime, endTime };
+                            this.rangeSelectionStart = null;
+                            
+                            // Calculate and display range metrics
+                            const rangeMetrics = this.calculateRangeMetrics(startTime, endTime, workoutData);
+                            if (rangeMetrics) {
+                                this.displayRangeMetrics(rangeMetrics);
+                                this.updateChartRangeSelection(this.selectedRange);
+                                
+                                const clearBtn = document.getElementById('clearRangeSelection');
+                                if (clearBtn) clearBtn.disabled = false;
+                                
+                                document.getElementById('rangeSelectionStatus').textContent = 
+                                    `Range selected: ${formatDuration(startTime)} - ${formatDuration(endTime)}`;
+                            }
+                        }
+                        return;
+                    }
+
+                    // Normal segment selection
                     const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false }, true);
                     if (points && points.length > 0) {
                         const point = points[0];
@@ -460,6 +925,9 @@ export class UI {
         });
 
         document.querySelector('.chart-container').style.display = 'block';
+        
+        // Initialize range selection functionality
+        this.initializeRangeSelection();
     }
 
     displaySegmentDetails(workoutData) {
@@ -841,16 +1309,16 @@ The JSON should have this exact structure:
             } else if (error.message) {
                 // Categorize client-side errors with enhanced diagnostics
                 if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-                    errorMessage += "**Connection Error**\n\nCannot connect to the LLM server.\n\n**Troubleshooting Steps:**\n1. Check if server is running: `python3 server.py`\n2. Verify server is accessible at http://localhost:53218\n3. Check for firewall or network issues\n4. Try using Local mode instead\n\n**Alternative:** Disable 'Use LLM' toggle for local generation";
+                    errorMessage += '**Connection Error**\n\nCannot connect to the LLM server.\n\n**Troubleshooting Steps:**\n1. Check if server is running: `python3 server.py`\n2. Verify server is accessible at http://localhost:53218\n3. Check for firewall or network issues\n4. Try using Local mode instead\n\n**Alternative:** Disable \'Use LLM\' toggle for local generation';
                 } else if (error.message.includes('timeout')) {
-                    errorMessage += "**Timeout Error**\n\nThe LLM request took too long to complete.\n\n**Troubleshooting Steps:**\n1. Try a simpler workout description\n2. Check your internet connection\n3. Wait a moment and try again\n4. Use Local mode for faster generation\n\n**Technical Details:** Request timeout after waiting for server response";
+                    errorMessage += '**Timeout Error**\n\nThe LLM request took too long to complete.\n\n**Troubleshooting Steps:**\n1. Try a simpler workout description\n2. Check your internet connection\n3. Wait a moment and try again\n4. Use Local mode for faster generation\n\n**Technical Details:** Request timeout after waiting for server response';
                 } else if (error.message.includes('JSON') || error.message.includes('parse')) {
-                    errorMessage += "**Response Format Error**\n\nThe LLM returned an invalid response format.\n\n**Troubleshooting Steps:**\n1. Try a different workout description\n2. Check the debug output for malformed data\n3. Restart the server to reset the LLM state\n4. Use Local mode as an alternative\n\n**Technical Details:** " + error.message;
+                    errorMessage += '**Response Format Error**\n\nThe LLM returned an invalid response format.\n\n**Troubleshooting Steps:**\n1. Try a different workout description\n2. Check the debug output for malformed data\n3. Restart the server to reset the LLM state\n4. Use Local mode as an alternative\n\n**Technical Details:** ' + error.message;
                 } else {
-                    errorMessage += "**Unexpected Error**\n\nAn unexpected error occurred during LLM communication.\n\n**Troubleshooting Steps:**\n1. Check the browser console (F12) for technical details\n2. Verify the server is running and configured correctly\n3. Try refreshing the page and submitting again\n4. Use Local mode as a fallback\n\n**Technical Details:** " + error.message;
+                    errorMessage += '**Unexpected Error**\n\nAn unexpected error occurred during LLM communication.\n\n**Troubleshooting Steps:**\n1. Check the browser console (F12) for technical details\n2. Verify the server is running and configured correctly\n3. Try refreshing the page and submitting again\n4. Use Local mode as a fallback\n\n**Technical Details:** ' + error.message;
                 }
             } else {
-                errorMessage += "**Unknown Error**\n\nAn unknown error occurred.\n\n**Troubleshooting Steps:**\n1. Check browser console (F12) for details\n2. Verify server is running\n3. Try Local mode instead\n\n**Need Help?** Check server logs for more information";
+                errorMessage += '**Unknown Error**\n\nAn unknown error occurred.\n\n**Troubleshooting Steps:**\n1. Check browser console (F12) for details\n2. Verify server is running\n3. Try Local mode instead\n\n**Need Help?** Check server logs for more information';
             }
             
             this.appendChatMessage(errorMessage, 'llm error');

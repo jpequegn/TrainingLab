@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zwift Workout Visualizer - Modern Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))"
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))"
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))"
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))"
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))"
+                        },
+                        popover: {
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))"
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))"
+                        }
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 text-foreground">
+    
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container flex h-16 items-center justify-between px-4">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">ZW</span>
+                    </div>
+                    <h1 class="text-xl font-bold text-foreground">Workout Visualizer</h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+                    <span class="sr-only">Toggle theme</span>
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                
+                <!-- Help Button -->
+                <button id="helpButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+                    <span class="sr-only">Help</span>
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative py-20 px-4 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-purple-500/20 blur-3xl"></div>
+        <div class="container relative mx-auto text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl mb-6 shadow-lg">
+                <span class="text-3xl">🚴‍♂️</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent mb-6">
+                Visualize Your Training
+            </h1>
+            <p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Transform your Zwift workout files into stunning interactive visualizations with advanced analytics and export capabilities.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="uploadButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Upload Workout
+                </button>
+                <button id="loadSample" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Try Sample
+                </button>
+            </div>
+        </div>
+        
+        <!-- Hidden File Input -->
+        <input type="file" id="fileInput" accept=".zwo" class="hidden" />
+    </section>
+
+    <!-- Workout Display Section -->
+    <section id="workoutSection" class="py-8 px-4 hidden">
+        <div class="container mx-auto max-w-7xl space-y-8">
+            
+            <!-- Workout Stats Cards -->
+            <div id="workoutStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <!-- Chart Section -->
+            <div class="card-modern p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-foreground">Power Profile</h3>
+                        <p class="text-sm text-muted-foreground">Interactive workout visualization</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="undoEditBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-yellow-500 text-white hover:bg-yellow-600 h-9 px-3 hidden">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                            </svg>
+                            Undo
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-muted/50 rounded-lg p-4">
+                    <canvas id="workoutChart" class="w-full h-96"></canvas>
+                </div>
+            </div>
+
+            <!-- Workout Info Panel -->
+            <div id="workoutInfo" class="card-modern overflow-hidden hidden">
+                <div class="bg-gradient-to-r from-violet-500 to-purple-500 px-6 py-6 text-white">
+                    <h2 id="workoutName" class="text-2xl font-bold mb-2"></h2>
+                    <p id="workoutDescription" class="text-violet-100 opacity-90"></p>
+                    <div class="flex items-center space-x-4 mt-4 text-sm">
+                        <span id="workoutAuthor" class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Author
+                        </span>
+                        <span id="workoutSport" class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                            Sport
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Controls Section -->
+                <div class="p-6 space-y-6">
+                    <!-- Scaling Controls -->
+                    <div class="card-glass p-4">
+                        <h4 class="text-sm font-semibold text-foreground mb-4 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                            Intensity Scaling
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <label for="scaleSlider" class="text-sm font-medium text-foreground">Scale Factor:</label>
+                                <span class="scale-value text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">1.0x</span>
+                            </div>
+                            <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" 
+                                   class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer">
+                            <div class="flex space-x-2">
+                                <button id="applyScale" class="flex-1 btn-modern">Apply Scaling</button>
+                                <button id="resetWorkout" class="btn-outline px-4 py-2 rounded-lg">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="card-glass p-4">
+                        <h4 class="text-sm font-semibold text-foreground mb-4 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Options
+                        </h4>
+                        
+                        <!-- FTP Input -->
+                        <div class="mb-4">
+                            <label for="ftpInput" class="block text-sm font-medium text-foreground mb-2">FTP (watts):</label>
+                            <input type="number" id="ftpInput" value="250" min="100" max="500" 
+                                   class="input-modern w-full" placeholder="Enter your FTP">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="exportERG" class="btn-outline text-sm py-2">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                                </svg>
+                                ERG File
+                            </button>
+                            <button id="exportMRC" class="btn-outline text-sm py-2">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                MRC File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segments Panel -->
+            <div id="segmentDetails" class="card-modern overflow-hidden hidden">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4 text-white flex items-center justify-between">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold">Workout Segments</h3>
+                    </div>
+                    <button id="toggleSegments" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200">−</button>
+                </div>
+                <div class="p-6">
+                    <div id="segmentList" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Cards -->
+    <section class="py-16 px-4">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-foreground mb-4">Powerful Features</h2>
+                <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Everything you need to analyze, modify, and export your training data
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-modern p-6 text-center animate-on-scroll">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">Interactive Charts</h3>
+                    <p class="text-muted-foreground">Visualize power profiles with hover details and segment breakdown</p>
+                </div>
+                
+                <div class="card-modern p-6 text-center animate-on-scroll">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">Workout Scaling</h3>
+                    <p class="text-muted-foreground">Adjust intensity levels with real-time preview and TSS calculation</p>
+                </div>
+                
+                <div class="card-modern p-6 text-center animate-on-scroll">
+                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">Multi-Format Export</h3>
+                    <p class="text-muted-foreground">Export to ERG, MRC, and ZWO formats for any training platform</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t bg-background/95 backdrop-blur">
+        <div class="container mx-auto py-8 px-4">
+            <div class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
+                <div class="flex items-center space-x-2">
+                    <div class="w-6 h-6 bg-gradient-to-r from-violet-500 to-purple-500 rounded"></div>
+                    <span class="text-sm text-muted-foreground">Zwift Workout Visualizer</span>
+                </div>
+                <div class="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <span>Made with ❤️ for cyclists</span>
+                    <span>•</span>
+                    <button id="keyboardHelp" class="hover:text-foreground transition-colors">
+                        Keyboard Shortcuts
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Power Info Tooltip -->
+    <div id="hoverPowerBox" class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-3 py-2 text-sm font-medium z-50 hidden">
+        <div class="text-popover-foreground"></div>
+    </div>
+    
+    <!-- Segment Edit Modal -->
+    <div id="segmentEditBox" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="card-modern p-6 max-w-md w-full mx-4"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50">
+        <div class="flex items-center space-x-2 text-popover-foreground">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="font-medium"></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="components/ui.js"></script>
+    <script type="module" src="themes.js"></script>
+    <script type="module" src="shortcuts.js"></script>
+    <script type="module" src="error-handler.js"></script>
+    <script type="module" src="script.js"></script>
+    
+    <script>
+        // Initialize modern UI components
+        document.addEventListener('DOMContentLoaded', () => {
+            const modernUI = new ModernUI();
+            
+            // Connect upload button to file input
+            document.getElementById('uploadButton').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+            
+            // Add smooth scrolling animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
