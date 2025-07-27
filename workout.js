@@ -79,6 +79,181 @@ export function formatDuration(seconds) {
     }
 }
 
+export function calculateWorkoutMetrics(workout) {
+    if (!workout.segments || workout.segments.length === 0) {
+        return {
+            avgPower: 0,
+            normalizedPower: 0,
+            intensityFactor: 0,
+            timeInZones: {},
+            maxPower: 0,
+            minPower: 0,
+            variabilityIndex: 0
+        };
+    }
+
+    // Flatten all segments
+    const allSegments = [];
+    workout.segments.forEach(segment => {
+        if (Array.isArray(segment)) {
+            allSegments.push(...segment);
+        } else {
+            allSegments.push(segment);
+        }
+    });
+
+    // Calculate power metrics
+    let totalWeightedPower = 0;
+    let totalPowerSum = 0;
+    let totalDuration = 0;
+    let maxPower = 0;
+    let minPower = Infinity;
+
+    // Power zones based on FTP percentage
+    const powerZones = {
+        'Zone 1': { min: 0, max: 55, time: 0 },
+        'Zone 2': { min: 56, max: 75, time: 0 },
+        'Zone 3': { min: 76, max: 90, time: 0 },
+        'Zone 4': { min: 91, max: 105, time: 0 },
+        'Zone 5': { min: 106, max: 120, time: 0 },
+        'Zone 6': { min: 121, max: 150, time: 0 },
+        'Zone 7': { min: 151, max: 999, time: 0 }
+    };
+
+    allSegments.forEach(segment => {
+        if (segment.duration > 0) {
+            let segmentPower;
+            
+            // Calculate power for the segment
+            if (segment.power !== undefined) {
+                segmentPower = segment.power;
+            } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
+                segmentPower = (segment.powerLow + segment.powerHigh) / 2;
+            } else {
+                segmentPower = 0.6; // Default fallback
+            }
+
+            const powerPercent = segmentPower * 100;
+            
+            // Update min/max power
+            maxPower = Math.max(maxPower, powerPercent);
+            if (powerPercent > 0) {
+                minPower = Math.min(minPower, powerPercent);
+            }
+
+            // Accumulate for average power calculation
+            totalPowerSum += powerPercent * segment.duration;
+            
+            // Accumulate for normalized power (4th power method)
+            totalWeightedPower += Math.pow(segmentPower, 4) * segment.duration;
+            totalDuration += segment.duration;
+
+            // Calculate time in zones
+            for (const [zoneName, zone] of Object.entries(powerZones)) {
+                if (powerPercent >= zone.min && powerPercent <= zone.max) {
+                    zone.time += segment.duration;
+                    break;
+                }
+            }
+        }
+    });
+
+    if (totalDuration === 0) {
+        return {
+            avgPower: 0,
+            normalizedPower: 0,
+            intensityFactor: 0,
+            timeInZones: powerZones,
+            maxPower: 0,
+            minPower: 0,
+            variabilityIndex: 0
+        };
+    }
+
+    // Calculate metrics
+    const avgPower = totalPowerSum / totalDuration;
+    const normalizedPower = Math.pow(totalWeightedPower / totalDuration, 0.25) * 100;
+    const intensityFactor = normalizedPower / 100; // Since 100% = FTP
+    const variabilityIndex = normalizedPower / avgPower;
+
+    // Convert time in zones to percentages
+    const timeInZonesPercent = {};
+    for (const [zoneName, zone] of Object.entries(powerZones)) {
+        timeInZonesPercent[zoneName] = {
+            ...zone,
+            percentage: (zone.time / totalDuration) * 100
+        };
+    }
+
+    return {
+        avgPower: Math.round(avgPower),
+        normalizedPower: Math.round(normalizedPower),
+        intensityFactor: Math.round(intensityFactor * 100) / 100,
+        timeInZones: timeInZonesPercent,
+        maxPower: Math.round(maxPower),
+        minPower: minPower === Infinity ? 0 : Math.round(minPower),
+        variabilityIndex: Math.round(variabilityIndex * 100) / 100
+    };
+}
+
+export function calculatePowerCurve(workout, durations = [5, 10, 15, 20, 30, 60, 300, 600, 1200, 3600]) {
+    if (!workout.segments || workout.segments.length === 0) {
+        return {};
+    }
+
+    // Create a continuous power data array with 1-second resolution
+    const powerData = [];
+    let currentTime = 0;
+
+    const allSegments = [];
+    workout.segments.forEach(segment => {
+        if (Array.isArray(segment)) {
+            allSegments.push(...segment);
+        } else {
+            allSegments.push(segment);
+        }
+    });
+
+    // Sort segments by start time
+    allSegments.sort((a, b) => a.startTime - b.startTime);
+
+    allSegments.forEach(segment => {
+        for (let i = 0; i < segment.duration; i++) {
+            let power;
+            if (segment.power !== undefined) {
+                power = segment.power * 100;
+            } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
+                // For ramps, interpolate power over time
+                const progress = i / segment.duration;
+                power = (segment.powerLow + (segment.powerHigh - segment.powerLow) * progress) * 100;
+            } else {
+                power = 60; // Default
+            }
+            powerData.push(power);
+        }
+    });
+
+    // Calculate power curve for specified durations
+    const powerCurve = {};
+    
+    durations.forEach(duration => {
+        if (duration <= powerData.length) {
+            let maxAvgPower = 0;
+            
+            // Calculate rolling average for this duration
+            for (let i = 0; i <= powerData.length - duration; i++) {
+                const slice = powerData.slice(i, i + duration);
+                const avgPower = slice.reduce((sum, p) => sum + p, 0) / slice.length;
+                maxAvgPower = Math.max(maxAvgPower, avgPower);
+            }
+            
+            powerCurve[duration] = Math.round(maxAvgPower);
+        }
+    });
+
+    return powerCurve;
+}
+
 
 
 export function generateSteadyData(segment) {

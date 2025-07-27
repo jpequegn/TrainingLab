@@ -19,34 +19,40 @@ export class ModernUIUpgrade {
     }
 
     performUpgrade() {
-        console.log('🎨 Starting Modern UI Upgrade...');
-        
-        // 1. Upgrade body and main containers
-        this.upgradeLayout();
-        
-        // 2. Modernize cards and panels
-        this.modernizeCards();
-        
-        // 3. Enhance buttons
-        this.enhanceButtons();
-        
-        // 4. Upgrade form inputs
-        this.upgradeInputs();
-        
-        // 5. Add modern metrics cards
-        this.createModernMetrics();
-        
-        // 6. Enhance navigation
-        this.modernizeNavigation();
-        
-        // 7. Add glass effects
-        this.addGlassEffects();
-        
-        // 8. Setup animations
-        this.setupAnimations();
-        
-        this.isUpgraded = true;
-        console.log('✨ Modern UI Upgrade Complete!');
+        try {
+            console.log('🎨 Starting Modern UI Upgrade...');
+            
+            // 1. Upgrade body and main containers
+            this.upgradeLayout();
+            
+            // 2. Modernize cards and panels
+            this.modernizeCards();
+            
+            // 3. Enhance buttons
+            this.enhanceButtons();
+            
+            // 4. Upgrade form inputs
+            this.upgradeInputs();
+            
+            // 5. Add modern metrics cards
+            this.createModernMetrics();
+            
+            // 6. Enhance navigation
+            this.modernizeNavigation();
+            
+            // 7. Add glass effects
+            this.addGlassEffects();
+            
+            // 8. Setup animations
+            this.setupAnimations();
+            
+            this.isUpgraded = true;
+            console.log('✨ Modern UI Upgrade Complete!');
+        } catch (error) {
+            console.error('❌ Modern UI Upgrade Failed:', error);
+            // Fallback: just add basic modern styling
+            document.body.classList.add('modern-ui-fallback');
+        }
     }
 
     upgradeLayout() {
@@ -62,21 +68,31 @@ export class ModernUIUpgrade {
     }
 
     modernizeCards() {
-        // Upgrade existing cards to modern design
-        const cards = document.querySelectorAll('.bg-white\\/95, .bg-white');
-        cards.forEach(card => {
-            if (!card.classList.contains('modern-upgraded')) {
-                card.classList.add('modern-upgraded');
-                card.classList.remove('bg-white/95', 'bg-white');
-                card.classList.add('card-modern', 'backdrop-blur-sm');
-                
-                // Add hover effects
-                card.addEventListener('mouseenter', () => {
-                    card.style.transform = 'translateY(-2px)';
+        // Upgrade existing cards to modern design - fix selector syntax
+        const cardSelectors = ['.bg-white\/95', '.bg-white', '[class*="bg-white"]'];
+        cardSelectors.forEach(selector => {
+            try {
+                const cards = document.querySelectorAll(selector.replace('\\/95', '/95'));
+                cards.forEach(card => {
+                    if (!card.classList.contains('modern-upgraded')) {
+                        card.classList.add('modern-upgraded');
+                        // Remove problematic classes safely
+                        card.classList.remove('bg-white');
+                        card.className = card.className.replace('bg-white/95', '');
+                        card.classList.add('card-modern', 'backdrop-blur-sm');
+                        
+                        // Add hover effects with transition
+                        card.style.transition = 'transform 0.2s ease-out';
+                        card.addEventListener('mouseenter', () => {
+                            card.style.transform = 'translateY(-2px)';
+                        });
+                        card.addEventListener('mouseleave', () => {
+                            card.style.transform = 'translateY(0)';
+                        });
+                    }
                 });
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = 'translateY(0)';
-                });
+            } catch (e) {
+                console.warn('Selector error:', selector, e);
             }
         });
 
@@ -120,15 +136,15 @@ export class ModernUIUpgrade {
             undoBtn.classList.add('btn-modern', 'bg-yellow-500', 'hover:bg-yellow-600');
         }
 
-        // Upload and sample buttons
-        const uploadSection = document.querySelector('.bg-white\\/95');
+        // Upload and sample buttons - fix selector and add safety checks
+        const uploadSection = document.querySelector('[class*="bg-white"]');
         if (uploadSection) {
             const buttons = uploadSection.querySelectorAll('button, label');
             buttons.forEach(btn => {
-                if (btn.textContent.includes('Upload') || btn.textContent.includes('file')) {
+                if (btn.textContent && btn.textContent.includes('Upload') || btn.textContent && btn.textContent.includes('file')) {
                     btn.classList.add('btn-modern', 'hover:scale-105', 'transform', 'transition-transform');
                 }
-                if (btn.textContent.includes('Sample')) {
+                if (btn.textContent && btn.textContent.includes('Sample')) {
                     btn.classList.add('btn-outline', 'hover:scale-105', 'transform', 'transition-transform');
                 }
             });
@@ -160,27 +176,29 @@ export class ModernUIUpgrade {
     }
 
     createModernMetrics() {
-        // Find the workout stats section and modernize it
-        const statsContainer = document.querySelector('.grid.grid-cols-2.lg\\:grid-cols-4');
+        // Find the workout stats section and modernize it - fix selector syntax
+        const statsContainer = document.querySelector('.grid.grid-cols-2') || document.querySelector('[class*="grid-cols-2"]');
         if (statsContainer) {
             statsContainer.classList.add('gap-6');
             
             // Modernize each stat card
-            const statCards = statsContainer.querySelectorAll('.bg-gradient-to-br');
+            const statCards = statsContainer.querySelectorAll('.bg-gradient-to-br, [class*="gradient-to-br"]');
             statCards.forEach((card, index) => {
-                card.classList.add('card-modern', 'hover:scale-105', 'transform', 'transition-all', 'duration-300');
-                
-                // Add modern icons
-                const iconMap = ['⏱️', '🔥', '👤', '🚴'];
-                const icon = iconMap[index] || '📊';
-                
-                const iconEl = document.createElement('div');
-                iconEl.className = 'w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary text-lg mb-2';
-                iconEl.textContent = icon;
-                
-                const title = card.querySelector('.text-xs');
-                if (title) {
-                    title.parentElement.insertBefore(iconEl, title);
+                if (!card.classList.contains('metrics-modernized')) {
+                    card.classList.add('metrics-modernized', 'card-modern', 'hover:scale-105', 'transform', 'transition-all', 'duration-300');
+                    
+                    // Add modern icons
+                    const iconMap = ['⏱️', '🔥', '👤', '🚴'];
+                    const icon = iconMap[index] || '📊';
+                    
+                    const iconEl = document.createElement('div');
+                    iconEl.className = 'w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary text-lg mb-2';
+                    iconEl.textContent = icon;
+                    
+                    const title = card.querySelector('.text-xs');
+                    if (title && title.parentElement) {
+                        title.parentElement.insertBefore(iconEl, title);
+                    }
                 }
             });
         }
@@ -327,15 +345,28 @@ export class ModernUIUpgrade {
     }
 }
 
-// Auto-initialize the upgrade
-document.addEventListener('DOMContentLoaded', () => {
-    const upgrader = new ModernUIUpgrade();
-    
-    // Show notification after upgrade
-    setTimeout(() => {
-        upgrader.showUpgradeNotification();
-    }, 1000);
-});
+// Auto-initialize the upgrade with better timing
+function initializeModernUI() {
+    try {
+        const upgrader = new ModernUIUpgrade();
+        
+        // Show notification after upgrade
+        setTimeout(() => {
+            upgrader.showUpgradeNotification();
+        }, 1000);
+    } catch (error) {
+        console.error('Failed to initialize Modern UI:', error);
+    }
+}
+
+// Multiple initialization strategies
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeModernUI);
+} else if (document.readyState === 'interactive') {
+    setTimeout(initializeModernUI, 100);
+} else {
+    initializeModernUI();
+}
 
 // Export for manual use
 window.ModernUIUpgrade = ModernUIUpgrade;

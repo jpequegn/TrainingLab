@@ -104,6 +104,23 @@ body {
     transition: background 0.3s ease;
 }
 
+/* Fallback styling for when modern UI upgrade fails */
+.modern-ui-fallback {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.modern-ui-fallback .bg-white,
+.modern-ui-fallback [class*="bg-white"] {
+    @apply rounded-xl shadow-lg border border-gray-200;
+    transition: all 0.2s ease;
+}
+
+.modern-ui-fallback .bg-white:hover,
+.modern-ui-fallback [class*="bg-white"]:hover {
+    @apply shadow-xl;
+    transform: translateY(-1px);
+}
+
 .bg-card {
     background: var(--bg-card) !important;
     border-color: var(--border-color) !important;
