@@ -10,11 +10,18 @@ export class ModernUIUpgrade {
     }
 
     initializeUpgrade() {
+        console.log('🔧 Initializing Modern UI Upgrade...', {
+            readyState: document.readyState,
+            bodyExists: !!document.body,
+            elementsCount: document.querySelectorAll('*').length
+        });
+        
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.performUpgrade());
         } else {
-            this.performUpgrade();
+            // Add a small delay to ensure all scripts are loaded
+            setTimeout(() => this.performUpgrade(), 100);
         }
     }
 
@@ -68,17 +75,21 @@ export class ModernUIUpgrade {
     }
 
     modernizeCards() {
+        console.log('🔄 Modernizing cards...');
         // Upgrade existing cards to modern design - fix selector syntax
-        const cardSelectors = ['.bg-white\/95', '.bg-white', '[class*="bg-white"]'];
+        const cardSelectors = ['.bg-white', '[class*="bg-white"]'];
         cardSelectors.forEach(selector => {
             try {
-                const cards = document.querySelectorAll(selector.replace('\\/95', '/95'));
+                console.log(`  Checking selector: ${selector}`);
+                const cards = document.querySelectorAll(selector);
+                console.log(`  Found ${cards.length} cards`);
                 cards.forEach(card => {
                     if (!card.classList.contains('modern-upgraded')) {
                         card.classList.add('modern-upgraded');
                         // Remove problematic classes safely
                         card.classList.remove('bg-white');
-                        card.className = card.className.replace('bg-white/95', '');
+                        // Handle the bg-white/95 class more carefully
+                        card.className = card.className.replace(/bg-white\/\d+/g, '');
                         card.classList.add('card-modern', 'backdrop-blur-sm');
                         
                         // Add hover effects with transition
