@@ -324,22 +324,22 @@ export class WorkoutEditor {
         const props = {};
         
         switch (template.type) {
-            case 'SteadyState':
-                props.power = template.power;
-                break;
-            case 'Warmup':
-            case 'Cooldown':
-            case 'Ramp':
-                props.powerLow = template.powerLow;
-                props.powerHigh = template.powerHigh;
-                break;
-            case 'IntervalsT':
-                props.repeat = template.repeat;
-                props.onDuration = template.onDuration;
-                props.offDuration = template.offDuration;
-                props.powerOnHigh = template.powerOnHigh;
-                props.powerOffHigh = template.powerOffHigh;
-                break;
+        case 'SteadyState':
+            props.power = template.power;
+            break;
+        case 'Warmup':
+        case 'Cooldown':
+        case 'Ramp':
+            props.powerLow = template.powerLow;
+            props.powerHigh = template.powerHigh;
+            break;
+        case 'IntervalsT':
+            props.repeat = template.repeat;
+            props.onDuration = template.onDuration;
+            props.offDuration = template.offDuration;
+            props.powerOnHigh = template.powerOnHigh;
+            props.powerOffHigh = template.powerOffHigh;
+            break;
         }
         
         return props;
@@ -518,19 +518,19 @@ export class WorkoutEditor {
 
         // Add power fields based on segment type
         switch (segment.type) {
-            case 'SteadyState':
-                formHTML += `
+        case 'SteadyState':
+            formHTML += `
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Power (% FTP)</label>
                         <input type="number" id="segmentPower" value="${(segment.power * 100).toFixed(0)}" min="30" max="300"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 `;
-                break;
-            case 'Warmup':
-            case 'Cooldown':
-            case 'Ramp':
-                formHTML += `
+            break;
+        case 'Warmup':
+        case 'Cooldown':
+        case 'Ramp':
+            formHTML += `
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Start Power (% FTP)</label>
                         <input type="number" id="segmentPowerLow" value="${(segment.powerLow * 100).toFixed(0)}" min="30" max="300"
@@ -542,7 +542,7 @@ export class WorkoutEditor {
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 `;
-                break;
+            break;
         }
 
         formHTML += `
@@ -589,18 +589,18 @@ export class WorkoutEditor {
 
         // Update power values based on segment type
         switch (segment.type) {
-            case 'SteadyState':
-                const power = parseFloat(document.getElementById('segmentPower')?.value) / 100;
-                if (power > 0) segment.power = power;
-                break;
-            case 'Warmup':
-            case 'Cooldown':
-            case 'Ramp':
-                const powerLow = parseFloat(document.getElementById('segmentPowerLow')?.value) / 100;
-                const powerHigh = parseFloat(document.getElementById('segmentPowerHigh')?.value) / 100;
-                if (powerLow > 0) segment.powerLow = powerLow;
-                if (powerHigh > 0) segment.powerHigh = powerHigh;
-                break;
+        case 'SteadyState':
+            const power = parseFloat(document.getElementById('segmentPower')?.value) / 100;
+            if (power > 0) segment.power = power;
+            break;
+        case 'Warmup':
+        case 'Cooldown':
+        case 'Ramp':
+            const powerLow = parseFloat(document.getElementById('segmentPowerLow')?.value) / 100;
+            const powerHigh = parseFloat(document.getElementById('segmentPowerHigh')?.value) / 100;
+            if (powerLow > 0) segment.powerLow = powerLow;
+            if (powerHigh > 0) segment.powerHigh = powerHigh;
+            break;
         }
 
         this.updateTimeline();
