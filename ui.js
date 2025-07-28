@@ -213,6 +213,11 @@ export class UI {
         
         // Calculate and display workout metrics
         this.displayWorkoutStats(workoutData, tss);
+        
+        // Update library save button state
+        if (this.visualizer.library) {
+            this.visualizer.library.updateSaveCurrentButton();
+        }
     }
 
     displayWorkoutStats(workoutData, tss) {
