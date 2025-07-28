@@ -7,6 +7,7 @@
  */
 import { workoutStorage } from './storage.js';
 import { formatDuration } from './workout.js';
+import { WorkoutComparison } from './comparison.js';
 
 export class WorkoutLibrary {
     constructor(visualizer) {
@@ -20,6 +21,9 @@ export class WorkoutLibrary {
         this.selectedWorkouts = new Set();
         this.sortBy = 'dateModified';
         this.sortOrder = 'desc';
+        
+        // Initialize comparison functionality
+        this.comparison = new WorkoutComparison(visualizer);
         
         // Initialize storage
         this.initializeStorage();
@@ -53,6 +57,12 @@ export class WorkoutLibrary {
         this.createLibraryInterface();
         this.bindLibraryEvents();
         this.refreshLibraryView();
+        
+        // Initialize comparison functionality
+        this.comparison.initialize();
+        
+        // Set global reference for comparison access
+        window.workoutComparison = this.comparison;
     }
 
     /**
