@@ -692,11 +692,16 @@ select:focus-visible {
 
 /* Main content adjustment when chat is open/closed */
 .container.chat-open {
-    margin-right: 20rem;
-    transition: margin-right 0.3s ease;
+    padding-right: 22rem !important;
+    transition: padding-right 0.3s ease;
 }
 
 .container.chat-closed {
+    padding-right: 3rem !important;
+    transition: padding-right 0.3s ease;
+}
+
+.container.chat-minimized {
     margin-right: 3rem;
     transition: margin-right 0.3s ease;
 }
@@ -718,6 +723,12 @@ select:focus-visible {
     }
     
     .container {
+        padding-right: 1rem !important;
         margin-right: 0 !important;
+    }
+    
+    .container.chat-open,
+    .container.chat-closed {
+        padding-right: 1rem !important;
     }
 }

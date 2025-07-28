@@ -1355,17 +1355,30 @@ export class UI {
         const container = document.querySelector('.container');
         
         if (chatToggle && chatPanel && container) {
+            // Initialize container state based on chat panel visibility
+            if (chatPanel.classList.contains('minimized')) {
+                container.style.paddingRight = '3rem';
+                container.classList.add('chat-closed');
+            } else {
+                container.style.paddingRight = '22rem';
+                container.classList.add('chat-open');
+            }
+            
             chatToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 chatPanel.classList.toggle('minimized');
                 chatToggle.textContent = chatPanel.classList.contains('minimized') ? '<' : '>';
                 chatToggle.title = chatPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
                 
-                // Adjust main content margin
+                // Adjust main content padding
                 if (chatPanel.classList.contains('minimized')) {
                     container.style.paddingRight = '3rem';
+                    container.classList.remove('chat-open');
+                    container.classList.add('chat-closed');
                 } else {
-                    container.style.paddingRight = '20rem';
+                    container.style.paddingRight = '22rem';
+                    container.classList.remove('chat-closed');
+                    container.classList.add('chat-open');
                 }
             });
         }
