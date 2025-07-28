@@ -154,6 +154,40 @@
                 </div>
             </div>
 
+            <!-- Zone Distribution Charts -->
+            <div id="zoneAnalytics" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+                <!-- Zone Distribution Pie Chart -->
+                <div class="card-modern p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-foreground">Zone Distribution</h3>
+                            <p class="text-sm text-muted-foreground">Time spent in each power zone</p>
+                        </div>
+                    </div>
+                    <div class="bg-muted/50 rounded-lg p-4">
+                        <canvas id="zoneDistributionChart" class="w-full h-64"></canvas>
+                    </div>
+                </div>
+
+                <!-- Advanced Analytics -->
+                <div class="card-modern p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-foreground">Advanced Analytics</h3>
+                            <p class="text-sm text-muted-foreground">Enhanced workout metrics</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div id="advancedMetrics" class="grid grid-cols-2 gap-4">
+                            <!-- Metrics will be populated by JavaScript -->
+                        </div>
+                        <div class="bg-muted/50 rounded-lg p-4">
+                            <canvas id="zoneBarChart" class="w-full h-32"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Workout Info Panel -->
             <div id="workoutInfo" class="card-modern overflow-hidden hidden">
                 <div class="bg-gradient-to-r from-violet-500 to-purple-500 px-6 py-6 text-white">

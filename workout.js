@@ -79,6 +79,77 @@ export function formatDuration(seconds) {
     }
 }
 
+/**
+ * Calculate Normalized Power using proper 30-second rolling window method
+ * This follows the industry standard algorithm for more accurate training metrics
+ */
+export function calculateNormalizedPower(powerData) {
+    if (!powerData || powerData.length < 30) {
+        // Fallback to simple average for short workouts
+        const avgPower = powerData.reduce((sum, p) => sum + p, 0) / powerData.length;
+        return avgPower;
+    }
+
+    const rollingWindow = 30; // 30-second window
+    const rollingAverages = [];
+
+    // Calculate 30-second rolling averages
+    for (let i = 0; i <= powerData.length - rollingWindow; i++) {
+        const window = powerData.slice(i, i + rollingWindow);
+        const windowAverage = window.reduce((sum, p) => sum + p, 0) / window.length;
+        rollingAverages.push(windowAverage);
+    }
+
+    // Calculate the 4th power of each rolling average
+    const fourthPowers = rollingAverages.map(avg => Math.pow(avg, 4));
+
+    // Take the average of all 4th powers
+    const avgFourthPower = fourthPowers.reduce((sum, p) => sum + p, 0) / fourthPowers.length;
+
+    // Take the 4th root to get Normalized Power
+    return Math.pow(avgFourthPower, 0.25);
+}
+
+/**
+ * Create high-resolution power data array from workout segments
+ * This generates 1-second resolution data for accurate NP calculation
+ */
+export function createPowerDataArray(workout) {
+    const powerData = [];
+    
+    // Flatten all segments
+    const allSegments = [];
+    workout.segments.forEach(segment => {
+        if (Array.isArray(segment)) {
+            allSegments.push(...segment);
+        } else {
+            allSegments.push(segment);
+        }
+    });
+
+    // Sort segments by start time
+    allSegments.sort((a, b) => a.startTime - b.startTime);
+
+    // Generate 1-second resolution power data
+    allSegments.forEach(segment => {
+        for (let i = 0; i < segment.duration; i++) {
+            let power;
+            if (segment.power !== undefined) {
+                power = segment.power * 100; // Convert to watts (assuming FTP = 100%)
+            } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
+                // For ramps, interpolate power over time
+                const progress = i / (segment.duration - 1);
+                power = (segment.powerLow + (segment.powerHigh - segment.powerLow) * progress) * 100;
+            } else {
+                power = 60; // Default fallback
+            }
+            powerData.push(power);
+        }
+    });
+
+    return powerData;
+}
+
 export function calculateWorkoutMetrics(workout) {
     if (!workout.segments || workout.segments.length === 0) {
         return {
@@ -102,8 +173,10 @@ export function calculateWorkoutMetrics(workout) {
         }
     });
 
+    // Create high-resolution power data for accurate NP calculation
+    const powerData = createPowerDataArray(workout);
+
     // Calculate power metrics
-    let totalWeightedPower = 0;
     let totalPowerSum = 0;
     let totalDuration = 0;
     let maxPower = 0;
@@ -143,9 +216,6 @@ export function calculateWorkoutMetrics(workout) {
 
             // Accumulate for average power calculation
             totalPowerSum += powerPercent * segment.duration;
-            
-            // Accumulate for normalized power (4th power method)
-            totalWeightedPower += Math.pow(segmentPower, 4) * segment.duration;
             totalDuration += segment.duration;
 
             // Calculate time in zones
@@ -170,9 +240,12 @@ export function calculateWorkoutMetrics(workout) {
         };
     }
 
-    // Calculate metrics
+    // Calculate metrics using enhanced algorithms
     const avgPower = totalPowerSum / totalDuration;
-    const normalizedPower = Math.pow(totalWeightedPower / totalDuration, 0.25) * 100;
+    
+    // Use the new 30-second rolling window Normalized Power calculation
+    const normalizedPower = calculateNormalizedPower(powerData);
+    
     const intensityFactor = normalizedPower / 100; // Since 100% = FTP
     const variabilityIndex = normalizedPower / avgPower;
 
@@ -185,7 +258,7 @@ export function calculateWorkoutMetrics(workout) {
         };
     }
 
-    return {
+    const metrics = {
         avgPower: Math.round(avgPower),
         normalizedPower: Math.round(normalizedPower),
         intensityFactor: Math.round(intensityFactor * 100) / 100,
@@ -194,6 +267,12 @@ export function calculateWorkoutMetrics(workout) {
         minPower: minPower === Infinity ? 0 : Math.round(minPower),
         variabilityIndex: Math.round(variabilityIndex * 100) / 100
     };
+
+    // Calculate Workout Difficulty Score
+    const difficultyScore = calculateWorkoutDifficultyScore(workout, metrics);
+    metrics.difficultyScore = difficultyScore;
+
+    return metrics;
 }
 
 export function calculatePowerCurve(workout, durations = [5, 10, 15, 20, 30, 60, 300, 600, 1200, 3600]) {
@@ -254,7 +333,87 @@ export function calculatePowerCurve(workout, durations = [5, 10, 15, 20, 30, 60,
     return powerCurve;
 }
 
+/**
+ * Calculate Workout Difficulty Score based on multiple factors
+ * Combines TSS, duration, intensity distribution, and variability for comprehensive difficulty assessment
+ */
+export function calculateWorkoutDifficultyScore(workout, metrics) {
+    if (!workout.segments || workout.segments.length === 0 || !metrics) {
+        return {
+            score: 0,
+            category: 'Recovery',
+            factors: {
+                tssComponent: 0,
+                durationComponent: 0,
+                intensityComponent: 0,
+                variabilityComponent: 0
+            }
+        };
+    }
 
+    const tss = calculateTSS(workout);
+    const duration = workout.totalDuration / 3600; // Convert to hours
+    const { intensityFactor, variabilityIndex, timeInZones } = metrics;
+
+    // TSS Component (0-40 points): Base difficulty from training stress
+    let tssComponent = 0;
+    if (tss <= 50) tssComponent = (tss / 50) * 10;
+    else if (tss <= 100) tssComponent = 10 + ((tss - 50) / 50) * 15;
+    else if (tss <= 200) tssComponent = 25 + ((tss - 100) / 100) * 15;
+    else tssComponent = Math.min(40, 40 + ((tss - 200) / 100) * 5);
+
+    // Duration Component (0-20 points): Longer workouts are more difficult
+    let durationComponent = 0;
+    if (duration <= 0.5) durationComponent = duration * 8; // Up to 4 points for 30min
+    else if (duration <= 1.0) durationComponent = 4 + ((duration - 0.5) * 8); // 4-8 points for 30-60min
+    else if (duration <= 2.0) durationComponent = 8 + ((duration - 1.0) * 8); // 8-16 points for 1-2h
+    else durationComponent = Math.min(20, 16 + ((duration - 2.0) * 4)); // Up to 20 points for 2h+
+
+    // Intensity Distribution Component (0-25 points): High-intensity zones increase difficulty
+    let intensityComponent = 0;
+    if (timeInZones) {
+        const zone4Time = timeInZones['Zone 4']?.percentage || 0;
+        const zone5Time = timeInZones['Zone 5']?.percentage || 0;
+        const zone6Time = timeInZones['Zone 6']?.percentage || 0;
+        const zone7Time = timeInZones['Zone 7']?.percentage || 0;
+
+        // Weight higher zones more heavily
+        intensityComponent = (
+            (zone4Time * 0.4) + 
+            (zone5Time * 0.8) + 
+            (zone6Time * 1.2) + 
+            (zone7Time * 1.6)
+        ) / 4; // Normalize to 0-25 range
+    }
+
+    // Variability Component (0-15 points): Higher variability = more difficult
+    let variabilityComponent = 0;
+    if (variabilityIndex > 1.0) {
+        variabilityComponent = Math.min(15, (variabilityIndex - 1.0) * 15);
+    }
+
+    // Calculate total score (0-100)
+    const totalScore = tssComponent + durationComponent + intensityComponent + variabilityComponent;
+
+    // Determine difficulty category
+    let category = 'Recovery';
+    if (totalScore >= 80) category = 'Extreme';
+    else if (totalScore >= 65) category = 'Very Hard';
+    else if (totalScore >= 50) category = 'Hard';
+    else if (totalScore >= 35) category = 'Moderate';
+    else if (totalScore >= 20) category = 'Easy';
+
+    return {
+        score: Math.round(totalScore),
+        category,
+        factors: {
+            tssComponent: Math.round(tssComponent),
+            durationComponent: Math.round(durationComponent),
+            intensityComponent: Math.round(intensityComponent),
+            variabilityComponent: Math.round(variabilityComponent)
+        }
+    };
+}
 
 export function generateSteadyData(segment) {
     const points = Math.max(2, Math.floor(segment.duration / 10)); // Point every 10 seconds, minimum 2 points

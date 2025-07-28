@@ -269,6 +269,9 @@ export class UI {
         // Create additional analysis sections
         this.displayTimeInZones(metrics.timeInZones);
         this.displayPowerCurve(powerCurve);
+        
+        // Display new zone analytics
+        this.displayZoneAnalytics(metrics);
     }
 
     createMetricCard({ title, value, icon, change, trend }) {
@@ -645,41 +648,248 @@ export class UI {
         this.chart.update('none');
     }
 
-    createPowerZoneAnnotations(ftp) {
-        const powerZones = {
-            'Zone 1 (Active Recovery)': { min: 0, max: 55, color: '#808080' },
-            'Zone 2 (Endurance)': { min: 56, max: 75, color: '#0000FF' },
-            'Zone 3 (Tempo)': { min: 76, max: 90, color: '#008000' },
-            'Zone 4 (Lactate Threshold)': { min: 91, max: 105, color: '#FFFF00' },
-            'Zone 5 (VO2 Max)': { min: 106, max: 120, color: '#FFA500' },
-            'Zone 6 (Anaerobic Capacity)': { min: 121, max: 150, color: '#FF0000' },
-            'Zone 7 (Neuromuscular Power)': { min: 151, max: 999, color: '#800080' },
-        };
+    /**
+     * Create zone distribution pie chart
+     * @param {Object} timeInZones - Time spent in each zone
+     */
+    createZoneDistributionChart(timeInZones) {
+        const ctx = document.getElementById('zoneDistributionChart');
+        if (!ctx) return;
 
+        // Destroy existing chart
+        if (this.zoneDistributionChart) {
+            this.zoneDistributionChart.destroy();
+        }
+
+        const zones = powerZoneManager.getZones();
+        const labels = [];
+        const data = [];
+        const colors = [];
+        const borderColors = [];
+
+        // Only show zones that have time
+        for (const [zoneKey, zone] of Object.entries(zones)) {
+            const zoneName = `Zone ${zoneKey.slice(-1)}`;
+            const zoneData = timeInZones[zoneName];
+            
+            if (zoneData && zoneData.time > 0) {
+                labels.push(zone.name);
+                data.push(Math.round(zoneData.time));
+                colors.push(zone.color + '80'); // 50% opacity
+                borderColors.push(zone.color);
+            }
+        }
+
+        this.zoneDistributionChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                const timeMinutes = Math.floor(context.parsed / 60);
+                                const timeSeconds = context.parsed % 60;
+                                return `${context.label}: ${timeMinutes}:${timeSeconds.toString().padStart(2, '0')} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Create zone distribution bar chart
+     * @param {Object} timeInZones - Time spent in each zone
+     */
+    createZoneBarChart(timeInZones) {
+        const ctx = document.getElementById('zoneBarChart');
+        if (!ctx) return;
+
+        // Destroy existing chart
+        if (this.zoneBarChart) {
+            this.zoneBarChart.destroy();
+        }
+
+        const zones = powerZoneManager.getZones();
+        const labels = [];
+        const data = [];
+        const colors = [];
+
+        // Show all zones, including those with zero time
+        for (const [zoneKey, zone] of Object.entries(zones)) {
+            const zoneName = `Zone ${zoneKey.slice(-1)}`;
+            const zoneData = timeInZones[zoneName];
+            
+            labels.push(`Z${zoneKey.slice(-1)}`);
+            data.push(zoneData ? zoneData.percentage : 0);
+            colors.push(zone.color);
+        }
+
+        this.zoneBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Time %',
+                    data: data,
+                    backgroundColor: colors.map(color => color + '80'),
+                    borderColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const zoneName = Object.values(zones)[context.dataIndex].name;
+                                return `${zoneName}: ${context.parsed.y.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Display advanced analytics metrics
+     * @param {Object} metrics - Workout metrics including difficulty score
+     */
+    displayAdvancedMetrics(metrics) {
+        const container = document.getElementById('advancedMetrics');
+        if (!container) return;
+
+        const { normalizedPower, intensityFactor, variabilityIndex, difficultyScore } = metrics;
+
+        const metricsHTML = `
+            <div class="text-center p-3 bg-card rounded-lg border">
+                <div class="text-2xl font-bold text-primary">${normalizedPower}W</div>
+                <div class="text-sm text-muted-foreground">Normalized Power</div>
+            </div>
+            <div class="text-center p-3 bg-card rounded-lg border">
+                <div class="text-2xl font-bold text-primary">${intensityFactor}</div>
+                <div class="text-sm text-muted-foreground">Intensity Factor</div>
+            </div>
+            <div class="text-center p-3 bg-card rounded-lg border">
+                <div class="text-2xl font-bold text-primary">${variabilityIndex}</div>
+                <div class="text-sm text-muted-foreground">Variability Index</div>
+            </div>
+            <div class="text-center p-3 bg-card rounded-lg border">
+                <div class="text-2xl font-bold text-primary">${difficultyScore.score}</div>
+                <div class="text-sm text-muted-foreground">Difficulty Score</div>
+                <div class="text-xs text-muted-foreground mt-1">${difficultyScore.category}</div>
+            </div>
+        `;
+
+        container.innerHTML = metricsHTML;
+    }
+
+    /**
+     * Display zone analytics section with charts and metrics
+     * @param {Object} metrics - Workout metrics
+     */
+    displayZoneAnalytics(metrics) {
+        const zoneAnalytics = document.getElementById('zoneAnalytics');
+        if (!zoneAnalytics) return;
+
+        // Show the zone analytics section
+        zoneAnalytics.classList.remove('hidden');
+
+        // Create the charts and display metrics
+        this.createZoneDistributionChart(metrics.timeInZones);
+        this.createZoneBarChart(metrics.timeInZones);
+        this.displayAdvancedMetrics(metrics);
+    }
+
+    createPowerZoneAnnotations(ftp) {
+        // Use PowerZoneManager for consistent zone definitions and colors
+        const zones = powerZoneManager.getZones();
         const annotations = {};
 
-        for (const zone in powerZones) {
-            const { min, max, color } = powerZones[zone];
-            annotations[zone] = {
+        for (const [zoneKey, zone] of Object.entries(zones)) {
+            const minPercent = zone.min * 100;
+            const maxPercent = zone.max * 100;
+            
+            annotations[zone.name] = {
                 type: 'box',
-                yMin: min,
-                yMax: max,
-                backgroundColor: color + '33',
-                borderColor: color + '33',
+                yMin: minPercent,
+                yMax: maxPercent,
+                backgroundColor: zone.color + '20', // 20% opacity
+                borderColor: zone.color + '40', // 40% opacity
                 borderWidth: 1,
                 label: {
-                    content: zone,
+                    content: zone.name,
                     enabled: true,
                     position: 'start',
-                    color: '#000',
+                    color: '#333',
                     font: {
                         size: 10,
+                        weight: 'bold'
                     },
                 },
             };
         }
 
         return annotations;
+    }
+
+    /**
+     * Get power zone for a given power percentage
+     * @param {number} powerPercent - Power as percentage of FTP
+     * @returns {Object|null} Zone object or null if not found
+     */
+    getPowerZoneForPercent(powerPercent) {
+        const zones = powerZoneManager.getZones();
+        for (const [zoneKey, zone] of Object.entries(zones)) {
+            const minPercent = zone.min * 100;
+            const maxPercent = zone.max * 100;
+            if (powerPercent >= minPercent && powerPercent <= maxPercent) {
+                return zone;
+            }
+        }
+        return null;
     }
 
     createChart(workoutData, ftp, selectedSegmentIndex, onSegmentClick) {
@@ -707,11 +917,13 @@ export class UI {
         
         allSegments.forEach(segment => {
             segment.powerData.forEach((point, index) => {
+                const powerZone = this.getPowerZoneForPercent(point.y);
                 continuousWorkoutData.push({
                     x: point.x,
                     y: point.y,
                     segmentType: segment.type,
-                    segmentIndex: allSegments.indexOf(segment)
+                    segmentIndex: allSegments.indexOf(segment),
+                    powerZone: powerZone
                 });
             });
         });
@@ -731,21 +943,20 @@ export class UI {
             pointRadius: 0,
             pointHoverRadius: 4,
             pointBackgroundColor: (context) => {
-                // Color points based on segment type
-                const point = context.parsed || context.dataPoint;
-                if (point && continuousWorkoutData[context.dataIndex]) {
-                    const segmentType = continuousWorkoutData[context.dataIndex].segmentType;
-                    return colors[segmentType] || '#999';
+                // Color points based on power zone
+                if (context.dataIndex !== undefined && continuousWorkoutData[context.dataIndex]) {
+                    const powerZone = continuousWorkoutData[context.dataIndex].powerZone;
+                    return powerZone ? powerZone.color : '#999';
                 }
                 return '#2563eb';
             },
             segment: {
                 borderColor: (context) => {
-                    // Color line segments based on workout segment type
+                    // Color line segments based on power zone
                     const point = context.p1DataIndex;
                     if (point !== undefined && continuousWorkoutData[point]) {
-                        const segmentType = continuousWorkoutData[point].segmentType;
-                        return colors[segmentType] || '#2563eb';
+                        const powerZone = continuousWorkoutData[point].powerZone;
+                        return powerZone ? powerZone.color : '#2563eb';
                     }
                     return '#2563eb';
                 }
@@ -798,13 +1009,18 @@ export class UI {
                         position: 'top',
                         labels: {
                             generateLabels: (chart) => {
-                                // Create custom legend showing segment types
-                                const segmentTypes = [...new Set(continuousWorkoutData.map(point => point.segmentType))];
-                                return segmentTypes.map(type => ({
-                                    text: type,
-                                    fillStyle: colors[type] || '#999',
-                                    strokeStyle: colors[type] || '#999',
-                                    lineWidth: 2,
+                                // Create custom legend showing power zones
+                                const zones = powerZoneManager.getZones();
+                                const usedZones = [...new Set(continuousWorkoutData
+                                    .map(point => point.powerZone)
+                                    .filter(zone => zone !== null)
+                                )];
+                                
+                                return usedZones.map(zone => ({
+                                    text: `${zone.name} (${(zone.min * 100).toFixed(0)}-${(zone.max * 100).toFixed(0)}%)`,
+                                    fillStyle: zone.color,
+                                    strokeStyle: zone.color,
+                                    lineWidth: 3,
                                     hidden: false
                                 }));
                             }
@@ -821,8 +1037,20 @@ export class UI {
                                 const percent = context.parsed.y;
                                 const actual = Math.round((percent / 100) * ftp);
                                 const dataIndex = context.dataIndex;
-                                const segmentType = continuousWorkoutData[dataIndex]?.segmentType || 'Unknown';
-                                return `${segmentType}: ${percent.toFixed(1)}% FTP (${actual} W)`;
+                                const dataPoint = continuousWorkoutData[dataIndex];
+                                const segmentType = dataPoint?.segmentType || 'Unknown';
+                                const powerZone = dataPoint?.powerZone;
+                                
+                                const lines = [
+                                    `${segmentType}: ${percent.toFixed(1)}% FTP (${actual} W)`
+                                ];
+                                
+                                if (powerZone) {
+                                    lines.push(`Power Zone: ${powerZone.name}`);
+                                    lines.push(`Zone Range: ${(powerZone.min * 100).toFixed(0)}-${(powerZone.max * 100).toFixed(0)}% FTP`);
+                                }
+                                
+                                return lines;
                             }
                         },
                         external: (context) => {
