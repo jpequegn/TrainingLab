@@ -21,7 +21,9 @@
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(npm install)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }
