@@ -1,0 +1,310 @@
+/* Workout Editor Styles */
+
+/* Segment Templates */
+.segment-template {
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.segment-template:hover {
+    transform: translateY(-2px);
+}
+
+.segment-template:active {
+    transform: scale(0.98);
+}
+
+.segment-template.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+/* Timeline */
+#workoutTimeline {
+    transition: all 0.3s ease;
+}
+
+#workoutTimeline.drag-over {
+    border-color: #4f46e5;
+    background-color: rgba(79, 70, 229, 0.05);
+    box-shadow: inset 0 0 0 1px #4f46e5;
+}
+
+/* Timeline Segments */
+.timeline-segment {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.timeline-segment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-segment .segment-controls {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.timeline-segment:hover .segment-controls {
+    opacity: 1;
+}
+
+/* Segment Action Buttons */
+.segment-action-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: absolute;
+    z-index: 10;
+}
+
+.segment-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.segment-delete-btn {
+    background-color: #ef4444;
+    color: white;
+    top: -8px;
+    right: -8px;
+}
+
+.segment-edit-btn {
+    background-color: #3b82f6;
+    color: white;
+    top: -8px;
+    left: -8px;
+}
+
+/* Drag and Drop States */
+.segment-template[draggable="true"] {
+    cursor: grab;
+}
+
+.segment-template[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.timeline-segment[draggable="true"] {
+    cursor: grab;
+}
+
+.timeline-segment[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Drop Zone Feedback */
+.drop-zone-active {
+    border-color: #4f46e5 !important;
+    background-color: rgba(79, 70, 229, 0.05) !important;
+    box-shadow: inset 0 0 0 2px #4f46e5;
+}
+
+/* Segment Editor Modal */
+#segmentEditorModal {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.segment-editor-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Form Styling */
+#segmentEditForm input[type="text"],
+#segmentEditForm input[type="number"] {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#segmentEditForm input[type="text"]:focus,
+#segmentEditForm input[type="number"]:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Workout Summary Cards */
+.workout-summary-card {
+    transition: all 0.2s ease;
+}
+
+.workout-summary-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Timeline Empty State */
+#timelineEmptyState {
+    font-style: italic;
+    color: #9ca3af;
+}
+
+/* Editor Toggle Button States */
+#toggleEditorBtn.active {
+    background-color: #059669;
+}
+
+#toggleEditorBtn.active:hover {
+    background-color: #047857;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #segmentTemplates {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .timeline-segment {
+        min-width: 80px;
+        height: 50px;
+    }
+    
+    .segment-action-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+    }
+    
+    .timeline-segment .text-lg {
+        font-size: 14px;
+    }
+    
+    .timeline-segment .text-xs {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 640px) {
+    #segmentTemplates {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .workout-summary-card {
+        padding: 8px;
+    }
+}
+
+/* Animation Classes */
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
+
+.slide-in-up {
+    animation: slideInUp 0.3s ease;
+}
+
+.slide-out-down {
+    animation: slideOutDown 0.3s ease;
+}
+
+/* Segment Type Colors */
+.segment-warmup {
+    border-left-color: #FFA726;
+}
+
+.segment-endurance {
+    border-left-color: #42A5F5;
+}
+
+.segment-threshold {
+    border-left-color: #FFEB3B;
+}
+
+.segment-vo2max {
+    border-left-color: #F44336;
+}
+
+.segment-recovery {
+    border-left-color: #4CAF50;
+}
+
+.segment-intervals {
+    border-left-color: #9C27B0;
+}
+
+.segment-ramp {
+    border-left-color: #FF7043;
+}
+
+.segment-cooldown {
+    border-left-color: #66BB6A;
+}
+
+/* Drag Placeholder */
+.drag-placeholder {
+    width: 60px;
+    height: 60px;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Success/Error States */
+.editor-success {
+    background-color: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+}
+
+.editor-error {
+    background-color: #fef2f2;
+    border-color: #dc2626;
+    color: #991b1b;
+}
+
+/* Loading States */
+.editor-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.editor-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

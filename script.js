@@ -6,6 +6,7 @@ import { generateERGContent, generateMRCContent, downloadFile, generateZWOConten
 import { deployWorkout } from './api.js';
 import { UI } from './ui.js';
 import { WorkoutLibrary } from './library.js';
+import { WorkoutEditor } from './editor.js';
 
 class ZwiftWorkoutVisualizer {
     constructor() {
@@ -15,6 +16,12 @@ class ZwiftWorkoutVisualizer {
         
         // Initialize workout library
         this.library = new WorkoutLibrary(this);
+        
+        // Initialize workout editor
+        this.editor = new WorkoutEditor(this);
+        
+        // Set global reference for inline event handlers
+        window.workoutEditor = this.editor;
     }
 
     async handleFileUpload(event) {
