@@ -5,12 +5,16 @@ import { Workout } from './workout.js';
 import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
 import { deployWorkout } from './api.js';
 import { UI } from './ui.js';
+import { WorkoutLibrary } from './library.js';
 
 class ZwiftWorkoutVisualizer {
     constructor() {
         this.workout = null;
         this.ui = new UI(this);
         this.selectedSegmentIndex = null;
+        
+        // Initialize workout library
+        this.library = new WorkoutLibrary(this);
     }
 
     async handleFileUpload(event) {

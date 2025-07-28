@@ -1,0 +1,353 @@
+/**
+ * Workout Library Styles
+ * Additional styles for the workout library interface
+ */
+
+/* Library Panel Animations */
+#libraryPanel {
+    transition: transform 0.3s ease-in-out;
+    z-index: 30;
+}
+
+#libraryPanel.show {
+    transform: translateX(0) !important;
+}
+
+/* Workout Cards */
+.workout-card {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.workout-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #10b981;
+}
+
+.workout-card .star-workout,
+.workout-card .delete-workout {
+    opacity: 0.7;
+    transition: all 0.2s ease-in-out;
+}
+
+.workout-card:hover .star-workout,
+.workout-card:hover .delete-workout {
+    opacity: 1;
+}
+
+.workout-card .star-workout:hover {
+    transform: scale(1.1);
+}
+
+.workout-card .delete-workout:hover {
+    transform: scale(1.1);
+}
+
+/* Collection Cards */
+.collection-card {
+    transition: all 0.2s ease-in-out;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.collection-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #10b981;
+}
+
+/* Filter and Search Inputs */
+#librarySearch:focus {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+#categoryFilter:focus,
+#difficultyFilter:focus,
+#durationFilter:focus,
+#sortBy:focus {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+/* Action Buttons */
+.library-action-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.library-action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.library-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Empty State */
+.library-empty-state {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Library Stats */
+.library-stats {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+}
+
+.library-stats .stat-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+/* Tag Pills */
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.tag-pill:hover {
+    background: #bae6fd;
+    transform: scale(1.05);
+}
+
+/* Difficulty Stars */
+.difficulty-stars {
+    color: #fbbf24;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Library Toggle Button in Header */
+#libraryToggleBtn {
+    transition: all 0.2s ease-in-out;
+}
+
+#libraryToggleBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+/* Loading States */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #libraryPanel {
+        width: 100vw;
+        max-width: 320px;
+    }
+    
+    .workout-card {
+        padding: 0.75rem;
+    }
+    
+    .workout-card .star-workout,
+    .workout-card .delete-workout {
+        opacity: 1; /* Always visible on mobile */
+    }
+}
+
+/* Dark Mode Support (if implemented) */
+@media (prefers-color-scheme: dark) {
+    .workout-card,
+    .collection-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-color: #374151;
+        color: #f9fafb;
+    }
+    
+    .workout-card:hover,
+    .collection-card:hover {
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tag-pill {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+    
+    .tag-pill:hover {
+        background: #1e40af;
+    }
+}
+
+/* Accessibility */
+.workout-card:focus,
+.collection-card:focus {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+.star-workout:focus,
+.delete-workout:focus {
+    outline: 2px solid #10b981;
+    outline-offset: 1px;
+    border-radius: 0.25rem;
+}
+
+/* Print Styles */
+@media print {
+    #libraryPanel {
+        display: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .workout-card,
+    .collection-card {
+        border-width: 2px;
+    }
+    
+    .workout-card:hover,
+    .collection-card:hover {
+        border-width: 3px;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .workout-card,
+    .collection-card,
+    .star-workout,
+    .delete-workout,
+    #libraryPanel {
+        transition: none;
+    }
+    
+    .workout-card:hover,
+    .collection-card:hover,
+    .star-workout:hover,
+    .delete-workout:hover {
+        transform: none;
+    }
+    
+    .loading-spinner {
+        animation: none;
+    }
+    
+    .library-empty-state {
+        animation: none;
+    }
+}
+
+/* Scrollbar Styling for Library Content */
+#libraryContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#libraryContent::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#libraryContent::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#libraryContent::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Library Panel Backdrop */
+.library-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 25;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+.library-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Compact Mode for Small Screens */
+@media (max-height: 600px) {
+    #libraryPanel .px-4 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    #libraryPanel .py-3 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .workout-card {
+        padding: 0.5rem;
+    }
+}
+
+/* Selection States */
+.workout-card.selected {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Batch Actions Bar */
+.batch-actions-bar {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, #ffffff, rgba(255, 255, 255, 0.9));
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e5e7eb;
+    padding: 0.75rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.batch-actions-bar.show {
+    transform: translateY(0);
+}
+
+/* Error States */
+.library-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+/* Success States */
+.library-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+}
