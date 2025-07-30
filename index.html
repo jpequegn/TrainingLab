@@ -11,12 +11,17 @@
     <link rel="stylesheet" href="library.css">
 </head>
 <body class="bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 min-h-screen">
+    <!-- Skip Navigation -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-indigo-600 text-white px-4 py-2 rounded-lg z-50 font-medium">Skip to main content</a>
+    
+    <!-- Screen Reader Announcements -->
+    <div id="sr-announcements" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
     
 
     <div class="container mx-auto px-4 py-8 max-w-7xl relative" style="padding-right: 22rem;">
         
         <!-- Chat Interface Panel -->
-        <div id="chatPanel" class="fixed right-0 top-0 h-full w-80 bg-white/95 backdrop-blur-sm shadow-2xl border-l border-white/20 z-40 transform transition-transform duration-300">
+        <div id="chatPanel" class="fixed right-0 top-0 h-full w-80 bg-white/95 backdrop-blur-sm shadow-2xl border-l border-white/20 z-40 transform transition-transform duration-300" role="complementary" aria-label="Workout creation chat interface">
             <div class="flex flex-col h-full">
                 <!-- Chat Header -->
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-white flex items-center justify-between">
@@ -32,7 +37,7 @@
                 </div>
                 
                 <!-- Chat Messages -->
-                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50" role="log" aria-live="polite" aria-label="Chat conversation">
                     <div class="chat-message llm bg-blue-100 rounded-lg p-3 text-sm">
                         👋 Hi! I can help you create custom workouts. Just describe what kind of workout you want!
                         <br><br>
@@ -52,16 +57,20 @@
                             <span>Use LLM (requires API key)</span>
                         </label>
                     </div>
-                    <form id="chatForm" class="flex gap-2">
+                    <form id="chatForm" class="flex gap-2" role="search" aria-label="Create workout">
                         <input 
                             id="chatInput" 
                             type="text" 
                             placeholder="Describe your workout..." 
                             class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            aria-label="Describe your workout requirements"
+                            aria-describedby="chatInputHelp"
                         />
+                        <span id="chatInputHelp" class="sr-only">Enter a description of the workout you want to create, for example: 45 minute endurance ride or 4x5 minute intervals at threshold</span>
                         <button 
                             type="submit" 
                             class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
+                            aria-label="Send workout request"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -72,7 +81,7 @@
             </div>
         </div>
         <!-- Header Section -->
-        <header class="text-center mb-12">
+        <header class="text-center mb-12" role="banner">
             <div class="flex justify-end gap-3 mb-4">
                 <a href="power-zones-ui.html" class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors duration-200 text-sm font-medium backdrop-blur-sm border border-white/20">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,17 +108,17 @@
         </header>
 
         <!-- Upload Section -->
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8 border border-white/20">
+        <section id="main-content" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8 border border-white/20" role="main" aria-labelledby="uploadSectionTitle">
             <div class="text-center">
                 <div class="mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Get Started</h2>
+                    <h2 id="uploadSectionTitle" class="text-2xl font-semibold text-gray-800 mb-2">Get Started</h2>
                     <p class="text-gray-600">Upload your workout file or try our sample</p>
                 </div>
                 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <!-- File Upload Button -->
                     <div class="relative">
-                        <input type="file" id="fileInput" accept=".zwo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        <input type="file" id="fileInput" accept=".zwo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" aria-label="Choose Zwift workout file to upload" />
                         <label for="fileInput" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 cursor-pointer">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -148,7 +157,7 @@
                 </button>
             </div>
             <div class="bg-gray-50 rounded-xl p-4">
-                <canvas id="workoutChart" class="w-full h-96"></canvas>
+                <canvas id="workoutChart" class="w-full h-96" role="img" aria-label="Workout power profile visualization. Press Tab to focus and use arrow keys to navigate segments." tabindex="0"></canvas>
             </div>
         </div>
 
@@ -382,6 +391,9 @@
     <script type="module" src="themes.js"></script>
     <script type="module" src="shortcuts.js"></script>
     <script type="module" src="error-handler.js"></script>
+    <script type="module" src="loading-manager.js"></script>
+    <script type="module" src="keyboard-navigation.js"></script>
+    <script type="module" src="mobile-enhancements.js"></script>
     <script type="module" src="components/ui.js"></script>
     <script type="module" src="modern-ui-upgrade.js"></script>
     <script type="module" src="comparison.js"></script>
