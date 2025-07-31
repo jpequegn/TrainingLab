@@ -11,6 +11,7 @@ import { stateManager } from './state-manager.js';
 import { reactiveUI } from './reactive-ui.js';
 import { initializeComponents } from './components/index.js';
 import { performanceOptimizer } from './performance-optimizer.js';
+import { WorkoutEditor } from './editor.js';
 
 class ZwiftWorkoutVisualizer {
     constructor() {
@@ -19,6 +20,12 @@ class ZwiftWorkoutVisualizer {
         
         // Make globally accessible for keyboard navigation and error handling
         window.app = this;
+        
+        // Initialize workout editor
+        this.editor = new WorkoutEditor(this);
+        
+        // Set global reference for inline event handlers
+        window.workoutEditor = this.editor;
         
         // Setup state management integration
         this.setupStateIntegration();
