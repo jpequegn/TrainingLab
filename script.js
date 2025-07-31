@@ -6,22 +6,119 @@ import { generateERGContent, generateMRCContent, downloadFile, generateZWOConten
 import { deployWorkout } from './api.js';
 import { UI } from './ui.js';
 import { WorkoutLibrary } from './library.js';
+import { loadingManager, delay } from './loading-manager.js';
+import { stateManager } from './state-manager.js';
+import { reactiveUI } from './reactive-ui.js';
+import { initializeComponents } from './components/index.js';
+import { performanceOptimizer } from './performance-optimizer.js';
 import { WorkoutEditor } from './editor.js';
 
 class ZwiftWorkoutVisualizer {
     constructor() {
-        this.workout = null;
         this.ui = new UI(this);
-        this.selectedSegmentIndex = null;
-        
-        // Initialize workout library
         this.library = new WorkoutLibrary(this);
+        
+        // Make globally accessible for keyboard navigation and error handling
+        window.app = this;
         
         // Initialize workout editor
         this.editor = new WorkoutEditor(this);
         
         // Set global reference for inline event handlers
         window.workoutEditor = this.editor;
+        
+        // Setup state management integration
+        this.setupStateIntegration();
+        
+        // Initialize reactive UI bindings
+        this.initializeReactiveBindings();
+        
+        // Initialize component system
+        this.initializeComponents();
+        
+        // Initialize performance monitoring
+        this.initializePerformanceMonitoring();
+    }
+
+    setupStateIntegration() {
+        // Subscribe to state changes and update legacy properties
+        stateManager.subscribe('workout', (workout) => {
+            this.workout = workout;
+        });
+        
+        stateManager.subscribe('selectedSegmentIndex', (index) => {
+            this.selectedSegmentIndex = index;
+        });
+        
+        // Setup state action handlers
+        this.setupStateActions();
+    }
+
+    setupStateActions() {
+        // Add custom action handlers
+        stateManager.addMiddleware((context) => {
+            const { path, newValue, source } = context;
+            
+            // Log state changes in development
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`State change: ${path} = ${JSON.stringify(newValue)} (source: ${source})`);
+            }
+            
+            return true; // Allow the change
+        });
+        
+        // Custom actions that need special handling
+        const customActions = {
+            'FILE_UPLOAD': async (payload) => {
+                const { file } = payload;
+                await this.handleFileUpload({ target: { files: [file] } });
+            },
+            
+            'LOAD_SAMPLE': async () => {
+                await this.loadSampleWorkout();
+            },
+            
+            'APPLY_SCALING': () => {
+                this.applyScaling();
+            },
+            
+            'RESET_WORKOUT': () => {
+                this.resetWorkout();
+            },
+            
+            'TOGGLE_THEME': () => {
+                const currentTheme = stateManager.getState('themeMode');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                stateManager.dispatch('SET_THEME', newTheme);
+            }
+        };
+        
+        // Override the dispatch method to handle custom actions
+        const originalDispatch = stateManager.dispatch.bind(stateManager);
+        stateManager.dispatch = (action, payload) => {
+            if (customActions[action]) {
+                return customActions[action](payload);
+            }
+            return originalDispatch(action, payload);
+        };
+    }
+
+    initializeReactiveBindings() {
+        // Setup computed properties
+        stateManager.computed('canUndo', () => {
+            const undoStack = stateManager.getState('undoStack');
+            return undoStack && undoStack.length > 0;
+        }, ['undoStack']);
+        
+        stateManager.computed('canRedo', () => {
+            const redoStack = stateManager.getState('redoStack');
+            return redoStack && redoStack.length > 0;
+        }, ['redoStack']);
+        
+        stateManager.computed('hasWorkout', () => {
+            const workout = stateManager.getState('workout');
+            return workout !== null;
+        }, ['workout']);
     }
 
     async handleFileUpload(event) {
@@ -29,27 +126,66 @@ class ZwiftWorkoutVisualizer {
         if (!file) return;
 
         if (!file.name.toLowerCase().endsWith('.zwo')) {
-            this.ui.showToast('Please select a valid Zwift workout file (.zwo)');
+            stateManager.dispatch('ADD_ERROR', {
+                type: 'FILE_ERROR',
+                message: 'Please select a valid Zwift workout file (.zwo)',
+                timestamp: Date.now()
+            });
             return;
         }
 
         try {
+            // Set loading state
+            stateManager.dispatch('SET_LOADING', {
+                isLoading: true,
+                message: 'Reading workout file...',
+                progress: 0
+            });
+            
             const text = await this.readFileAsText(file);
-            this.parseAndVisualize(text);
+            await delay(200);
+            
+            stateManager.dispatch('SET_LOADING', {
+                isLoading: true,
+                message: 'Processing workout data...',
+                progress: 25
+            });
+            
+            await this.parseAndVisualize(text, file.name);
+            
         } catch (error) {
             console.error('Error reading file:', error);
-            this.ui.showToast('Error reading the workout file. Please try again.');
+            stateManager.dispatch('SET_LOADING', { isLoading: false });
+            stateManager.dispatch('ADD_ERROR', {
+                type: 'FILE_PROCESSING_ERROR',
+                message: 'Error reading the workout file. Please check the file format and try again.',
+                error,
+                timestamp: Date.now()
+            });
         }
     }
 
     async loadSampleWorkout() {
         try {
+            // Show loading state
+            loadingManager.showLoading('Loading sample workout...');
+            loadingManager.updateProgress(0, 'Fetching sample data...');
+            
             const response = await fetch('sample_workout.zwo');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            await delay(300);
+            loadingManager.updateProgress(1, 'Processing sample workout...');
+            
             const text = await response.text();
-            this.parseAndVisualize(text);
+            await this.parseAndVisualize(text, 'sample_workout.zwo');
+            
         } catch (error) {
             console.error('Error loading sample workout:', error);
-            this.ui.showToast('Error loading sample workout. Please try uploading your own file.');
+            loadingManager.hideLoading();
+            this.ui.showToast('Error loading sample workout. Please try uploading your own file.', 'error');
         }
     }
 
@@ -62,23 +198,48 @@ class ZwiftWorkoutVisualizer {
         });
     }
 
-    parseAndVisualize(xmlText) {
+    async parseAndVisualize(xmlText, filename = 'workout.zwo') {
         try {
+            loadingManager.updateProgress(2, 'Parsing workout structure...');
+            await delay(200);
+            
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
             
             const parseError = xmlDoc.querySelector('parsererror');
             if (parseError) {
-                throw new Error('Invalid XML format');
+                throw new Error('Invalid XML format: The file appears to be corrupted or not a valid Zwift workout file');
             }
 
+            loadingManager.updateProgress(3, 'Processing workout segments...');
+            await delay(300);
+            
             const workoutData = parseWorkoutXML(xmlDoc);
             this.workout = new Workout(workoutData);
+            
+            loadingManager.updateProgress(4, 'Rendering visualization...');
+            await delay(400);
+            
             this.ui.updateUndoButton(this.workout.undoStack.length);
-            this.displayWorkout();
+            await this.displayWorkout();
+            
+            loadingManager.hideLoading();
+            this.ui.showToast(`Successfully loaded: ${filename}`, 'success');
+            
         } catch (error) {
             console.error('Error parsing workout:', error);
-            this.ui.showToast('Error parsing the workout file. Please ensure it\'s a valid Zwift workout file.');
+            loadingManager.hideLoading();
+            
+            let errorMessage = 'Error parsing the workout file. ';
+            if (error.message.includes('Invalid XML')) {
+                errorMessage += 'The file appears to be corrupted or not a valid Zwift workout file.';
+            } else if (error.message.includes('segments')) {
+                errorMessage += 'The workout structure is invalid or contains unsupported segments.';
+            } else {
+                errorMessage += 'Please ensure it\'s a valid Zwift workout file (.zwo).';
+            }
+            
+            this.ui.showToast(errorMessage, 'error');
         }
     }
 
@@ -171,7 +332,31 @@ class ZwiftWorkoutVisualizer {
 
     setSelectedSegmentIndex(index) {
         this.selectedSegmentIndex = index;
+        // Update UI and chart highlighting
+        if (this.ui && this.ui.updateSegmentHighlight) {
+            this.ui.updateSegmentHighlight(index);
+        }
+        
+        // Announce to screen readers
+        if (index !== null && this.workout && this.workout.workoutData.segments) {
+            const segment = this.workout.workoutData.segments[index];
+            if (segment) {
+                this.announceToScreenReader(`Selected segment ${index + 1}: ${Math.round(segment.power || 0)}% power, ${segment.duration || 0} seconds`);
+            }
+        }
+        
         this.displayWorkout();
+    }
+
+    announceToScreenReader(message) {
+        const announcements = document.getElementById('sr-announcements');
+        if (announcements) {
+            announcements.textContent = message;
+            // Clear after a delay
+            setTimeout(() => {
+                announcements.textContent = '';
+            }, 1000);
+        }
     }
 
     applySegmentEdit(segmentIndex, newDuration, newPower, newPowerLow, newPowerHigh) {
@@ -202,6 +387,54 @@ class ZwiftWorkoutVisualizer {
             console.error('Error creating workout from data:', error);
             this.ui.showToast('Error creating workout from generated data');
         }
+    }
+    
+    async initializeComponents() {
+        try {
+            // Initialize component system
+            const components = await initializeComponents();
+            console.log(`Initialized ${components.length} components`);
+            
+            // Setup component event handlers
+            this.setupComponentEvents();
+            
+        } catch (error) {
+            console.error('Failed to initialize components:', error);
+        }
+    }
+    
+    setupComponentEvents() {
+        // Listen for component events
+        document.addEventListener('workout:exported', (event) => {
+            this.ui.showToast(`Workout exported as ${event.detail.format.toUpperCase()}`, 'success');
+        });
+        
+        document.addEventListener('export:error', (event) => {
+            this.ui.showToast(`Export failed: ${event.detail.error.message}`, 'error');
+        });
+        
+        document.addEventListener('chart:initialized', () => {
+            console.log('Chart component initialized');
+        });
+        
+        document.addEventListener('component:destroy', (event) => {
+            console.log('Component destroyed:', event.detail.component);
+        });
+    }
+    
+    initializePerformanceMonitoring() {
+        // Performance monitoring is automatically initialized by the performance optimizer
+        console.log('Performance monitoring initialized');
+        
+        // Setup performance reporting
+        setInterval(() => {
+            const summary = performanceOptimizer.getSummary();
+            if (summary.score < 70) {
+                console.warn('Performance score is low:', summary.score);
+                console.warn('Issues:', summary.issues);
+                console.warn('Recommendations:', summary.recommendations);
+            }
+        }, 60000); // Check every minute
     }
 }
 
