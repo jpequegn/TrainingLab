@@ -13,6 +13,72 @@ import { initializeComponents } from './components/index.js';
 import { performanceOptimizer } from './performance-optimizer.js';
 import { WorkoutEditor } from './editor.js';
 
+// Global Error Handling - Security Feature
+window.addEventListener('error', (event) => {
+    const errorData = {
+        type: 'javascript_error',
+        message: event.error?.message || 'Unknown error',
+        filename: event.filename || 'unknown',
+        lineno: event.lineno || 0,
+        colno: event.colno || 0,
+        stack: event.error?.stack || 'No stack trace',
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+    };
+    
+    console.error('🚨 Unhandled JavaScript Error:', errorData);
+    
+    // Send to error reporting service in production
+    if (process.env.NODE_ENV === 'production') {
+        // TODO: Integrate with error reporting service (Sentry, etc.)
+        // reportError(errorData);
+    }
+    
+    // Show user-friendly error message
+    if (window.app && window.app.ui) {
+        window.app.ui.showToast('An unexpected error occurred. Please refresh the page.', 'error');
+    }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    const errorData = {
+        type: 'promise_rejection',
+        reason: event.reason?.toString() || 'Unknown rejection',
+        stack: event.reason?.stack || 'No stack trace',
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+    };
+    
+    console.error('🚨 Unhandled Promise Rejection:', errorData);
+    
+    // Send to error reporting service in production
+    if (process.env.NODE_ENV === 'production') {
+        // TODO: Integrate with error reporting service
+        // reportError(errorData);
+    }
+    
+    // Show user-friendly error message
+    if (window.app && window.app.ui) {
+        window.app.ui.showToast('A background operation failed. Please try again.', 'error');
+    }
+    
+    // Prevent the default unhandled rejection behavior
+    event.preventDefault();
+});
+
+// Security: Disable eval and similar dangerous functions
+// eslint-disable-next-line no-eval
+window.eval = function() {
+    throw new Error('eval() is disabled for security reasons');
+};
+
+// Security: Remove any potential XSS vectors
+if (window.setTimeout.toString().indexOf('[native code]') === -1) {
+    console.warn('⚠️ setTimeout appears to be overridden - potential security risk');
+}
+
 class ZwiftWorkoutVisualizer {
     constructor() {
         this.ui = new UI(this);
