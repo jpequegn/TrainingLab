@@ -33,7 +33,14 @@
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
       "Bash(grep:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(gh label create:*)",
+      "Bash(rm:*)",
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run test:coverage:*)"
     ],
     "deny": []
   }
