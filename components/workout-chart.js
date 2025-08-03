@@ -3,10 +3,9 @@
  * Reusable chart component with reactive data binding
  */
 
-import { BaseComponent, Component } from './base-component.js';
+import { BaseComponent } from './base-component.js';
 import { moduleLoader } from '../module-loader.js';
 
-@Component('workout-chart')
 export class WorkoutChart extends BaseComponent {
     getDefaultOptions() {
         return {
@@ -450,29 +449,29 @@ export class WorkoutChart extends BaseComponent {
         const maxIndex = workout.segments.length - 1;
         
         switch (event.key) {
-            case 'ArrowLeft':
-                event.preventDefault();
-                if (currentIndex > 0) {
-                    stateManager.dispatch('SELECT_SEGMENT', currentIndex - 1);
-                }
-                break;
+        case 'ArrowLeft':
+            event.preventDefault();
+            if (currentIndex > 0) {
+                stateManager.dispatch('SELECT_SEGMENT', currentIndex - 1);
+            }
+            break;
                 
-            case 'ArrowRight':
-                event.preventDefault();
-                if (currentIndex < maxIndex) {
-                    stateManager.dispatch('SELECT_SEGMENT', currentIndex + 1);
-                }
-                break;
+        case 'ArrowRight':
+            event.preventDefault();
+            if (currentIndex < maxIndex) {
+                stateManager.dispatch('SELECT_SEGMENT', currentIndex + 1);
+            }
+            break;
                 
-            case 'Home':
-                event.preventDefault();
-                stateManager.dispatch('SELECT_SEGMENT', 0);
-                break;
+        case 'Home':
+            event.preventDefault();
+            stateManager.dispatch('SELECT_SEGMENT', 0);
+            break;
                 
-            case 'End':
-                event.preventDefault();
-                stateManager.dispatch('SELECT_SEGMENT', maxIndex);
-                break;
+        case 'End':
+            event.preventDefault();
+            stateManager.dispatch('SELECT_SEGMENT', maxIndex);
+            break;
         }
     }
     

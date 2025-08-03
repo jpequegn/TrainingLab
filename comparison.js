@@ -424,15 +424,15 @@ export class WorkoutComparison {
         if (!this.isComparisonActive || this.selectedWorkouts.size === 0) return;
 
         switch (this.comparisonMode) {
-            case 'sidebyside':
-                this.renderSideBySideComparison();
-                break;
-            case 'overlay':
-                this.renderOverlayComparison();
-                break;
-            case 'metrics':
-                this.renderMetricsComparison();
-                break;
+        case 'sidebyside':
+            this.renderSideBySideComparison();
+            break;
+        case 'overlay':
+            this.renderOverlayComparison();
+            break;
+        case 'metrics':
+            this.renderMetricsComparison();
+            break;
         }
     }
 

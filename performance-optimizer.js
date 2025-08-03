@@ -264,17 +264,18 @@ export class PerformanceOptimizer {
     measureFileProcessing() {
         // Hook into file upload process
         const originalFileReader = FileReader.prototype.readAsText;
+        const self = this;
         
         FileReader.prototype.readAsText = function(...args) {
             const start = performance.now();
             
             this.addEventListener('load', () => {
                 const duration = performance.now() - start;
-                this.recordMetric('file-read', { duration, size: this.result.length });
-            }.bind(this));
+                self.recordMetric('file-read', { duration, size: this.result.length });
+            });
             
             return originalFileReader.apply(this, args);
-        }.bind(this);
+        };
     }
     
     measureStateUpdates() {
@@ -490,16 +491,16 @@ export class PerformanceOptimizer {
     
     getMetricValue(type, entry) {
         switch (type) {
-            case 'lcp':
-                return entry.startTime;
-            case 'fid':
-                return entry.delay;
-            case 'cls':
-                return entry.value;
-            case 'memory':
-                return entry.usage;
-            default:
-                return 0;
+        case 'lcp':
+            return entry.startTime;
+        case 'fid':
+            return entry.delay;
+        case 'cls':
+            return entry.value;
+        case 'memory':
+            return entry.usage;
+        default:
+            return 0;
         }
     }
     

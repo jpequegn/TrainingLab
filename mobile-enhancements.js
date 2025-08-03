@@ -379,7 +379,7 @@ export class MobileEnhancements {
 
     setupViewportHandling() {
         // Handle viewport changes (keyboard show/hide on mobile)
-        let initialViewportHeight = window.innerHeight;
+        const initialViewportHeight = window.innerHeight;
         
         window.addEventListener('resize', () => {
             const currentHeight = window.innerHeight;

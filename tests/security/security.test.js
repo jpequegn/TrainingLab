@@ -28,7 +28,7 @@ describe('Security Tests', () => {
         });
 
         it('should prevent SQL injection in search queries', () => {
-            const maliciousQuery = "'; DROP TABLE workouts; --";
+            const maliciousQuery = '\'; DROP TABLE workouts; --';
             const sanitized = sanitizeSearchQuery(maliciousQuery);
             
             expect(sanitized).not.toContain('DROP');
@@ -206,7 +206,7 @@ describe('Security Tests', () => {
         });
 
         it('should sanitize database queries', () => {
-            const userInput = "'; DROP TABLE users; --";
+            const userInput = '\'; DROP TABLE users; --';
             const query = buildSafeQuery('SELECT * FROM workouts WHERE name = ?', [userInput]);
             
             expect(query).not.toContain('DROP TABLE');
@@ -237,9 +237,9 @@ describe('Security Tests', () => {
         it('should use Content Security Policy headers', () => {
             const cspHeader = getCSPHeader();
             
-            expect(cspHeader).toContain("default-src 'self'");
-            expect(cspHeader).toContain("script-src 'self'");
-            expect(cspHeader).toContain("object-src 'none'");
+            expect(cspHeader).toContain('default-src \'self\'');
+            expect(cspHeader).toContain('script-src \'self\'');
+            expect(cspHeader).toContain('object-src \'none\'');
         });
 
         it('should validate and sanitize URLs', () => {
@@ -292,17 +292,17 @@ describe('Security Tests', () => {
 // Mock security utility functions for testing
 function sanitizeInput(input) {
     return input.replace(/<script[^>]*>.*?<\/script>/gi, '')
-                .replace(/javascript:/gi, '')
-                .replace(/on\w+=/gi, '')
-                .replace(/onerror="[^"]*"/gi, '')
-                .replace(/alert\([^)]*\)/gi, '');
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+=/gi, '')
+        .replace(/onerror="[^"]*"/gi, '')
+        .replace(/alert\([^)]*\)/gi, '');
 }
 
 function sanitizeSearchQuery(query) {
     return query.replace(/[;'"\\]/g, '')
-                .replace(/--/g, '')
-                .replace(/DROP/gi, '')
-                .replace(/TABLE/gi, '');
+        .replace(/--/g, '')
+        .replace(/DROP/gi, '')
+        .replace(/TABLE/gi, '');
 }
 
 function isValidWorkoutFile(filename) {
@@ -419,13 +419,13 @@ function decryptSensitiveData(encrypted) {
 
 function escapeHtml(html) {
     return html.replace(/</g, '&lt;')
-               .replace(/>/g, '&gt;')
-               .replace(/"/g, '&quot;')
-               .replace(/'/g, '&#x27;');
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
 }
 
 function getCSPHeader() {
-    return "default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'";
+    return 'default-src \'self\'; script-src \'self\'; object-src \'none\'; style-src \'self\' \'unsafe-inline\'';
 }
 
 function isSecureUrl(url) {

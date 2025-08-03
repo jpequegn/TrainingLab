@@ -3,9 +3,8 @@
  * Reusable component for editing workout segments
  */
 
-import { BaseComponent, Component } from './base-component.js';
+import { BaseComponent } from './base-component.js';
 
-@Component('segment-editor')
 export class SegmentEditor extends BaseComponent {
     getDefaultOptions() {
         return {
