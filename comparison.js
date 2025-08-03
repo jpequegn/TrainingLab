@@ -464,55 +464,108 @@ export class WorkoutComparison {
         const difficultyStars = '★'.repeat(workout.difficulty) + '☆'.repeat(5 - workout.difficulty);
         const duration = formatDuration(workout.duration);
 
-        card.innerHTML = `
-            <div class="p-4 border-b border-gray-200">
-                <h4 class="font-semibold text-gray-900 truncate">${this.escapeHtml(workout.name)}</h4>
-                <p class="text-sm text-gray-600">${this.escapeHtml(workout.author)}</p>
-            </div>
+        // Create header section safely
+        const header = document.createElement('div');
+        header.className = 'p-4 border-b border-gray-200';
+        
+        const title = document.createElement('h4');
+        title.className = 'font-semibold text-gray-900 truncate';
+        title.textContent = workout.name; // Safe text content
+        
+        const author = document.createElement('p');
+        author.className = 'text-sm text-gray-600';
+        author.textContent = workout.author; // Safe text content
+        
+        header.appendChild(title);
+        header.appendChild(author);
+        
+        // Create content section safely
+        const content = document.createElement('div');
+        content.className = 'p-4';
+        
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 gap-3 mb-4';
+        
+        // Helper function to create metric sections
+        const createMetricDiv = (value, label, colorClass) => {
+            const metricDiv = document.createElement('div');
+            metricDiv.className = 'text-center';
             
-            <div class="p-4">
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="text-center">
-                        <div class="text-lg font-semibold text-blue-600">${duration}</div>
-                        <div class="text-xs text-gray-500">Duration</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-semibold text-orange-600">${workout.tss}</div>
-                        <div class="text-xs text-gray-500">TSS</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-semibold text-green-600">${workout.averagePower}%</div>
-                        <div class="text-xs text-gray-500">Avg Power</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-semibold text-red-600">${workout.maxPower}%</div>
-                        <div class="text-xs text-gray-500">Max Power</div>
-                    </div>
-                </div>
+            const valueDiv = document.createElement('div');
+            valueDiv.className = `text-lg font-semibold ${colorClass}`;
+            valueDiv.textContent = value;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'text-xs text-gray-500';
+            labelDiv.textContent = label;
+            
+            metricDiv.appendChild(valueDiv);
+            metricDiv.appendChild(labelDiv);
+            return metricDiv;
+        };
+        
+        // Create metric sections
+        grid.appendChild(createMetricDiv(duration, 'Duration', 'text-blue-600'));
+        grid.appendChild(createMetricDiv(workout.tss, 'TSS', 'text-orange-600'));
+        grid.appendChild(createMetricDiv(`${workout.averagePower}%`, 'Avg Power', 'text-green-600'));
+        grid.appendChild(createMetricDiv(`${workout.maxPower}%`, 'Max Power', 'text-red-600'));
+        
+        // Create category and difficulty section
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'mb-3';
+        
+        const metaInner = document.createElement('div');
+        metaInner.className = 'flex items-center justify-between text-sm';
+        
+        const categorySpan = document.createElement('span');
+        categorySpan.className = 'bg-gray-100 px-2 py-1 rounded';
+        categorySpan.textContent = workout.category;
+        
+        const difficultySpan = document.createElement('span');
+        difficultySpan.className = 'text-yellow-600';
+        difficultySpan.textContent = difficultyStars;
+        
+        metaInner.appendChild(categorySpan);
+        metaInner.appendChild(difficultySpan);
+        metaDiv.appendChild(metaInner);
+        
+        // Create chart container
+        const chartDiv = document.createElement('div');
+        chartDiv.className = 'mb-4';
+        
+        const canvas = document.createElement('canvas');
+        canvas.id = `comparisonChart${workout.id}`;
+        canvas.className = 'w-full h-32';
+        
+        chartDiv.appendChild(canvas);
+        
+        // Assemble the card
+        content.appendChild(grid);
+        content.appendChild(metaDiv);
+        content.appendChild(chartDiv);
+        
+        card.appendChild(header);
+        card.appendChild(content);
+        
+        // Create action buttons
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = 'flex justify-between';
+        
+        const loadButton = document.createElement('button');
+        loadButton.className = 'px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200';
+        loadButton.textContent = 'Load Workout';
+        loadButton.addEventListener('click', () => window.workoutComparison.loadWorkout(workout.id));
+        
+        const removeButton = document.createElement('button');
+        removeButton.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200';
+        removeButton.textContent = 'Remove';
+        removeButton.addEventListener('click', () => window.workoutComparison.removeFromComparison(workout.id));
+        
+        buttonDiv.appendChild(loadButton);
+        buttonDiv.appendChild(removeButton);
+        content.appendChild(buttonDiv);
 
-                <div class="mb-3">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="bg-gray-100 px-2 py-1 rounded">${workout.category}</span>
-                        <span class="text-yellow-600">${difficultyStars}</span>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <canvas id="comparisonChart${workout.id}" class="w-full h-32"></canvas>
-                </div>
-
-                <div class="flex justify-between">
-                    <button class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200" 
-                            onclick="window.workoutComparison.loadWorkout('${workout.id}')">
-                        Load Workout
-                    </button>
-                    <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                            onclick="window.workoutComparison.removeFromComparison('${workout.id}')">
-                        Remove
-                    </button>
-                </div>
-            </div>
-        `;
+        return card;
 
         // Create mini chart for this workout
         setTimeout(() => {
