@@ -40,7 +40,13 @@
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
       "Bash(npm run test:run:*)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(gh api:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(find:*)",
+      "Bash(ruff:*)",
+      "Bash(pip install:*)"
     ],
     "deny": []
   }

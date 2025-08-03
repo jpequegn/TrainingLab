@@ -13,7 +13,6 @@ import socket
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 import jsonschema
 from langchain.tools import Tool
 from fastmcp import Client
@@ -443,7 +442,7 @@ def load_mcp_tools(config_path: str = "mcp_config.json") -> Tuple[List[Tool], Li
     Returns tools and processes for existing code
     """
     manager = MCPManager(config_path)
-    results = manager.start_all_servers()
+    manager.start_all_servers()
     manager.start_health_monitoring()
     
     # Extract processes for legacy compatibility

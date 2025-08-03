@@ -10,11 +10,9 @@ import sys
 import json
 from pathlib import Path
 from dotenv import load_dotenv
-import requests
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, AIMessage
 from mcp_manager import load_mcp_tools, terminate_mcp_processes, MCPManager
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):

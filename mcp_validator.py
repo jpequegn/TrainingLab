@@ -9,7 +9,7 @@ import os
 import socket
 import subprocess
 import shutil
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Dict, Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -340,7 +340,6 @@ class MCPConfigValidator:
         }
         
         command = server_config.get("command")
-        args = server_config.get("args", [])
         
         if not command:
             result["can_start"] = False
