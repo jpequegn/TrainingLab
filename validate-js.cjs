@@ -19,6 +19,7 @@ function validateJavaScript(filePath) {
             .replace(/import\s+['"][^'"]+['"];?/g, '');
         
         // Try to evaluate in a sandbox (basic check)
+        // eslint-disable-next-line no-new-func
         new Function(testContent);
         
         console.log(`✅ ${filePath}: Syntax OK`);

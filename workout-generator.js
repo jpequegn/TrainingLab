@@ -460,7 +460,7 @@ export class WorkoutGenerator {
             /(\d+)'?\s*@\s*(\d+)%/gi               // Generic "X' @ Y%"
         ];
         
-        let totalTime = 0;
+        const totalTime = 0;
         
         // Try to parse "first X @ Y% then Z @ W%" structure
         const firstMatch = subStructure.match(/(?:first\s+)?(\d+)'?\s*@\s*(\d+)%/i);
@@ -760,7 +760,7 @@ export class WorkoutGenerator {
 
     createComplexIntervalWorkout(parsed, description) {
         const complex = parsed.complexIntervals;
-        let totalDuration = parsed.duration * 60; // Target total duration in seconds
+        const totalDuration = parsed.duration * 60; // Target total duration in seconds
         
         // Calculate warmup and cooldown
         const warmupDuration = Math.min(600, totalDuration * 0.15); // Max 10 minutes

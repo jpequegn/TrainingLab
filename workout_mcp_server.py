@@ -4,14 +4,12 @@ Specialized Workout Creation MCP Server
 Provides advanced workout creation, parsing, and optimization with domain expertise.
 """
 
-import json
 import re
 import os
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
-import math
 from fastmcp import FastMCP
 
 # Configure logging
@@ -392,9 +390,6 @@ class WorkoutMCPServer:
     def parse_workout_description(self, description: str) -> Dict[str, Any]:
         """Parse natural language workout description"""
         description = description.lower().strip()
-        
-        # Detect workout type
-        workout_type = self._detect_workout_type(description)
         
         # Extract duration
         total_duration = self._extract_total_duration(description)

@@ -25,7 +25,7 @@ export function parseWorkoutXML(xmlDoc) {
     const segments = workoutElement.children;
     let currentTime = 0;
 
-    for (let segment of segments) {
+    for (const segment of segments) {
         const segmentData = parseSegment(segment, currentTime);
         if (segmentData) {
             if (Array.isArray(segmentData)) {
@@ -50,7 +50,7 @@ function parseSegment(segment, startTime) {
     const tagName = segment.tagName;
     const duration = parseInt(segment.getAttribute('Duration')) || 0;
     
-    let segmentData = {
+    const segmentData = {
         type: tagName,
         startTime: startTime,
         duration: duration,

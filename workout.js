@@ -282,7 +282,7 @@ export function calculatePowerCurve(workout, durations = [5, 10, 15, 20, 30, 60,
 
     // Create a continuous power data array with 1-second resolution
     const powerData = [];
-    let currentTime = 0;
+    const currentTime = 0;
 
     const allSegments = [];
     workout.segments.forEach(segment => {

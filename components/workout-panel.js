@@ -3,11 +3,10 @@
  * Main container for workout display and interaction
  */
 
-import { BaseComponent, Component } from './base-component.js';
+import { BaseComponent } from './base-component.js';
 import WorkoutChart from './workout-chart.js';
 import SegmentEditor from './segment-editor.js';
 
-@Component('workout-panel')
 export class WorkoutPanel extends BaseComponent {
     getDefaultOptions() {
         return {
@@ -316,21 +315,21 @@ export class WorkoutPanel extends BaseComponent {
     
     handleAction(action, event) {
         switch (action) {
-            case 'export-erg':
-                this.exportWorkout('erg');
-                break;
-            case 'export-mrc':
-                this.exportWorkout('mrc');
-                break;
-            case 'export-zwo':
-                this.exportWorkout('zwo');
-                break;
-            case 'export-chart':
-                this.exportChart();
-                break;
-            case 'toggle-power-zones':
-                this.togglePowerZones();
-                break;
+        case 'export-erg':
+            this.exportWorkout('erg');
+            break;
+        case 'export-mrc':
+            this.exportWorkout('mrc');
+            break;
+        case 'export-zwo':
+            this.exportWorkout('zwo');
+            break;
+        case 'export-chart':
+            this.exportChart();
+            break;
+        case 'toggle-power-zones':
+            this.togglePowerZones();
+            break;
         }
     }
     
@@ -340,15 +339,15 @@ export class WorkoutPanel extends BaseComponent {
         try {
             if (window.app) {
                 switch (format) {
-                    case 'erg':
-                        window.app.exportToERG();
-                        break;
-                    case 'mrc':
-                        window.app.exportToMRC();
-                        break;
-                    case 'zwo':
-                        window.app.exportModifiedZWO();
-                        break;
+                case 'erg':
+                    window.app.exportToERG();
+                    break;
+                case 'mrc':
+                    window.app.exportToMRC();
+                    break;
+                case 'zwo':
+                    window.app.exportModifiedZWO();
+                    break;
                 }
                 this.emit('workout:exported', { format });
             }
