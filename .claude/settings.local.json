@@ -46,7 +46,9 @@
       "Bash(gh run view:*)",
       "Bash(find:*)",
       "Bash(ruff:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git stash:*)"
     ],
     "deny": []
   }
