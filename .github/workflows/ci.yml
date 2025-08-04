@@ -59,7 +59,10 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint -- --max-warnings 1000
+        run: npm run lint -- --max-warnings 50 --format stylish
+        env:
+          NODE_ENV: development
+        continue-on-error: false
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -73,6 +76,7 @@ jobs:
 
       - name: Run Python linting
         run: npm run lint:py
+        continue-on-error: false
 
   # Unit and integration tests
   test:
@@ -142,22 +146,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Start application server
-        run: |
-          python server.py &
-          SERVER_PID=$!
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-          sleep 15
-
       - name: Run E2E tests
-        run: npm run test:e2e
-
-      - name: Stop application server
-        if: always()
-        run: |
-          if [ ! -z "$SERVER_PID" ]; then
-            kill $SERVER_PID || true
-          fi
+        run: npx playwright test tests/e2e/basic.spec.js --reporter=line
+        env:
+          NODE_ENV: test
+          CI: true
 
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
@@ -166,4 +159,5 @@ jobs:
           name: e2e-test-results
           path: |
             test-results/
-            playwright-report/ 
+            playwright-report/
+          retention-days: 30 

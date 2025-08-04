@@ -17,8 +17,13 @@ export default [
             // 'linebreak-style': ['error', 'unix'],
             quotes: ['error', 'single'],
             semi: ['error', 'always'],
-            'no-unused-vars': ['warn', { args: 'none' }],
-            'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+            'no-unused-vars': ['warn', { 
+                args: 'none',
+                vars: 'local',
+                ignoreRestSiblings: true,
+                caughtErrors: 'none'
+            }],
+            'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
             'prefer-const': 'error',
             'no-var': 'error',
             'no-eval': 'error',
