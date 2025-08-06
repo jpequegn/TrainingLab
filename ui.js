@@ -204,19 +204,63 @@ export class UI {
     }
 
     displayWorkoutInfo(workoutData, tss) {
+        // Update workout details
         document.getElementById('workoutName').textContent = workoutData.name;
         document.getElementById('workoutDescription').textContent = workoutData.description;
         document.getElementById('workoutAuthor').textContent = workoutData.author;
         document.getElementById('workoutSport').textContent = workoutData.sportType;
         
-        document.getElementById('workoutInfo').style.display = 'block';
+        // Update chart header information
+        const chartDuration = document.getElementById('chartDuration');
+        const chartTSS = document.getElementById('chartTSS');
+        if (chartDuration) {
+            chartDuration.textContent = this.formatDuration(workoutData.totalDuration);
+        }
+        if (chartTSS) {
+            chartTSS.textContent = `${tss} TSS`;
+        }
         
-        // Calculate and display workout metrics
+        // Show the new panel structure with optimized layout
+        const body = document.body;
+        body.classList.add('workout-loaded');
+        
+        // Show chart container first (top priority)
+        const chartContainer = document.querySelector('.chart-container');
+        if (chartContainer) {
+            chartContainer.style.display = 'block';
+        }
+        
+        // Show panels with staggered animation
+        setTimeout(() => {
+            document.getElementById('workoutStats').style.display = 'grid';
+        }, 100);
+        
+        setTimeout(() => {
+            document.getElementById('workoutInfo').style.display = 'block';
+            document.getElementById('controlsPanel').style.display = 'block';
+        }, 200);
+        
+        // Scroll to top to show the chart
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Calculate and display workout metrics in the stats cards
         this.displayWorkoutStats(workoutData, tss);
         
         // Update library save button state
         if (this.visualizer.library) {
             this.visualizer.library.updateSaveCurrentButton();
+        }
+    }
+    
+    formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         }
     }
 

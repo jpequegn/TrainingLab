@@ -902,6 +902,346 @@ select:focus-visible {
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Optimized Layout Styles */
+/* Instructions Panel - Horizontal at Top */
+#instructionsPanel {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#instructionsPanel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+}
+
+#instructionsContent {
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 0px;
+    overflow: hidden;
+}
+
+#instructionsToggle {
+    transition: transform 0.3s ease;
+}
+
+/* Enhanced Chart Container */
+.chart-container {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+#workoutChart {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+/* Chart badges and indicators */
+#chartDuration, #chartTSS {
+    transition: all 0.2s ease;
+}
+
+#chartDuration:hover, #chartTSS:hover {
+    transform: scale(1.05);
+}
+
+/* Fullscreen chart button */
+#fullscreenChart {
+    transition: all 0.2s ease;
+}
+
+#fullscreenChart:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    transform: scale(1.05);
+}
+
+/* Workout Stats Cards */
+#workoutStats {
+    animation: slideUp 0.6s ease-out;
+}
+
+#workoutStats > div {
+    transition: all 0.3s ease;
+}
+
+#workoutStats > div:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Grid Layout Enhancements */
+.grid.lg\\:grid-cols-3 {
+    gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+    .grid.lg\\:grid-cols-3 > div:first-child {
+        grid-column: span 2;
+    }
+}
+
+/* Controls Panel */
+#controlsPanel {
+    animation: slideIn 0.6s ease-out 0.2s both;
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+}
+
+#controlsPanel .space-y-4 > * {
+    transition: all 0.2s ease;
+}
+
+#controlsPanel button:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive Enhancements */
+@media (max-width: 1024px) {
+    .grid.lg\\:grid-cols-3 {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    #controlsPanel {
+        position: static;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    #instructionsPanel {
+        margin: 0 -1rem 2rem -1rem;
+        border-radius: 0;
+    }
+    
+    .chart-container {
+        margin: 0 -1rem 2rem -1rem;
+        border-radius: 0;
+    }
+    
+    #workoutChart {
+        height: 350px !important;
+    }
+}
+
+/* Modern hover effects */
+@media (hover: hover) {
+    .hover\\:scale-105:hover {
+        transform: scale(1.05);
+    }
+    
+    .hover\\:shadow-xl:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+}
+
+/* Loading states for new layout */
+.chart-container.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.chart-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 3px solid rgba(99, 102, 241, 0.3);
+    border-top-color: rgb(99, 102, 241);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 10;
+}
+
+/* Enhanced focus management */
+.focus-visible\\:ring-2:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+/* Smooth panel transitions */
+#workoutInfo, #workoutStats, #controlsPanel {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#workoutInfo[style*="block"], 
+#workoutStats[style*="grid"], 
+#controlsPanel[style*="block"] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Performance optimizations */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Enhanced glass morphism for modern look */
+.bg-white\\/95 {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.bg-white\\/10 {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* Dark mode support for new layout */
+@media (prefers-color-scheme: dark) {
+    .bg-white\\/95 {
+        background: rgba(17, 24, 39, 0.95);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+    
+    .bg-white\\/10 {
+        background: rgba(17, 24, 39, 0.6);
+    }
+}
+
+/* Print styles for new layout */
+@media print {
+    #instructionsPanel,
+    #controlsPanel {
+        display: none !important;
+    }
+    
+    .chart-container {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* Futuristic Dark Theme Enhancements */
+.futuristic-theme {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0f172a 50%, #1a1b3a 100%);
+    color: #e2e8f0;
+}
+
+.glow-cyan {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+}
+
+.glow-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+}
+
+.glass-dark {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.neon-text {
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Layout optimization when workout is loaded */
+.workout-loaded #uploadSection {
+    display: none !important;
+}
+
+.workout-loaded #instructionsPanel {
+    margin-bottom: 1rem !important;
+}
+
+.workout-loaded #mainHeader {
+    margin-bottom: 2rem !important;
+}
+
+.workout-loaded #mainHeader h1 {
+    font-size: 2.5rem !important;
+}
+
+.workout-loaded #mainHeader p {
+    font-size: 1rem !important;
+}
+
+.workout-loaded #mainHeader .w-20 {
+    width: 4rem !important;
+    height: 4rem !important;
+}
+
+/* Workout visualization should be first when loaded */
+.workout-loaded .main-content-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.workout-loaded .chart-container {
+    order: 1;
+    margin-bottom: 2rem !important;
+}
+
+.workout-loaded #workoutStats {
+    order: 2;
+    margin-bottom: 2rem !important;
+}
+
+.workout-loaded .workout-panels {
+    order: 3;
+}
+
+/* Enhanced dark theme colors */
+.futuristic-theme .bg-white\/95 {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+.futuristic-theme .bg-white\/10 {
+    background: rgba(15, 23, 42, 0.6) !important;
+}
+
+.futuristic-theme .text-gray-800 {
+    color: #e2e8f0 !important;
+}
+
+.futuristic-theme .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
+.futuristic-theme .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+/* Smooth transitions for layout changes */
+.main-content-wrapper {
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-container,
+#workoutStats,
+.workout-panels {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced hover effects for dark theme */
+.futuristic-theme .hover\:scale-105:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+.futuristic-theme button:hover {
+    filter: brightness(1.1);
+}
+
 /* Chat Interface Styles */
 .chat-message {
     max-width: 80%;
