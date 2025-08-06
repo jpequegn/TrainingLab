@@ -8,6 +8,7 @@ import socketserver
 import os
 import sys
 import json
+import signal
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -44,17 +45,17 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             load_dotenv()
             api_key = os.getenv('OPENAI_API_KEY')
             if not api_key:
-                print("❌ Error: OPENAI_API_KEY not set. LLM functionality will be disabled.")
-                print("📝 Create a .env file with: OPENAI_API_KEY=your_key_here")
-                print("🔑 Get an API key from: https://platform.openai.com/api-keys")
+                print("[ERROR] OPENAI_API_KEY not set. LLM functionality will be disabled.")
+                print("[INFO] Create a .env file with: OPENAI_API_KEY=your_key_here")
+                print("[INFO] Get an API key from: https://platform.openai.com/api-keys")
                 cls.llm = None # Explicitly set LLM to None if API key is missing
                 cls.agent_executor = None
                 return
 
-            print("🔑 Initializing OpenAI LLM with API key...")
+            print("[INFO] Initializing OpenAI LLM with API key...")
             cls.llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
             
-            print("🛠️ Loading MCP tools...")
+            print("[INFO] Loading MCP tools...")
             cls.mcp_manager = MCPManager()
             mcp_tools, cls.mcp_processes = load_mcp_tools()
 
@@ -72,12 +73,12 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             agent = create_tool_calling_agent(cls.llm, mcp_tools, prompt)
             cls.agent_executor = AgentExecutor(agent=agent, tools=mcp_tools, verbose=True)
             
-            print("✅ LLM agent initialized successfully!")
+            print("[SUCCESS] LLM agent initialized successfully!")
             
         except Exception as e:
             error_type = type(e).__name__
-            print(f"❌ Failed to initialize LLM agent: {error_type}: {e}")
-            print("🔧 Troubleshooting:")
+            print(f"[ERROR] Failed to initialize LLM agent: {error_type}: {e}")
+            print("[INFO] Troubleshooting:")
             
             if "openai" in str(e).lower() or "api" in str(e).lower():
                 if "api_key" in str(e).lower() or "authentication" in str(e).lower():
@@ -111,8 +112,8 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Content Security Policy
         csp_policy = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "
             "connect-src 'self' https://api.openai.com; "
@@ -539,8 +540,33 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+def find_available_port(start_port=53218):
+    """Find an available port starting from the given port number"""
+    import socket
+    for port in range(start_port, start_port + 100):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('0.0.0.0', port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError("Could not find an available port")
+
+def signal_handler(signum, frame):
+    """Handle Ctrl+C and other termination signals gracefully"""
+    print(f"\n\nReceived signal {signum}. Shutting down server...")
+    terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+    print("Server stopped.")
+    sys.exit(0)
+
 def main():
-    port = 53218
+    port = find_available_port()
+    print(f"[INFO] Using port: {port}")
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+    if hasattr(signal, 'SIGTERM'):
+        signal.signal(signal.SIGTERM, signal_handler)  # Terminate signal
     
     # Change to the directory containing the HTML files
     os.chdir(Path(__file__).parent)
@@ -549,7 +575,7 @@ def main():
     CORSHTTPRequestHandler.initialize_agent()
     
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
-        print("🚴‍♂️ Zwift Workout Visualizer server running at:")
+        print("[INFO] Zwift Workout Visualizer server running at:")
         print(f"   Local: http://localhost:{port}")
         print("   Network: https://work-1-jpkjjijvsbmtuklc.prod-runtime.all-hands.dev")
         print("\nPress Ctrl+C to stop the server")
@@ -557,7 +583,8 @@ def main():
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\n\nServer stopped.")
+            # This should now be handled by signal_handler, but keeping as fallback
+            print("\n\nKeyboardInterrupt caught. Shutting down...")
             terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
             sys.exit(0)
 

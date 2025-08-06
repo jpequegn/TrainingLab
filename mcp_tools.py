@@ -75,14 +75,46 @@ def load_mcp_tools(config_path="mcp_config.json"):
     return tools, mcp_processes
 
 def terminate_mcp_processes(processes):
+    """Fast and responsive MCP process termination"""
+    if not processes:
+        return
+    
+    print(f"Terminating {len(processes)} MCP processes...")
+    
+    # Step 1: Send terminate signal to all processes simultaneously
+    active_processes = []
     for p in processes:
         if p.poll() is None:  # Check if process is still running
             print(f"Terminating MCP process {p.pid}")
             p.terminate()
-            p.wait(timeout=5) # Give it some time to terminate gracefully
+            active_processes.append(p)
+    
+    if not active_processes:
+        print("No active MCP processes to terminate.")
+        return
+    
+    # Step 2: Wait for graceful termination with reduced timeout
+    timeout_start = time.time()
+    timeout_duration = 2  # Reduced from 5 seconds to 2 seconds
+    
+    while active_processes and (time.time() - timeout_start) < timeout_duration:
+        active_processes = [p for p in active_processes if p.poll() is None]
+        if active_processes:
+            time.sleep(0.1)  # Small delay before checking again
+    
+    # Step 3: Force kill remaining processes
+    if active_processes:
+        print(f"Force killing {len(active_processes)} unresponsive MCP processes...")
+        for p in active_processes:
             if p.poll() is None:
                 print(f"Killing MCP process {p.pid}")
-                p.kill()
+                try:
+                    p.kill()
+                    p.wait(timeout=1)  # Brief wait for kill to complete
+                except:
+                    pass  # Process might already be dead
+    
+    print("MCP process termination complete.")
 
 if __name__ == "__main__":
     # Example usage:

@@ -242,8 +242,8 @@ export class ModernUIUpgrade {
                 </div>
             `;
             
-            // Insert nav before the main content
-            document.body.insertBefore(nav, header);
+            // Insert nav at the beginning of body
+            document.body.insertBefore(nav, document.body.firstChild);
             
             // Connect help button to shortcuts
             const helpButton = nav.querySelector('#helpButton');

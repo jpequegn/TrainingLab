@@ -9,7 +9,7 @@ import { WorkoutLibrary } from './library.js';
 import { loadingManager, delay } from './loading-manager.js';
 import { stateManager } from './state-manager.js';
 import { reactiveUI } from './reactive-ui.js';
-import { initializeComponents } from './components/index.js';
+// import { initializeComponents } from './components/index.js'; // Disabled - not needed for main app
 import { performanceOptimizer } from './performance-optimizer.js';
 import { WorkoutEditor } from './editor.js';
 
@@ -30,7 +30,7 @@ window.addEventListener('error', (event) => {
     console.error('🚨 Unhandled JavaScript Error:', errorData);
     
     // Send to error reporting service in production
-    if (process.env.NODE_ENV === 'production') {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
         // TODO: Integrate with error reporting service (Sentry, etc.)
         // reportError(errorData);
     }
@@ -54,7 +54,7 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('🚨 Unhandled Promise Rejection:', errorData);
     
     // Send to error reporting service in production
-    if (process.env.NODE_ENV === 'production') {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
         // TODO: Integrate with error reporting service
         // reportError(errorData);
     }
@@ -99,8 +99,8 @@ class ZwiftWorkoutVisualizer {
         // Initialize reactive UI bindings
         this.initializeReactiveBindings();
         
-        // Initialize component system
-        this.initializeComponents();
+        // Initialize component system - disabled (not needed for main app)
+        // this.initializeComponents();
         
         // Initialize performance monitoring
         this.initializePerformanceMonitoring();
@@ -126,7 +126,7 @@ class ZwiftWorkoutVisualizer {
             const { path, newValue, source } = context;
             
             // Log state changes in development
-            if (process.env.NODE_ENV === 'development') {
+            if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
                 console.log(`State change: ${path} = ${JSON.stringify(newValue)} (source: ${source})`);
             }
             
@@ -455,19 +455,19 @@ class ZwiftWorkoutVisualizer {
         }
     }
     
-    async initializeComponents() {
-        try {
-            // Initialize component system
-            const components = await initializeComponents();
-            console.log(`Initialized ${components.length} components`);
-            
-            // Setup component event handlers
-            this.setupComponentEvents();
-            
-        } catch (error) {
-            console.error('Failed to initialize components:', error);
-        }
-    }
+    // async initializeComponents() {
+    //     try {
+    //         // Initialize component system
+    //         const components = await initializeComponents();
+    //         console.log(`Initialized ${components.length} components`);
+    //         
+    //         // Setup component event handlers
+    //         this.setupComponentEvents();
+    //         
+    //     } catch (error) {
+    //         console.error('Failed to initialize components:', error);
+    //     }
+    // }
     
     setupComponentEvents() {
         // Listen for component events

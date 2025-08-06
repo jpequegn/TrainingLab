@@ -54,7 +54,7 @@ export class UI {
     initializeEventListeners() {
         const eventMappings = [
             { id: 'fileInput', event: 'change', handler: (e) => this.visualizer.handleFileUpload(e) },
-            { id: 'loadSample', event: 'click', handler: () => this.visualizer.loadSampleWorkout() },
+            // { id: 'loadSample', event: 'click', handler: () => this.visualizer.loadSampleWorkout() }, // Handled by reactive-ui.js
             { id: 'exportERG', event: 'click', handler: () => this.visualizer.exportToERG() },
             { id: 'exportMRC', event: 'click', handler: () => this.visualizer.exportToMRC() },
             { id: 'ftpInput', event: 'input', handler: (e) => this._handleFTPInput(e) },

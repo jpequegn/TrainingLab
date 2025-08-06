@@ -357,9 +357,22 @@ export class ReactiveUI {
         // Chat panel state
         this.bind('#chatPanel', 'chatPanelExpanded', {
             property: 'class',
-            transform: (expanded) => ({
-                'expanded': expanded
-            })
+            transform: (expanded) => {
+                const panel = document.getElementById('chatPanel');
+                if (panel) {
+                    if (expanded) {
+                        panel.classList.add('expanded');
+                        panel.style.transform = 'translateX(0)';
+                    } else {
+                        panel.classList.remove('expanded');
+                        // On smaller screens, hide the panel completely
+                        if (window.innerWidth < 1280) {
+                            panel.style.transform = 'translateX(100%)';
+                        }
+                    }
+                }
+                return { 'expanded': expanded };
+            }
         });
 
         // Theme switching
@@ -410,7 +423,7 @@ export class ReactiveUI {
         });
 
         // Performance metrics (debug)
-        if (process.env.NODE_ENV === 'development') {
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             this.bind('#debugInfo', 'performanceMetrics', {
                 property: 'innerHTML',
                 transform: (metrics) => `
