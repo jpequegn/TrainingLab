@@ -1,8 +1,8 @@
 
-import { parseWorkoutXML } from './parser.js';
-import { calculateTSS, formatDuration, calculateWorkoutMetrics, calculatePowerCurve } from './workout.js';
-import { generateERGContent, generateMRCContent, downloadFile, generateZWOContent } from './exporter.js';
-import { fetchDirectory, fetchWorkoutFile, deployWorkout, sendChatMessage, getZwiftWorkoutDirectory, saveAsWorkout, selectFolder } from './api.js';
+// import { parseWorkoutXML } from './parser.js'; // Currently unused
+import { formatDuration, calculateWorkoutMetrics, calculatePowerCurve } from './workout.js';
+import { downloadFile, generateZWOContent } from './exporter.js';
+import { fetchDirectory, fetchWorkoutFile, sendChatMessage, getZwiftWorkoutDirectory, saveAsWorkout, selectFolder } from './api.js';
 import { WorkoutGenerator } from './workout-generator.js';
 import { powerZoneManager } from './power-zones.js';
 
@@ -909,7 +909,7 @@ export class UI {
         const zones = powerZoneManager.getZones();
         const annotations = {};
 
-        for (const [zoneKey, zone] of Object.entries(zones)) {
+        for (const [, zone] of Object.entries(zones)) {
             const minPercent = zone.min * 100;
             const maxPercent = zone.max * 100;
             
@@ -943,7 +943,7 @@ export class UI {
      */
     getPowerZoneForPercent(powerPercent) {
         const zones = powerZoneManager.getZones();
-        for (const [zoneKey, zone] of Object.entries(zones)) {
+        for (const [, zone] of Object.entries(zones)) {
             const minPercent = zone.min * 100;
             const maxPercent = zone.max * 100;
             if (powerPercent >= minPercent && powerPercent <= maxPercent) {
@@ -960,15 +960,16 @@ export class UI {
             this.chart.destroy();
         }
 
-        const colors = {
-            'Warmup': '#FFA726',
-            'Cooldown': '#66BB6A',
-            'SteadyState': '#42A5F5',
-            'Interval (On)': '#EF5350',
-            'Interval (Off)': '#AB47BC',
-            'Ramp': '#FF7043',
-            'FreeRide': '#78909C'
-        };
+        // Segment type colors (currently using power zones instead)
+        // const colors = {
+        //     'Warmup': '#FFA726',
+        //     'Cooldown': '#66BB6A',
+        //     'SteadyState': '#42A5F5',
+        //     'Interval (On)': '#EF5350',
+        //     'Interval (Off)': '#AB47BC',
+        //     'Ramp': '#FF7043',
+        //     'FreeRide': '#78909C'
+        // };
 
         const allSegments = this.visualizer.workout.getAllSegments();
         allSegments.sort((a, b) => a.startTime - b.startTime);
@@ -1071,7 +1072,6 @@ export class UI {
                         labels: {
                             generateLabels: (chart) => {
                                 // Create custom legend showing power zones
-                                const zones = powerZoneManager.getZones();
                                 const usedZones = [...new Set(continuousWorkoutData
                                     .map(point => point.powerZone)
                                     .filter(zone => zone !== null)
@@ -1479,7 +1479,7 @@ export class UI {
                 input.value = '';
                 
                 // Show thinking message
-                const thinkingMsg = this.appendChatMessage('🤔 Creating your workout...', 'llm thinking');
+                this.appendChatMessage('🤔 Creating your workout...', 'llm thinking');
                 
                 // Check if LLM mode is enabled
                 const llmToggle = document.getElementById('llmModeToggle');
@@ -1980,7 +1980,6 @@ The JSON should have this exact structure:
         try {
             // Show loading state
             const confirmBtn = dialog.querySelector('#saveAsConfirm');
-            const originalText = confirmBtn.textContent;
             confirmBtn.textContent = 'Saving...';
             confirmBtn.disabled = true;
 
