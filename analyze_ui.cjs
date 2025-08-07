@@ -56,4 +56,3 @@ async function analyzeUI() {
 }
 
 analyzeUI();
-EOF < /dev/null

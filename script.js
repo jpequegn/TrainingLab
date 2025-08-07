@@ -8,7 +8,7 @@ import { UI } from './ui.js';
 import { WorkoutLibrary } from './library.js';
 import { loadingManager, delay } from './loading-manager.js';
 import { stateManager } from './state-manager.js';
-import { reactiveUI } from './reactive-ui.js';
+// import { reactiveUI } from './reactive-ui.js'; // Currently unused
 // import { initializeComponents } from './components/index.js'; // Disabled - not needed for main app
 import { performanceOptimizer } from './performance-optimizer.js';
 import { WorkoutEditor } from './editor.js';
