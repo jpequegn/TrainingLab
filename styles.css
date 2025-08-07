@@ -378,7 +378,8 @@ body {
 
 .modern-ui-fallback .bg-white,
 .modern-ui-fallback [class*="bg-white"] {
-    @apply rounded-xl shadow-lg border border-gray-200;
+    @apply shadow-lg border border-gray-200;
+    border-radius: 4px; /* Angular design - consistent with card styles */
     transition: all 0.2s ease;
 }
 
@@ -727,14 +728,15 @@ select:focus-visible {
     transform: translateY(0);
 }
 
-/* Modern Button Styles */
+/* Modern Button Styles - Nebula Angular Design */
 .btn-modern {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200;
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-200;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
     @apply disabled:opacity-50 disabled:pointer-events-none;
     background: var(--gradient-primary);
     color: hsl(var(--primary-foreground));
-    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 4px; /* Angular design - max 4px for buttons */
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.05); /* Subtle elevation */
 }
 
 .btn-modern:hover {
@@ -758,10 +760,11 @@ select:focus-visible {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
 }
 
-/* Modern Card Styles */
+/* Modern Card Styles - Nebula Angular Design */
 .card-modern {
-    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+    @apply border bg-card text-card-foreground shadow-sm;
+    border-radius: 4px; /* Angular design - 4px for cards */
+    background: hsl(var(--card)); /* Solid surface instead of gradient */
     transition: all var(--animation-duration) var(--animation-easing);
 }
 
@@ -771,7 +774,8 @@ select:focus-visible {
 }
 
 .card-glass {
-    @apply glass-card rounded-xl;
+    @apply border bg-card/95 backdrop-blur-sm text-card-foreground shadow-sm;
+    border-radius: 4px; /* Angular design - minimal radius */
     transition: all var(--animation-duration) var(--animation-easing);
 }
 
@@ -780,12 +784,13 @@ select:focus-visible {
     box-shadow: var(--glass-shadow), 0 10px 25px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Modern Input Styles */
+/* Modern Input Styles - Nebula Angular Design */
 .input-modern {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm;
+    @apply flex h-10 w-full border border-input bg-background px-3 py-2 text-sm;
     @apply ring-offset-background placeholder:text-muted-foreground;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: 2px; /* Angular design - 2px for inputs */
     transition: all var(--animation-duration) var(--animation-easing);
 }
 
@@ -794,13 +799,14 @@ select:focus-visible {
     box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
 }
 
-/* Modern Badge Styles */
+/* Modern Badge Styles - Nebula Angular Design */
 .badge-modern {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold;
     @apply transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
-    background: var(--gradient-accent);
-    color: hsl(var(--primary));
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
     border: 1px solid hsl(var(--border));
+    border-radius: 2px; /* Angular design - minimal radius for badges */
 }
 
 .badge-success {
@@ -815,34 +821,39 @@ select:focus-visible {
     @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
 }
 
-/* Skeleton Loading */
+/* Skeleton Loading - Nebula Angular Design */
 .skeleton {
-    @apply animate-pulse rounded-md bg-muted;
+    @apply animate-pulse bg-muted;
+    border-radius: 2px; /* Angular design - minimal radius */
 }
 
 .skeleton-text {
-    @apply h-4 bg-muted rounded;
+    @apply h-4 bg-muted;
+    border-radius: 2px; /* Angular design - minimal radius */
     background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
     background-size: 200px 100%;
     animation: shimmer 2s infinite;
 }
 
-/* Enhanced Tooltips */
+/* Enhanced Tooltips - Nebula Angular Design */
 .tooltip-modern {
-    @apply absolute z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground;
+    @apply absolute z-50 overflow-hidden bg-primary px-3 py-1.5 text-xs text-primary-foreground;
+    border-radius: 2px; /* Angular design - minimal radius */
     animation: scaleIn 0.2s ease-out;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* Modern Progress Bar */
+/* Modern Progress Bar - Nebula Angular Design */
 .progress-modern {
-    @apply relative h-2 w-full overflow-hidden rounded-full bg-secondary;
+    @apply relative h-2 w-full overflow-hidden bg-secondary;
+    border-radius: 1px; /* Angular design - minimal radius for progress */
 }
 
 .progress-modern .progress-bar {
-    @apply h-full transition-all duration-500 ease-out rounded-full;
+    @apply h-full transition-all duration-500 ease-out;
     background: var(--gradient-primary);
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.2);
+    border-radius: 1px; /* Angular design - minimal radius */
 }
 
 /* Enhanced Focus Styles */
