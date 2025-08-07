@@ -224,6 +224,12 @@ export class UI {
         const body = document.body;
         body.classList.add('workout-loaded');
         
+        // Show the workout section (remove hidden class)
+        const workoutSection = document.getElementById('workoutSection');
+        if (workoutSection) {
+            workoutSection.classList.remove('hidden');
+        }
+        
         // Show chart container first (top priority)
         const chartContainer = document.querySelector('.chart-container');
         if (chartContainer) {
@@ -232,12 +238,18 @@ export class UI {
         
         // Show panels with staggered animation
         setTimeout(() => {
-            document.getElementById('workoutStats').style.display = 'grid';
+            const workoutStats = document.getElementById('workoutStats');
+            if (workoutStats) {
+                workoutStats.style.display = 'grid';
+            }
         }, 100);
         
         setTimeout(() => {
-            document.getElementById('workoutInfo').style.display = 'block';
-            document.getElementById('controlsPanel').style.display = 'block';
+            const workoutInfo = document.getElementById('workoutInfo');
+            if (workoutInfo) {
+                workoutInfo.classList.remove('hidden');
+                workoutInfo.style.display = 'block';
+            }
         }, 200);
         
         // Scroll to top to show the chart
