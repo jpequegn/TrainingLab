@@ -5,7 +5,7 @@
 
 export class ThemeManager {
     constructor() {
-        this.currentTheme = this.getStoredTheme() || 'light';
+        this.currentTheme = this.getStoredTheme() || 'dark';
         this.initializeTheme();
         this.createThemeToggle();
     }
@@ -40,28 +40,28 @@ export class ThemeManager {
 
     applyLightTheme() {
         const root = document.documentElement;
-        root.style.setProperty('--bg-primary', 'linear-gradient(to bottom right, #4338ca, #7c3aed, #2563eb)');
-        root.style.setProperty('--bg-card', 'rgba(255, 255, 255, 0.95)');
-        root.style.setProperty('--bg-card-header', 'linear-gradient(to right, #4f46e5, #7c3aed)');
-        root.style.setProperty('--text-primary', '#1f2937');
-        root.style.setProperty('--text-secondary', '#6b7280');
-        root.style.setProperty('--text-accent', '#4f46e5');
-        root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
-        root.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.1)');
-        root.style.setProperty('--chart-bg', '#f9fafb');
+        root.style.setProperty('--bg-primary', 'linear-gradient(to bottom right, #E0E6F0, #A3A9BF, #1F4E8C)');
+        root.style.setProperty('--bg-card', 'rgba(224, 230, 240, 0.95)');
+        root.style.setProperty('--bg-card-header', 'linear-gradient(to right, #1F4E8C, #333A56)');
+        root.style.setProperty('--text-primary', '#121317');
+        root.style.setProperty('--text-secondary', '#333A56');
+        root.style.setProperty('--text-accent', '#1F4E8C');
+        root.style.setProperty('--border-color', 'rgba(51, 58, 86, 0.2)');
+        root.style.setProperty('--shadow-color', 'rgba(18, 19, 23, 0.1)');
+        root.style.setProperty('--chart-bg', '#E0E6F0');
     }
 
     applyDarkTheme() {
         const root = document.documentElement;
-        root.style.setProperty('--bg-primary', 'linear-gradient(to bottom right, #1e1b4b, #581c87, #1e3a8a)');
-        root.style.setProperty('--bg-card', 'rgba(31, 41, 55, 0.95)');
-        root.style.setProperty('--bg-card-header', 'linear-gradient(to right, #374151, #4b5563)');
-        root.style.setProperty('--text-primary', '#f9fafb');
-        root.style.setProperty('--text-secondary', '#d1d5db');
-        root.style.setProperty('--text-accent', '#8b5cf6');
-        root.style.setProperty('--border-color', 'rgba(75, 85, 99, 0.3)');
-        root.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.3)');
-        root.style.setProperty('--chart-bg', '#374151');
+        root.style.setProperty('--bg-primary', 'linear-gradient(to bottom right, #121317, #1E2130, #1F4E8C)');
+        root.style.setProperty('--bg-card', 'rgba(30, 33, 48, 0.95)');
+        root.style.setProperty('--bg-card-header', 'linear-gradient(to right, #1F4E8C, #333A56)');
+        root.style.setProperty('--text-primary', '#E0E6F0');
+        root.style.setProperty('--text-secondary', '#A3A9BF');
+        root.style.setProperty('--text-accent', '#1F4E8C');
+        root.style.setProperty('--border-color', 'rgba(51, 58, 86, 0.3)');
+        root.style.setProperty('--shadow-color', 'rgba(18, 19, 23, 0.3)');
+        root.style.setProperty('--chart-bg', '#1E2130');
     }
 
     createThemeToggle() {

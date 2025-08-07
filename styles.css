@@ -81,37 +81,37 @@
 
 /* Modern Design System - CSS Custom Properties */
 :root {
-    /* Color Palette */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+    /* Color Palette - Nebula UI Dark Theme */
+    --background: 240 8% 9%;
+    --foreground: 225 25% 91%;
+    --card: 230 20% 16%;
+    --card-foreground: 225 25% 91%;
+    --popover: 230 20% 16%;
+    --popover-foreground: 225 25% 91%;
+    --primary: 214 63% 34%;
+    --primary-foreground: 225 25% 91%;
+    --secondary: 228 25% 27%;
+    --secondary-foreground: 223 14% 69%;
+    --muted: 228 25% 27%;
+    --muted-foreground: 223 14% 69%;
+    --accent: 214 63% 34%;
+    --accent-foreground: 225 25% 91%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262.1 83.3% 57.8%;
+    --destructive-foreground: 225 25% 91%;
+    --border: 228 25% 27%;
+    --input: 228 25% 27%;
+    --ring: 214 63% 34%;
     --radius: 0.5rem;
 
     /* Modern gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262.1 83.3% 57.8%) 0%, hsl(252.1 83.3% 67.8%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%) 0%, hsl(210 40% 90%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(262.1 83.3% 57.8% / 0.1) 0%, hsl(252.1 83.3% 67.8% / 0.1) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(214 63% 34%) 0%, hsl(214 63% 44%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(228 25% 27%) 0%, hsl(228 25% 32%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(214 63% 34% / 0.1) 0%, hsl(214 63% 44% / 0.1) 100%);
     
     /* Glass morphism */
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --glass-bg: rgba(18, 19, 23, 0.4);
+    --glass-border: rgba(51, 58, 86, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(18, 19, 23, 0.37);
     
     /* Animations */
     --animation-duration: 0.3s;
@@ -203,7 +203,7 @@
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    background: linear-gradient(90deg, #1F4E8C, #1F4E8C);
     border-radius: 2px;
     transition: width 0.3s ease;
     width: 0%;
@@ -307,30 +307,30 @@
 }
 
 .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 240 8% 9%;
+    --foreground: 225 25% 91%;
+    --card: 230 20% 16%;
+    --card-foreground: 225 25% 91%;
+    --popover: 230 20% 16%;
+    --popover-foreground: 225 25% 91%;
+    --primary: 214 63% 34%;
+    --primary-foreground: 225 25% 91%;
+    --secondary: 228 25% 27%;
+    --secondary-foreground: 223 14% 69%;
+    --muted: 228 25% 27%;
+    --muted-foreground: 223 14% 69%;
+    --accent: 214 63% 34%;
+    --accent-foreground: 225 25% 91%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262.1 83.3% 57.8%;
+    --destructive-foreground: 225 25% 91%;
+    --border: 228 25% 27%;
+    --input: 228 25% 27%;
+    --ring: 214 63% 34%;
     
     /* Dark mode glass */
-    --glass-bg: rgba(0, 0, 0, 0.2);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --glass-bg: rgba(18, 19, 23, 0.4);
+    --glass-border: rgba(51, 58, 86, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(18, 19, 23, 0.37);
 }
 
 /* Modern Utility Classes */
@@ -411,7 +411,7 @@ body {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #4f46e5;
+    background: #1F4E8C;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
@@ -420,7 +420,7 @@ body {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #4f46e5;
+    background: #1F4E8C;
     cursor: pointer;
     border: none;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -468,7 +468,7 @@ body {
 }
 
 .segment-edit-box .apply-btn {
-    background: #4f46e5;
+    background: #1F4E8C;
     color: white;
     border: none;
 }
@@ -519,7 +519,7 @@ body {
 }
 
 .segment-power {
-    color: #4f46e5;
+    color: #1F4E8C;
     font-weight: 500;
 }
 
@@ -954,7 +954,7 @@ select:focus-visible {
 }
 
 #fullscreenChart:hover {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #1F4E8C 0%, #1F4E8C 100%);
     transform: scale(1.05);
 }
 
@@ -1139,8 +1139,8 @@ select:focus-visible {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-.glow-purple {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+.glow-nebula {
+    box-shadow: 0 0 20px rgba(31, 78, 140, 0.3);
 }
 
 .glass-dark {
@@ -1250,7 +1250,7 @@ select:focus-visible {
 
 .chat-message.user {
     align-self: flex-end;
-    background: #4f46e5;
+    background: #1F4E8C;
     color: white;
     border-radius: 1rem 1rem 0.25rem 1rem;
     padding: 0.75rem;
