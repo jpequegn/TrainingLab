@@ -555,7 +555,22 @@ def find_available_port(start_port=53218):
 def signal_handler(signum, frame):
     """Handle Ctrl+C and other termination signals gracefully"""
     print(f"\n\nReceived signal {signum}. Shutting down server...")
-    terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+    
+    # Shutdown the HTTP server if it exists
+    if hasattr(signal_handler, 'httpd') and signal_handler.httpd:
+        try:
+            signal_handler.httpd.shutdown()
+            print("HTTP server shutdown completed.")
+        except Exception as e:
+            print(f"Error shutting down HTTP server: {e}")
+    
+    # Terminate MCP processes
+    try:
+        terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+        print("MCP processes terminated.")
+    except Exception as e:
+        print(f"Error terminating MCP processes: {e}")
+    
     print("Server stopped.")
     sys.exit(0)
 
@@ -575,6 +590,9 @@ def main():
     CORSHTTPRequestHandler.initialize_agent()
     
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
+        # Store server reference for signal handler
+        signal_handler.httpd = httpd
+        
         print("[INFO] Zwift Workout Visualizer server running at:")
         print(f"   Local: http://localhost:{port}")
         print("   Network: https://work-1-jpkjjijvsbmtuklc.prod-runtime.all-hands.dev")
@@ -587,6 +605,9 @@ def main():
             print("\n\nKeyboardInterrupt caught. Shutting down...")
             terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
             sys.exit(0)
+        finally:
+            # Clean up server reference
+            signal_handler.httpd = None
 
 if __name__ == "__main__":
     main()
