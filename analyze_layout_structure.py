@@ -298,7 +298,7 @@ class LayoutStructureAnalyzer:
                     "priority": "HIGH",
                     "issue": f"Main content is offset by {offset:.1f}px from center",
                     "solution": "Apply CSS: max-width + margin: 0 auto to main container",
-                    "css": f"""
+                    "css": """
                     main, .main-content, #root {{
                         max-width: 1200px;
                         margin: 0 auto;
