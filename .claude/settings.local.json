@@ -48,7 +48,11 @@
       "Bash(ruff:*)",
       "Bash(pip install:*)",
       "Bash(git cherry-pick:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(start /B python -m http.server 3000)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

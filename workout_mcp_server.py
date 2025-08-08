@@ -732,16 +732,15 @@ class WorkoutMCPServer:
             name=seg_dict.get("name")
         )
     
-    def run(self, port: int = 8001):
+    def run(self):
         """Run the MCP server"""
-        logger.info(f"🏃‍♂️ Starting Workout Creator MCP Server on port {port}")
-        self.app.run(port=port)
+        logger.info(f"🏃‍♂️ Starting Workout Creator MCP Server")
+        self.app.run()
 
 def main():
     """Main entry point"""
-    port = int(os.environ.get("WORKOUT_SERVER_PORT", 8001))
     server = WorkoutMCPServer()
-    server.run(port=port)
+    server.run()
 
 if __name__ == "__main__":
     main()
