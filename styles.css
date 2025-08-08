@@ -503,15 +503,15 @@ body {
 
 /* Segment edit form styles */
 .segment-edit-box form {
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .segment-edit-box input {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.375rem;
     border: 1px solid #d1d5db;
     border-radius: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .segment-edit-box .edit-btns {
@@ -522,7 +522,7 @@ body {
 
 .segment-edit-box .apply-btn,
 .segment-edit-box .cancel-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.375rem 0.75rem;
     border-radius: 0.5rem;
     font-weight: 500;
     cursor: pointer;
