@@ -302,24 +302,57 @@
     }
 }
 
-/* Reduced motion support */
+/* Comprehensive reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+    /* Disable decorative animations but keep functional transitions */
+    .fade-in,
+    .fade-out,
+    .animate-on-scroll,
+    .slideUp,
+    .slideIn,
+    .scaleIn {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
     }
     
-    .loading-spinner {
-        animation: none;
+    /* Disable infinite animations */
+    .loading-spinner,
+    .skeleton,
+    [class*="spin"],
+    .progress-bar-indeterminate::after {
+        animation: none !important;
+    }
+    
+    /* Provide static alternatives for loading states */
+    .loading-spinner::after {
+        content: "⏳";
+        display: inline-block;
     }
     
     .skeleton {
-        animation: none;
-        background: #f0f0f0;
+        background: hsl(var(--muted)) !important;
+    }
+    
+    /* Reduce hover transforms but keep focus accessibility */
+    .btn-modern:hover,
+    .card-modern:hover,
+    .card-glass:hover,
+    .chart-container:hover,
+    #workoutStats > div:hover {
+        transform: none !important;
+    }
+    
+    /* Keep essential transitions for accessibility */
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+        transition: box-shadow 0.15s ease !important;
+    }
+    
+    /* Disable scroll behavior animations */
+    html {
+        scroll-behavior: auto !important;
     }
 }
 
@@ -922,24 +955,19 @@ select:focus-visible {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
 
-/* Reduced motion support */
+/* Additional reduced motion overrides */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-    
+    /* Ensure progress indicators show completion state */
     .progress-bar-indeterminate::after {
-        animation: none;
-        left: 0;
-        width: 100%;
+        left: 0 !important;
+        width: 100% !important;
+        background: hsl(var(--primary)) !important;
     }
     
-    .animate-on-scroll {
-        animation: none;
-        opacity: 1;
-        transform: none;
+    /* Disable shimmer effects */
+    [class*="shimmer"] {
+        background: hsl(var(--muted)) !important;
+        animation: none !important;
     }
 }
 
