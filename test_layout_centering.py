@@ -6,7 +6,6 @@ Tests the layout changes for density optimization across viewport sizes
 
 import asyncio
 from playwright.async_api import async_playwright
-import os
 from pathlib import Path
 
 class NebulaUITester:

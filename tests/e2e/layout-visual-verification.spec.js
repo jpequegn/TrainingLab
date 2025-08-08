@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('Layout Visual Verification', () => {
     test('should capture layout at different screen sizes', async ({ page }) => {
