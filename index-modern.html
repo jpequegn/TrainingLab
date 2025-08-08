@@ -222,13 +222,13 @@
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
                                 <label for="scaleSlider" class="text-sm font-medium text-foreground">Scale Factor:</label>
-                                <span class="scale-value text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">1.0x</span>
+                                <span class="scale-value text-sm font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">1.0x</span>
                             </div>
                             <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" 
                                    class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer">
                             <div class="flex space-x-2">
                                 <button id="applyScale" class="flex-1 btn-modern">Apply Scaling</button>
-                                <button id="resetWorkout" class="btn-outline px-4 py-2 rounded-lg">Reset</button>
+                                <button id="resetWorkout" class="btn-outline px-3 py-1.5 rounded-lg">Reset</button>
                             </div>
                         </div>
                     </div>
@@ -250,13 +250,13 @@
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3">
-                            <button id="exportERG" class="btn-outline text-sm py-2">
+                            <button id="exportERG" class="btn-outline text-sm py-1.5">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                                 </svg>
                                 ERG File
                             </button>
-                            <button id="exportMRC" class="btn-outline text-sm py-2">
+                            <button id="exportMRC" class="btn-outline text-sm py-1.5">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
@@ -286,7 +286,7 @@
     </section>
 
     <!-- Feature Cards -->
-    <section class="py-16 px-4">
+    <section class="py-12 px-4">
         <div class="container mx-auto">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold text-foreground mb-4">Powerful Features</h2>
@@ -331,7 +331,7 @@
 
     <!-- Footer -->
     <footer class="border-t bg-background/95 backdrop-blur">
-        <div class="container mx-auto py-8 px-4">
+        <div class="container mx-auto py-6 px-4">
             <div class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
                 <div class="flex items-center space-x-2">
                     <div class="w-6 h-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded"></div>
@@ -349,7 +349,7 @@
     </footer>
 
     <!-- Power Info Tooltip -->
-    <div id="hoverPowerBox" class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-3 py-2 text-sm font-medium z-50 hidden">
+    <div id="hoverPowerBox" class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-2 py-1 text-sm font-medium z-50 hidden">
         <div class="text-popover-foreground"></div>
     </div>
     
@@ -359,7 +359,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50">
+    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-3 py-2 transition-all duration-300 opacity-0 pointer-events-none z-50">
         <div class="flex items-center space-x-2 text-popover-foreground">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
