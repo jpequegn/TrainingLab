@@ -114,7 +114,7 @@
     --glass-shadow: 0 8px 32px 0 rgba(18, 19, 23, 0.37);
     
     /* Animations */
-    --animation-duration: 0.3s;
+    --animation-duration: 0.15s;
     --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Typography - Nebula UI System */
@@ -151,12 +151,12 @@
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #fff;
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid #fff;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -165,14 +165,14 @@
 }
 
 .skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
+    background: linear-gradient(90deg, #f0f0f0 30%, #e8e8e8 50%, #f0f0f0 70%);
+    background-size: 180% 100%;
+    animation: loading 1s infinite;
 }
 
 .dark .skeleton {
-    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #2a2a2a 30%, #323232 50%, #2a2a2a 70%);
+    background-size: 180% 100%;
 }
 
 @keyframes loading {
@@ -181,7 +181,7 @@
 }
 
 .workout-skeleton {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.15s ease-in-out;
 }
 
 .workout-skeleton .skeleton-header {
@@ -222,13 +222,13 @@
     height: 100%;
     background: linear-gradient(90deg, #1F4E8C, #1F4E8C);
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width 0.2s ease;
     width: 0%;
 }
 
 .progress-indeterminate {
     width: 30%;
-    animation: indeterminate 2s linear infinite;
+    animation: indeterminate 1.2s linear infinite;
 }
 
 @keyframes indeterminate {
@@ -248,11 +248,11 @@
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.15s ease-in-out;
 }
 
 .fade-out {
-    animation: fadeOut 0.3s ease-in-out;
+    animation: fadeOut 0.15s ease-in-out;
 }
 
 /* Screen Reader Only Content */
@@ -302,24 +302,57 @@
     }
 }
 
-/* Reduced motion support */
+/* Comprehensive reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+    /* Disable decorative animations but keep functional transitions */
+    .fade-in,
+    .fade-out,
+    .animate-on-scroll,
+    .slideUp,
+    .slideIn,
+    .scaleIn {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
     }
     
-    .loading-spinner {
-        animation: none;
+    /* Disable infinite animations */
+    .loading-spinner,
+    .skeleton,
+    [class*="spin"],
+    .progress-bar-indeterminate::after {
+        animation: none !important;
+    }
+    
+    /* Provide static alternatives for loading states */
+    .loading-spinner::after {
+        content: "⏳";
+        display: inline-block;
     }
     
     .skeleton {
-        animation: none;
-        background: #f0f0f0;
+        background: hsl(var(--muted)) !important;
+    }
+    
+    /* Reduce hover transforms but keep focus accessibility */
+    .btn-modern:hover,
+    .card-modern:hover,
+    .card-glass:hover,
+    .chart-container:hover,
+    #workoutStats > div:hover {
+        transform: none !important;
+    }
+    
+    /* Keep essential transitions for accessibility */
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+        transition: box-shadow 0.15s ease !important;
+    }
+    
+    /* Disable scroll behavior animations */
+    html {
+        scroll-behavior: auto !important;
     }
 }
 
@@ -393,7 +426,7 @@ html, body {
 /* Theme-aware components */
 body {
     background: var(--bg-primary);
-    transition: background 0.3s ease;
+    transition: background 0.2s ease;
 }
 
 /* Nebula UI Typography Utility Classes */
@@ -446,8 +479,8 @@ body {
 
 .modern-ui-fallback .bg-white:hover,
 .modern-ui-fallback [class*="bg-white"]:hover {
-    @apply shadow-xl;
-    transform: translateY(-1px);
+    @apply shadow-lg;
+    transform: translateY(-0.5px);
 }
 
 .bg-card {
@@ -560,7 +593,7 @@ body {
 
 .segment-item:hover {
     border-color: #a78bfa;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .segment-header {
@@ -587,7 +620,7 @@ body {
 
 /* Loading states and progress indicators */
 .loading {
-    opacity: 0.7;
+    opacity: 0.85;
     pointer-events: none;
     position: relative;
 }
@@ -655,7 +688,7 @@ body {
 .progress-bar-fill {
     height: 100%;
     background: var(--text-accent);
-    transition: width 0.3s ease;
+    transition: width 0.2s ease;
     border-radius: 2px;
 }
 
@@ -676,7 +709,7 @@ body {
     width: 50%;
     height: 100%;
     background: var(--text-accent);
-    animation: progress-indeterminate 2s ease-in-out infinite;
+    animation: progress-indeterminate 1.2s ease-in-out infinite;
 }
 
 @keyframes progress-indeterminate {
@@ -781,7 +814,7 @@ select:focus-visible {
 .animate-on-scroll {
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.6s ease-out;
+    transition: all 0.2s ease-out;
 }
 
 .animate-on-scroll.animate-in {
@@ -801,8 +834,8 @@ select:focus-visible {
 }
 
 .btn-modern:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.15);
+    transform: translateY(-0.5px);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .btn-modern:active {
@@ -830,8 +863,8 @@ select:focus-visible {
 }
 
 .card-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
 }
 
 .card-glass {
@@ -841,8 +874,8 @@ select:focus-visible {
 }
 
 .card-glass:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--glass-shadow), 0 10px 25px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: var(--glass-shadow), 0 6px 16px 0 rgba(0, 0, 0, 0.08);
 }
 
 /* Modern Input Styles - Nebula Angular Design */
@@ -891,9 +924,9 @@ select:focus-visible {
 .skeleton-text {
     @apply h-4 bg-muted;
     border-radius: 2px; /* Angular design - minimal radius */
-    background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
+    background: linear-gradient(90deg, hsl(var(--muted)) 30%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 70%);
     background-size: 200px 100%;
-    animation: shimmer 2s infinite;
+    animation: shimmer 1.2s infinite;
 }
 
 /* Enhanced Tooltips - Nebula Angular Design */
@@ -911,9 +944,9 @@ select:focus-visible {
 }
 
 .progress-modern .progress-bar {
-    @apply h-full transition-all duration-500 ease-out;
+    @apply h-full transition-all duration-200 ease-out;
     background: var(--gradient-primary);
-    box-shadow: 0 0 8px hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 4px hsl(var(--primary) / 0.15);
     border-radius: 1px; /* Angular design - minimal radius */
 }
 
@@ -922,24 +955,19 @@ select:focus-visible {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
 
-/* Reduced motion support */
+/* Additional reduced motion overrides */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-    
+    /* Ensure progress indicators show completion state */
     .progress-bar-indeterminate::after {
-        animation: none;
-        left: 0;
-        width: 100%;
+        left: 0 !important;
+        width: 100% !important;
+        background: hsl(var(--primary)) !important;
     }
     
-    .animate-on-scroll {
-        animation: none;
-        opacity: 1;
-        transform: none;
+    /* Disable shimmer effects */
+    [class*="shimmer"] {
+        background: hsl(var(--muted)) !important;
+        animation: none !important;
     }
 }
 
@@ -971,13 +999,13 @@ select:focus-visible {
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.15s ease-out;
 }
 
 /* Optimized Layout Styles */
 /* Instructions Panel - Horizontal at Top */
 #instructionsPanel {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #instructionsPanel:hover {
@@ -986,28 +1014,28 @@ select:focus-visible {
 }
 
 #instructionsContent {
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 0px;
     overflow: hidden;
 }
 
 #instructionsToggle {
-    transition: transform 0.3s ease;
+    transition: transform 0.15s ease;
 }
 
 /* Enhanced Chart Container */
 .chart-container {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     position: relative;
 }
 
 .chart-container:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 #workoutChart {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     border-radius: 12px;
 }
 
@@ -1017,7 +1045,7 @@ select:focus-visible {
 }
 
 #chartDuration:hover, #chartTSS:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 /* Fullscreen chart button */
@@ -1027,21 +1055,21 @@ select:focus-visible {
 
 #fullscreenChart:hover {
     background: linear-gradient(135deg, #1F4E8C 0%, #1F4E8C 100%);
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 /* Workout Stats Cards */
 #workoutStats {
-    animation: slideUp 0.6s ease-out;
+    animation: slideUp 0.2s ease-out;
 }
 
 #workoutStats > div {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
 
 #workoutStats > div:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Grid Layout Enhancements */
@@ -1057,7 +1085,7 @@ select:focus-visible {
 
 /* Controls Panel */
 #controlsPanel {
-    animation: slideIn 0.6s ease-out 0.2s both;
+    animation: slideIn 0.2s ease-out 0.1s both;
     height: fit-content;
     position: sticky;
     top: 2rem;
@@ -1068,7 +1096,7 @@ select:focus-visible {
 }
 
 #controlsPanel button:hover {
-    transform: translateY(-2px);
+    transform: translateY(-0.5px);
 }
 
 /* Responsive Enhancements */
@@ -1103,17 +1131,17 @@ select:focus-visible {
 /* Modern hover effects */
 @media (hover: hover) {
     .hover\\:scale-105:hover {
-        transform: scale(1.05);
+        transform: scale(1.02);
     }
     
     .hover\\:shadow-xl:hover {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0, 0, 0, 0.02);
     }
 }
 
 /* Loading states for new layout */
 .chart-container.loading {
-    opacity: 0.6;
+    opacity: 0.85;
     pointer-events: none;
 }
 
@@ -1142,7 +1170,7 @@ select:focus-visible {
 #workoutInfo, #workoutStats, #controlsPanel {
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #workoutInfo[style*="block"], 
@@ -1301,17 +1329,17 @@ select:focus-visible {
 .chart-container,
 #workoutStats,
 .workout-panels {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Enhanced hover effects for dark theme */
 .futuristic-theme .hover\:scale-105:hover {
     transform: scale(1.05);
-    filter: brightness(1.1);
+    filter: brightness(1.05);
 }
 
 .futuristic-theme button:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.05);
 }
 
 /* Chat Interface Styles */
@@ -1372,17 +1400,17 @@ select:focus-visible {
 /* Main content adjustment when chat is open/closed */
 .container.chat-open {
     padding-right: 22rem !important;
-    transition: padding-right 0.3s ease;
+    transition: padding-right 0.15s ease;
 }
 
 .container.chat-closed {
     padding-right: 3rem !important;
-    transition: padding-right 0.3s ease;
+    transition: padding-right 0.15s ease;
 }
 
 .container.chat-minimized {
     margin-right: 3rem;
-    transition: margin-right 0.3s ease;
+    transition: margin-right 0.15s ease;
 }
 
 /* Dark mode support (optional) */
