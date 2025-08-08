@@ -5,6 +5,7 @@ Simple HTTP server for the Zwift Workout Visualizer
 
 import http.server
 import socketserver
+import socket
 import os
 import sys
 import json
@@ -540,9 +541,8 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
-def find_available_port(start_port=53218):
+def find_available_port(start_port=3000):
     """Find an available port starting from the given port number"""
-    import socket
     for port in range(start_port, start_port + 100):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -556,9 +556,14 @@ def signal_handler(signum, frame):
     """Handle Ctrl+C and other termination signals gracefully"""
     print(f"\n\nReceived signal {signum}. Shutting down server...")
     
+    # Set shutdown flag
+    signal_handler.shutdown_requested = True
+    
     # Shutdown the HTTP server if it exists
     if hasattr(signal_handler, 'httpd') and signal_handler.httpd:
         try:
+            # Use server_close() instead of shutdown() for immediate closure
+            signal_handler.httpd.server_close()
             signal_handler.httpd.shutdown()
             print("HTTP server shutdown completed.")
         except Exception as e:
@@ -572,7 +577,9 @@ def signal_handler(signum, frame):
         print(f"Error terminating MCP processes: {e}")
     
     print("Server stopped.")
-    sys.exit(0)
+    # Force exit immediately on Windows
+    import os
+    os._exit(0)
 
 def main():
     port = find_available_port()
@@ -589,9 +596,15 @@ def main():
     # Initialize the LangChain agent
     CORSHTTPRequestHandler.initialize_agent()
     
+    # Initialize shutdown flag
+    signal_handler.shutdown_requested = False
+    
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
         # Store server reference for signal handler
         signal_handler.httpd = httpd
+        
+        # Configure socket options for better shutdown behavior
+        httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         print("[INFO] Zwift Workout Visualizer server running at:")
         print(f"   Local: http://localhost:{port}")
@@ -599,15 +612,25 @@ def main():
         print("\nPress Ctrl+C to stop the server")
         
         try:
-            httpd.serve_forever()
+            # Use polling instead of serve_forever for better signal responsiveness
+            httpd.timeout = 1.0  # 1 second timeout
+            while not getattr(signal_handler, 'shutdown_requested', False):
+                httpd.handle_request()
         except KeyboardInterrupt:
             # This should now be handled by signal_handler, but keeping as fallback
             print("\n\nKeyboardInterrupt caught. Shutting down...")
             terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
-            sys.exit(0)
+            import os
+            os._exit(0)
+        except Exception as e:
+            print(f"\n\nServer error: {e}")
+            terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+            import os
+            os._exit(1)
         finally:
             # Clean up server reference
             signal_handler.httpd = None
+            print("Server cleanup completed.")
 
 if __name__ == "__main__":
     main()
