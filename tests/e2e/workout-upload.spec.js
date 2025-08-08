@@ -111,12 +111,9 @@ test.describe('Workout Visualization', () => {
     
         // Verify specific stats exist
         const duration = page.locator('[data-stat="duration"]');
-        const tss = page.locator('[data-stat="tss"]');
-        const avgPower = page.locator('[data-stat="avg-power"]');
     
         await expect(duration).toBeVisible();
-    // TSS and avgPower might not be visible if not implemented yet
-    // await expect(tss).toBeVisible();
+        // Note: TSS and avgPower validation would be added here when implemented
     // await expect(avgPower).toBeVisible();
     });
 

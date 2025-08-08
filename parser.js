@@ -1,5 +1,5 @@
 
-import { generateSteadyData, generateRampData } from './workout.js';
+import { generateSteadyData, generateRampData, calculateTSS } from './workout.js';
 
 
 export function parseWorkoutXML(xmlDoc) {
@@ -43,6 +43,10 @@ export function parseWorkoutXML(xmlDoc) {
     }
 
     workout.totalDuration = currentTime;
+    
+    // Calculate TSS for the workout
+    workout.tss = calculateTSS(workout);
+    
     return workout;
 }
 
