@@ -111,8 +111,8 @@ def terminate_mcp_processes(processes):
                 try:
                     p.kill()
                     p.wait(timeout=1)  # Brief wait for kill to complete
-                except:
-                    pass  # Process might already be dead
+                except Exception as e:
+                    print(f"Error killing MCP process {p.pid}: {e}")
     
     print("MCP process termination complete.")
 

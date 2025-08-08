@@ -5,7 +5,6 @@ Provides advanced workout creation, parsing, and optimization with domain expert
 """
 
 import re
-import os
 import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
@@ -734,7 +733,7 @@ class WorkoutMCPServer:
     
     def run(self):
         """Run the MCP server"""
-        logger.info(f"🏃‍♂️ Starting Workout Creator MCP Server")
+        logger.info("🏃‍♂️ Starting Workout Creator MCP Server")
         self.app.run()
 
 def main():
