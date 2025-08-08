@@ -73,6 +73,67 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 text-foreground">
     
+    <!-- Chat Interface Panel -->
+    <div id="chatPanel" class="fixed right-0 top-0 h-full w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-gray-200/30 dark:border-slate-600/30 z-40 transform transition-transform duration-300" role="complementary" aria-label="Workout creation chat interface">
+        <div class="flex flex-col h-full">
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    <h3 class="font-semibold">Workout Creator</h3>
+                </div>
+                <button id="toggleChatPanel" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center font-bold transition-all duration-200" title="Minimize">
+                    >
+                </button>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50 dark:bg-slate-800/50" role="log" aria-live="polite" aria-label="Chat conversation">
+                <div class="chat-message llm bg-white dark:bg-slate-700/60 rounded-lg p-3 text-sm text-gray-800 dark:text-slate-200 border border-gray-200/50 dark:border-slate-600/30">
+                    👋 Hi! I can help you create custom workouts. Just describe what kind of workout you want!
+                    <br><br>
+                    <strong>Examples:</strong>
+                    <br>• "Create a 45-minute endurance ride"
+                    <br>• "I want interval training with 4x5 min at threshold"
+                    <br>• "Build me a recovery workout"
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="border-t border-gray-200/50 dark:border-slate-600/30 bg-white/90 dark:bg-slate-900/90 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-600 dark:text-slate-400">Mode:</span>
+                    <label class="flex items-center gap-2 text-xs">
+                        <input type="checkbox" id="llmModeToggle" class="rounded">
+                        <span class="text-gray-700 dark:text-slate-300">Use LLM (requires API key)</span>
+                    </label>
+                </div>
+                <form id="chatForm" class="flex gap-2" role="search" aria-label="Create workout">
+                    <input 
+                        id="chatInput" 
+                        type="text" 
+                        placeholder="Describe your workout..." 
+                        class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 dark:text-slate-200"
+                        aria-label="Describe your workout requirements"
+                        aria-describedby="chatInputHelp"
+                    />
+                    <span id="chatInputHelp" class="sr-only">Enter a description of the workout you want to create</span>
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
+                        aria-label="Send workout request"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <!-- Navigation Bar -->
     <nav class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div class="container flex h-16 items-center justify-between px-4">
@@ -106,7 +167,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative py-20 px-4 overflow-hidden">
+    <section class="relative py-20 px-4 overflow-hidden xl:pr-80">
         <div class="absolute inset-0 bg-gradient-to-r from-blue-700/20 to-blue-800/20 blur-3xl"></div>
         <div class="container relative mx-auto text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-700 to-blue-800 mb-6 shadow-lg" style="border-radius: 4px;">
@@ -139,7 +200,7 @@
     </section>
 
     <!-- Workout Display Section -->
-    <section id="workoutSection" class="py-8 px-4 hidden">
+    <section id="workoutSection" class="py-8 px-4 hidden xl:pr-80">
         <div class="container mx-auto max-w-7xl space-y-8">
             
             <!-- Workout Stats Cards -->
@@ -300,7 +361,7 @@
     </section>
 
     <!-- Feature Cards -->
-    <section class="py-16 px-4">
+    <section class="py-16 px-4 xl:pr-80">
         <div class="container mx-auto">
             <div class="text-center mb-12">
                 <h2 class="text-nebula-h2 font-bold text-foreground mb-4">Powerful Features</h2>
