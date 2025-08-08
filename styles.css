@@ -114,7 +114,7 @@
     --glass-shadow: 0 8px 32px 0 rgba(18, 19, 23, 0.37);
     
     /* Animations */
-    --animation-duration: 0.3s;
+    --animation-duration: 0.15s;
     --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Typography - Nebula UI System */
@@ -167,7 +167,7 @@
 .skeleton {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
-    animation: loading 1.5s infinite;
+    animation: loading 1s infinite;
 }
 
 .dark .skeleton {
@@ -181,7 +181,7 @@
 }
 
 .workout-skeleton {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.15s ease-in-out;
 }
 
 .workout-skeleton .skeleton-header {
@@ -222,13 +222,13 @@
     height: 100%;
     background: linear-gradient(90deg, #1F4E8C, #1F4E8C);
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width 0.2s ease;
     width: 0%;
 }
 
 .progress-indeterminate {
     width: 30%;
-    animation: indeterminate 2s linear infinite;
+    animation: indeterminate 1.2s linear infinite;
 }
 
 @keyframes indeterminate {
@@ -248,11 +248,11 @@
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.15s ease-in-out;
 }
 
 .fade-out {
-    animation: fadeOut 0.3s ease-in-out;
+    animation: fadeOut 0.15s ease-in-out;
 }
 
 /* Screen Reader Only Content */
@@ -393,7 +393,7 @@ html, body {
 /* Theme-aware components */
 body {
     background: var(--bg-primary);
-    transition: background 0.3s ease;
+    transition: background 0.2s ease;
 }
 
 /* Nebula UI Typography Utility Classes */
@@ -655,7 +655,7 @@ body {
 .progress-bar-fill {
     height: 100%;
     background: var(--text-accent);
-    transition: width 0.3s ease;
+    transition: width 0.2s ease;
     border-radius: 2px;
 }
 
@@ -676,7 +676,7 @@ body {
     width: 50%;
     height: 100%;
     background: var(--text-accent);
-    animation: progress-indeterminate 2s ease-in-out infinite;
+    animation: progress-indeterminate 1.2s ease-in-out infinite;
 }
 
 @keyframes progress-indeterminate {
@@ -781,7 +781,7 @@ select:focus-visible {
 .animate-on-scroll {
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.6s ease-out;
+    transition: all 0.2s ease-out;
 }
 
 .animate-on-scroll.animate-in {
@@ -893,7 +893,7 @@ select:focus-visible {
     border-radius: 2px; /* Angular design - minimal radius */
     background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
     background-size: 200px 100%;
-    animation: shimmer 2s infinite;
+    animation: shimmer 1.2s infinite;
 }
 
 /* Enhanced Tooltips - Nebula Angular Design */
@@ -911,7 +911,7 @@ select:focus-visible {
 }
 
 .progress-modern .progress-bar {
-    @apply h-full transition-all duration-500 ease-out;
+    @apply h-full transition-all duration-200 ease-out;
     background: var(--gradient-primary);
     box-shadow: 0 0 8px hsl(var(--primary) / 0.2);
     border-radius: 1px; /* Angular design - minimal radius */
@@ -971,13 +971,13 @@ select:focus-visible {
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.15s ease-out;
 }
 
 /* Optimized Layout Styles */
 /* Instructions Panel - Horizontal at Top */
 #instructionsPanel {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #instructionsPanel:hover {
@@ -986,18 +986,18 @@ select:focus-visible {
 }
 
 #instructionsContent {
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 0px;
     overflow: hidden;
 }
 
 #instructionsToggle {
-    transition: transform 0.3s ease;
+    transition: transform 0.15s ease;
 }
 
 /* Enhanced Chart Container */
 .chart-container {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     position: relative;
 }
 
@@ -1007,7 +1007,7 @@ select:focus-visible {
 }
 
 #workoutChart {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     border-radius: 12px;
 }
 
@@ -1032,11 +1032,11 @@ select:focus-visible {
 
 /* Workout Stats Cards */
 #workoutStats {
-    animation: slideUp 0.6s ease-out;
+    animation: slideUp 0.2s ease-out;
 }
 
 #workoutStats > div {
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
 
 #workoutStats > div:hover {
@@ -1057,7 +1057,7 @@ select:focus-visible {
 
 /* Controls Panel */
 #controlsPanel {
-    animation: slideIn 0.6s ease-out 0.2s both;
+    animation: slideIn 0.2s ease-out 0.1s both;
     height: fit-content;
     position: sticky;
     top: 2rem;
@@ -1142,7 +1142,7 @@ select:focus-visible {
 #workoutInfo, #workoutStats, #controlsPanel {
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #workoutInfo[style*="block"], 
@@ -1301,7 +1301,7 @@ select:focus-visible {
 .chart-container,
 #workoutStats,
 .workout-panels {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Enhanced hover effects for dark theme */
@@ -1372,17 +1372,17 @@ select:focus-visible {
 /* Main content adjustment when chat is open/closed */
 .container.chat-open {
     padding-right: 22rem !important;
-    transition: padding-right 0.3s ease;
+    transition: padding-right 0.15s ease;
 }
 
 .container.chat-closed {
     padding-right: 3rem !important;
-    transition: padding-right 0.3s ease;
+    transition: padding-right 0.15s ease;
 }
 
 .container.chat-minimized {
     margin-right: 3rem;
-    transition: margin-right 0.3s ease;
+    transition: margin-right 0.15s ease;
 }
 
 /* Dark mode support (optional) */
