@@ -61,8 +61,8 @@
     
     <!-- Navigation Bar -->
     <nav class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div class="container flex h-16 items-center justify-between px-4">
-            <div class="flex items-center space-x-4">
+        <div class="container flex h-12 items-center justify-between px-4">
+            <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 bg-gradient-to-r from-blue-700 to-blue-800 rounded-lg flex items-center justify-center">
                         <span class="text-white font-bold text-sm">ZW</span>
@@ -73,7 +73,7 @@
             
             <div class="flex items-center space-x-2">
                 <!-- Theme Toggle -->
-                <button id="themeToggle" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+                <button id="themeToggle" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9">
                     <span class="sr-only">Toggle theme</span>
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -81,7 +81,7 @@
                 </button>
                 
                 <!-- Help Button -->
-                <button id="helpButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+                <button id="helpButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9">
                     <span class="sr-only">Help</span>
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -92,7 +92,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative py-20 px-4 overflow-hidden">
+    <section class="relative py-12 px-4 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-blue-700/20 to-blue-800/20 blur-3xl"></div>
         <div class="container relative mx-auto text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-700 to-blue-800 rounded-2xl mb-6 shadow-lg">
@@ -105,13 +105,13 @@
                 Transform your Zwift workout files into stunning interactive visualizations with advanced analytics and export capabilities.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="uploadButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8">
+                <button id="uploadButton" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                     Upload Workout
                 </button>
-                <button id="loadSample" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8">
+                <button id="loadSample" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
@@ -125,17 +125,17 @@
     </section>
 
     <!-- Workout Display Section -->
-    <section id="workoutSection" class="py-8 px-4 hidden">
-        <div class="container mx-auto max-w-7xl space-y-8">
+    <section id="workoutSection" class="py-6 px-4 hidden">
+        <div class="container mx-auto max-w-7xl space-y-6">
             
             <!-- Workout Stats Cards -->
-            <div id="workoutStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div id="workoutStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Stats will be populated by JavaScript -->
             </div>
 
             <!-- Chart Section -->
-            <div class="card-modern p-6">
-                <div class="flex items-center justify-between mb-6">
+            <div class="card-modern p-4">
+                <div class="flex items-center justify-between mb-4">
                     <div>
                         <h3 class="text-lg font-semibold text-foreground">Power Profile</h3>
                         <p class="text-sm text-muted-foreground">Interactive workout visualization</p>
@@ -155,10 +155,10 @@
             </div>
 
             <!-- Zone Distribution Charts -->
-            <div id="zoneAnalytics" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div id="zoneAnalytics" class="grid grid-cols-1 lg:grid-cols-2 gap-4 hidden">
                 <!-- Zone Distribution Pie Chart -->
-                <div class="card-modern p-6">
-                    <div class="flex items-center justify-between mb-6">
+                <div class="card-modern p-4">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="text-lg font-semibold text-foreground">Zone Distribution</h3>
                             <p class="text-sm text-muted-foreground">Time spent in each power zone</p>
@@ -170,8 +170,8 @@
                 </div>
 
                 <!-- Advanced Analytics -->
-                <div class="card-modern p-6">
-                    <div class="flex items-center justify-between mb-6">
+                <div class="card-modern p-4">
+                    <div class="flex items-center justify-between mb-4">
                         <div>
                             <h3 class="text-lg font-semibold text-foreground">Advanced Analytics</h3>
                             <p class="text-sm text-muted-foreground">Enhanced workout metrics</p>
@@ -210,7 +210,7 @@
                 </div>
 
                 <!-- Controls Section -->
-                <div class="p-6 space-y-6">
+                <div class="p-4 space-y-4">
                     <!-- Scaling Controls -->
                     <div class="card-glass p-4">
                         <h4 class="text-sm font-semibold text-foreground mb-4 flex items-center">
@@ -222,13 +222,13 @@
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
                                 <label for="scaleSlider" class="text-sm font-medium text-foreground">Scale Factor:</label>
-                                <span class="scale-value text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">1.0x</span>
+                                <span class="scale-value text-sm font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">1.0x</span>
                             </div>
                             <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" 
                                    class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer">
                             <div class="flex space-x-2">
                                 <button id="applyScale" class="flex-1 btn-modern">Apply Scaling</button>
-                                <button id="resetWorkout" class="btn-outline px-4 py-2 rounded-lg">Reset</button>
+                                <button id="resetWorkout" class="btn-outline px-3 py-1.5 rounded-lg">Reset</button>
                             </div>
                         </div>
                     </div>
@@ -250,13 +250,13 @@
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3">
-                            <button id="exportERG" class="btn-outline text-sm py-2">
+                            <button id="exportERG" class="btn-outline text-sm py-1.5">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                                 </svg>
                                 ERG File
                             </button>
-                            <button id="exportMRC" class="btn-outline text-sm py-2">
+                            <button id="exportMRC" class="btn-outline text-sm py-1.5">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
@@ -278,15 +278,15 @@
                     </div>
                     <button id="toggleSegments" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200">−</button>
                 </div>
-                <div class="p-6">
-                    <div id="segmentList" class="space-y-3"></div>
+                <div class="p-4">
+                    <div id="segmentList" class="space-y-2"></div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Feature Cards -->
-    <section class="py-16 px-4">
+    <section class="py-12 px-4">
         <div class="container mx-auto">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold text-foreground mb-4">Powerful Features</h2>
@@ -295,8 +295,8 @@
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="card-modern p-6 text-center animate-on-scroll">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card-modern p-4 text-center animate-on-scroll">
                     <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -306,7 +306,7 @@
                     <p class="text-muted-foreground">Visualize power profiles with hover details and segment breakdown</p>
                 </div>
                 
-                <div class="card-modern p-6 text-center animate-on-scroll">
+                <div class="card-modern p-4 text-center animate-on-scroll">
                     <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
@@ -316,7 +316,7 @@
                     <p class="text-muted-foreground">Adjust intensity levels with real-time preview and TSS calculation</p>
                 </div>
                 
-                <div class="card-modern p-6 text-center animate-on-scroll">
+                <div class="card-modern p-4 text-center animate-on-scroll">
                     <div class="w-12 h-12 bg-gradient-to-r from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mx-auto mb-4">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -331,7 +331,7 @@
 
     <!-- Footer -->
     <footer class="border-t bg-background/95 backdrop-blur">
-        <div class="container mx-auto py-8 px-4">
+        <div class="container mx-auto py-6 px-4">
             <div class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
                 <div class="flex items-center space-x-2">
                     <div class="w-6 h-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded"></div>
@@ -349,17 +349,17 @@
     </footer>
 
     <!-- Power Info Tooltip -->
-    <div id="hoverPowerBox" class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-3 py-2 text-sm font-medium z-50 hidden">
+    <div id="hoverPowerBox" class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-2 py-1 text-sm font-medium z-50 hidden">
         <div class="text-popover-foreground"></div>
     </div>
     
     <!-- Segment Edit Modal -->
     <div id="segmentEditBox" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="card-modern p-6 max-w-md w-full mx-4"></div>
+        <div class="card-modern p-4 max-w-md w-full mx-4"></div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50">
+    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-3 py-2 transition-all duration-300 opacity-0 pointer-events-none z-50">
         <div class="flex items-center space-x-2 text-popover-foreground">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
