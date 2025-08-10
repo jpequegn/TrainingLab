@@ -52,7 +52,8 @@
       "Bash(git rm:*)",
       "Bash(npm run test:e2e:*)",
       "Bash(start /B python -m http.server 3000)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }
