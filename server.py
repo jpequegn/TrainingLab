@@ -5,10 +5,13 @@ Simple HTTP server for the Zwift Workout Visualizer
 
 import http.server
 import socketserver
+import socket
 import os
 import sys
 import json
 import signal
+import threading
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -540,9 +543,8 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
-def find_available_port(start_port=53218):
+def find_available_port(start_port=3000):
     """Find an available port starting from the given port number"""
-    import socket
     for port in range(start_port, start_port + 100):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -552,12 +554,47 @@ def find_available_port(start_port=53218):
                 continue
     raise RuntimeError("Could not find an available port")
 
+# Global shutdown flag for cross-platform compatibility
+shutdown_flag_file = "server_shutdown.flag"
+shutdown_event = threading.Event()
+
 def signal_handler(signum, frame):
     """Handle Ctrl+C and other termination signals gracefully"""
-    print(f"\n\nReceived signal {signum}. Shutting down server...")
-    terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
-    print("Server stopped.")
-    sys.exit(0)
+    print(f"\n\n[SHUTDOWN] Received signal {signum}. Shutting down server...")
+    
+    # Create shutdown flag file and set event
+    try:
+        with open(shutdown_flag_file, 'w') as f:
+            f.write(str(os.getpid()))
+        print(f"[SHUTDOWN] Created shutdown flag: {shutdown_flag_file}")
+    except Exception as e:
+        print(f"[SHUTDOWN] Error creating shutdown flag: {e}")
+    
+    shutdown_event.set()
+    
+    # Terminate MCP processes
+    try:
+        terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+        print("[SHUTDOWN] MCP processes terminated.")
+    except Exception as e:
+        print(f"[SHUTDOWN] Error terminating MCP processes: {e}")
+    
+    print("[SHUTDOWN] Server stopped.")
+    # Force exit immediately on Windows
+    os._exit(0)
+
+def check_shutdown_flag():
+    """Check if shutdown flag file exists"""
+    return os.path.exists(shutdown_flag_file)
+
+def cleanup_shutdown_flag():
+    """Remove shutdown flag file"""
+    try:
+        if os.path.exists(shutdown_flag_file):
+            os.remove(shutdown_flag_file)
+            print(f"[CLEANUP] Removed shutdown flag: {shutdown_flag_file}")
+    except Exception as e:
+        print(f"[CLEANUP] Error removing shutdown flag: {e}")
 
 def main():
     port = find_available_port()
@@ -574,19 +611,59 @@ def main():
     # Initialize the LangChain agent
     CORSHTTPRequestHandler.initialize_agent()
     
+    # Clean up any existing shutdown flag
+    cleanup_shutdown_flag()
+    
+    # Clear shutdown event
+    shutdown_event.clear()
+    
     with socketserver.TCPServer(("0.0.0.0", port), CORSHTTPRequestHandler) as httpd:
+        # Configure socket options for better shutdown behavior
+        httpd.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        
         print("[INFO] Zwift Workout Visualizer server running at:")
         print(f"   Local: http://localhost:{port}")
         print("   Network: https://work-1-jpkjjijvsbmtuklc.prod-runtime.all-hands.dev")
         print("\nPress Ctrl+C to stop the server")
         
-        try:
+        # Start server in a separate thread
+        def run_server():
+            print("[DEBUG] Server thread started")
             httpd.serve_forever()
+            print("[DEBUG] Server thread ended")
+        
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+        
+        try:
+            # Main thread watches for shutdown signal or file
+            print("[DEBUG] Monitoring for shutdown signal...")
+            print("[TIP] To stop the server manually, create a file named 'server_shutdown.flag' or press Ctrl+C")
+            while not (shutdown_event.is_set() or check_shutdown_flag()):
+                time.sleep(0.5)  # Check every 500ms
+            
+            print("[SHUTDOWN] Shutdown signal received, stopping server...")
+            httpd.shutdown()
+            httpd.server_close()
+            cleanup_shutdown_flag()
+            
         except KeyboardInterrupt:
-            # This should now be handled by signal_handler, but keeping as fallback
-            print("\n\nKeyboardInterrupt caught. Shutting down...")
+            # Direct Ctrl+C handling as fallback
+            print("\n\n[FALLBACK] KeyboardInterrupt caught. Shutting down...")
+            shutdown_event.set()
+            httpd.shutdown()
+            httpd.server_close()
             terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
-            sys.exit(0)
+            os._exit(0)
+        except Exception as e:
+            print(f"\n\n[ERROR] Server error: {e}")
+            shutdown_event.set()
+            httpd.shutdown()
+            httpd.server_close()
+            terminate_mcp_processes(CORSHTTPRequestHandler.mcp_processes)
+            os._exit(1)
+        
+        print("[SHUTDOWN] Server cleanup completed.")
 
 if __name__ == "__main__":
     main()

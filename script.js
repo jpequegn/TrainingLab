@@ -233,6 +233,8 @@ class ZwiftWorkoutVisualizer {
 
     async loadSampleWorkout() {
         try {
+            console.log('Starting sample workout load...');
+            
             // Show loading state
             loadingManager.showLoading('Loading sample workout...');
             loadingManager.updateProgress(0, 'Fetching sample data...');
@@ -246,12 +248,33 @@ class ZwiftWorkoutVisualizer {
             loadingManager.updateProgress(1, 'Processing sample workout...');
             
             const text = await response.text();
+            console.log('Sample workout file loaded, text length:', text.length);
+            
             await this.parseAndVisualize(text, 'sample_workout.zwo');
+            console.log('Sample workout visualization completed');
             
         } catch (error) {
             console.error('Error loading sample workout:', error);
             loadingManager.hideLoading();
-            this.ui.showToast('Error loading sample workout. Please try uploading your own file.', 'error');
+            
+            // Show detailed error message
+            let errorMessage = 'Error loading sample workout: ';
+            if (error.message.includes('HTTP error')) {
+                errorMessage += 'Could not fetch the sample workout file. Please check if the file exists.';
+            } else if (error.message.includes('fetch')) {
+                errorMessage += 'Network error. Please check your connection.';
+            } else {
+                errorMessage += error.message || 'Unknown error occurred.';
+            }
+            
+            this.ui.showToast(errorMessage, 'error');
+            
+            // Also show in console for debugging
+            console.error('Sample workout load failed with:', {
+                error: error.message,
+                stack: error.stack,
+                currentURL: window.location.href
+            });
         }
     }
 

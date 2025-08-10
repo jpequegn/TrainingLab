@@ -43,6 +43,13 @@
     }
 }
 
+/* Show chat panel by default on larger screens */
+@media (min-width: 1280px) {
+    #chatPanel {
+        transform: translateX(0) !important;
+    }
+}
+
 /* Chart container centering */
 .chart-container {
     margin: 0 auto;
