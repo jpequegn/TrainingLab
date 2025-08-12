@@ -1,463 +1,614 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Power Zones Test</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f7fa;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f7fa;
+      }
 
-        .test-section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
 
-        .test-result {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            font-family: monospace;
-        }
+      .test-result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-family: monospace;
+      }
 
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
 
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
 
-        input, button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+      input,
+      button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
 
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
 
-        button:hover {
-            background: #0056b3;
-        }
+      button:hover {
+        background: #0056b3;
+      }
 
-        .zone-display {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
+      .zone-display {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
 
-        .zone-card {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-        }
+      .zone-card {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 15px;
+      }
 
-        .zone-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+      .zone-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
 
-        .zone-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
+      .zone-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
 
-        .workout-demo {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-        }
+      .workout-demo {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+      }
 
-        pre {
-            background: #f1f3f4;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
+      pre {
+        background: #f1f3f4;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>🎯 Power Zones System Test</h1>
-    
+
     <div class="test-section">
-        <h2>System Status</h2>
-        <div id="system-status"></div>
+      <h2>System Status</h2>
+      <div id="system-status"></div>
     </div>
 
     <div class="test-section">
-        <h2>FTP Configuration</h2>
-        <div class="controls">
-            <input type="number" id="ftp-input" placeholder="Enter FTP (watts)" value="250">
-            <button onclick="updateFTP()">Update FTP</button>
-            <button onclick="testFTPConversion()">Test Conversions</button>
-        </div>
-        <div id="ftp-results"></div>
+      <h2>FTP Configuration</h2>
+      <div class="controls">
+        <input
+          type="number"
+          id="ftp-input"
+          placeholder="Enter FTP (watts)"
+          value="250"
+        />
+        <button onclick="updateFTP()">Update FTP</button>
+        <button onclick="testFTPConversion()">Test Conversions</button>
+      </div>
+      <div id="ftp-results"></div>
     </div>
 
     <div class="test-section">
-        <h2>Zone Models</h2>
-        <div class="controls">
-            <select id="zone-model-select">
-                <option value="coggan">Coggan 7-Zone Model</option>
-                <option value="polarized">Polarized 3-Zone Model</option>
-                <option value="custom">Custom Zones</option>
-            </select>
-            <button onclick="switchZoneModel()">Switch Model</button>
-            <button onclick="testZoneOverlap()">Test Zone Detection</button>
-        </div>
-        <div id="zones-display"></div>
+      <h2>Zone Models</h2>
+      <div class="controls">
+        <select id="zone-model-select">
+          <option value="coggan">Coggan 7-Zone Model</option>
+          <option value="polarized">Polarized 3-Zone Model</option>
+          <option value="custom">Custom Zones</option>
+        </select>
+        <button onclick="switchZoneModel()">Switch Model</button>
+        <button onclick="testZoneOverlap()">Test Zone Detection</button>
+      </div>
+      <div id="zones-display"></div>
     </div>
 
     <div class="test-section">
-        <h2>Workout Generator Integration</h2>
-        <div class="controls">
-            <input type="text" id="workout-description" placeholder="Describe a workout..." value="45 minute endurance ride">
-            <button onclick="testWorkoutGeneration()">Generate Workout</button>
-            <button onclick="testZoneTargeting()">Test Zone Targeting</button>
-        </div>
-        <div id="workout-results"></div>
+      <h2>Workout Generator Integration</h2>
+      <div class="controls">
+        <input
+          type="text"
+          id="workout-description"
+          placeholder="Describe a workout..."
+          value="45 minute endurance ride"
+        />
+        <button onclick="testWorkoutGeneration()">Generate Workout</button>
+        <button onclick="testZoneTargeting()">Test Zone Targeting</button>
+      </div>
+      <div id="workout-results"></div>
     </div>
 
     <div class="test-section">
-        <h2>Zone Management Tests</h2>
-        <div class="controls">
-            <button onclick="testCreateZone()">Create Test Zone</button>
-            <button onclick="testExportImport()">Test Export/Import</button>
-            <button onclick="testValidation()">Test Validation</button>
-            <button onclick="resetToDefaults()">Reset to Defaults</button>
-        </div>
-        <div id="management-results"></div>
+      <h2>Zone Management Tests</h2>
+      <div class="controls">
+        <button onclick="testCreateZone()">Create Test Zone</button>
+        <button onclick="testExportImport()">Test Export/Import</button>
+        <button onclick="testValidation()">Test Validation</button>
+        <button onclick="resetToDefaults()">Reset to Defaults</button>
+      </div>
+      <div id="management-results"></div>
     </div>
 
     <script type="module">
-        import { PowerZoneManager } from './power-zones.js';
-        import { WorkoutGenerator } from './workout-generator.js';
+      import { PowerZoneManager } from './power-zones.js';
+      import { WorkoutGenerator } from './workout-generator.js';
 
-        // Initialize test environment
-        const powerZoneManager = new PowerZoneManager();
-        const workoutGenerator = new WorkoutGenerator(powerZoneManager);
-        let testResults = [];
+      // Initialize test environment
+      const powerZoneManager = new PowerZoneManager();
+      const workoutGenerator = new WorkoutGenerator(powerZoneManager);
+      let testResults = [];
 
-        function logResult(message, type = 'info') {
-            testResults.push({ message, type, timestamp: new Date() });
-            console.log(`[${type.toUpperCase()}] ${message}`);
+      function logResult(message, type = 'info') {
+        testResults.push({ message, type, timestamp: new Date() });
+        console.log(`[${type.toUpperCase()}] ${message}`);
+      }
+
+      function displayResult(containerId, message, type = 'info') {
+        const container = document.getElementById(containerId);
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `test-result ${type}`;
+        resultDiv.innerHTML = message;
+        container.appendChild(resultDiv);
+      }
+
+      function clearResults(containerId) {
+        document.getElementById(containerId).innerHTML = '';
+      }
+
+      // System Status Check
+      function checkSystemStatus() {
+        const statusContainer = document.getElementById('system-status');
+        statusContainer.innerHTML = '';
+
+        try {
+          // Check PowerZoneManager
+          const ftp = powerZoneManager.getFTP();
+          const zones = powerZoneManager.getZones();
+          const model = powerZoneManager.getZoneModel();
+
+          displayResult(
+            'system-status',
+            `✅ PowerZoneManager: Loaded successfully`,
+            'success'
+          );
+          displayResult('system-status', `📊 Current FTP: ${ftp}W`, 'info');
+          displayResult('system-status', `🎯 Zone Model: ${model}`, 'info');
+          displayResult(
+            'system-status',
+            `🔢 Total Zones: ${Object.keys(zones).length}`,
+            'info'
+          );
+
+          // Check WorkoutGenerator integration
+          const availableZones = workoutGenerator.getAvailablePowerZones();
+          displayResult(
+            'system-status',
+            `✅ WorkoutGenerator: Integrated with power zones`,
+            'success'
+          );
+          displayResult(
+            'system-status',
+            `🔗 Integration FTP: ${availableZones.ftp}W`,
+            'info'
+          );
+
+          logResult('System status check completed successfully', 'success');
+        } catch (error) {
+          displayResult(
+            'system-status',
+            `❌ System Error: ${error.message}`,
+            'error'
+          );
+          logResult(`System status check failed: ${error.message}`, 'error');
         }
+      }
 
-        function displayResult(containerId, message, type = 'info') {
-            const container = document.getElementById(containerId);
-            const resultDiv = document.createElement('div');
-            resultDiv.className = `test-result ${type}`;
-            resultDiv.innerHTML = message;
-            container.appendChild(resultDiv);
+      // FTP Tests
+      window.updateFTP = function () {
+        const ftpInput = document.getElementById('ftp-input');
+        const ftp = parseInt(ftpInput.value);
+
+        clearResults('ftp-results');
+
+        try {
+          powerZoneManager.setFTP(ftp);
+          displayResult('ftp-results', `✅ FTP updated to ${ftp}W`, 'success');
+          logResult(`FTP updated to ${ftp}W`, 'success');
+          updateZonesDisplay();
+        } catch (error) {
+          displayResult(
+            'ftp-results',
+            `❌ FTP Update Error: ${error.message}`,
+            'error'
+          );
+          logResult(`FTP update failed: ${error.message}`, 'error');
         }
+      };
 
-        function clearResults(containerId) {
-            document.getElementById(containerId).innerHTML = '';
+      window.testFTPConversion = function () {
+        clearResults('ftp-results');
+
+        try {
+          const testValues = [0.6, 0.8, 1.0, 1.2, 1.5];
+          testValues.forEach(percent => {
+            const watts = powerZoneManager.percentToWatts(percent);
+            const backToPercent = powerZoneManager.wattsToPercent(watts);
+            const match = Math.abs(backToPercent - percent) < 0.001;
+
+            displayResult(
+              'ftp-results',
+              `${percent * 100}% FTP = ${watts}W → ${(backToPercent * 100).toFixed(1)}% ${match ? '✅' : '❌'}`,
+              match ? 'success' : 'error'
+            );
+          });
+          logResult('FTP conversion tests completed', 'success');
+        } catch (error) {
+          displayResult(
+            'ftp-results',
+            `❌ Conversion Test Error: ${error.message}`,
+            'error'
+          );
+          logResult(`FTP conversion test failed: ${error.message}`, 'error');
         }
+      };
 
-        // System Status Check
-        function checkSystemStatus() {
-            const statusContainer = document.getElementById('system-status');
-            statusContainer.innerHTML = '';
+      // Zone Model Tests
+      window.switchZoneModel = function () {
+        const modelSelect = document.getElementById('zone-model-select');
+        const model = modelSelect.value;
 
-            try {
-                // Check PowerZoneManager
-                const ftp = powerZoneManager.getFTP();
-                const zones = powerZoneManager.getZones();
-                const model = powerZoneManager.getZoneModel();
-                
-                displayResult('system-status', `✅ PowerZoneManager: Loaded successfully`, 'success');
-                displayResult('system-status', `📊 Current FTP: ${ftp}W`, 'info');
-                displayResult('system-status', `🎯 Zone Model: ${model}`, 'info');
-                displayResult('system-status', `🔢 Total Zones: ${Object.keys(zones).length}`, 'info');
-
-                // Check WorkoutGenerator integration
-                const availableZones = workoutGenerator.getAvailablePowerZones();
-                displayResult('system-status', `✅ WorkoutGenerator: Integrated with power zones`, 'success');
-                displayResult('system-status', `🔗 Integration FTP: ${availableZones.ftp}W`, 'info');
-
-                logResult('System status check completed successfully', 'success');
-            } catch (error) {
-                displayResult('system-status', `❌ System Error: ${error.message}`, 'error');
-                logResult(`System status check failed: ${error.message}`, 'error');
-            }
+        try {
+          powerZoneManager.setZoneModel(model);
+          updateZonesDisplay();
+          displayResult(
+            'zones-display',
+            `✅ Switched to ${model} model`,
+            'success'
+          );
+          logResult(`Switched to ${model} zone model`, 'success');
+        } catch (error) {
+          displayResult(
+            'zones-display',
+            `❌ Model Switch Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Zone model switch failed: ${error.message}`, 'error');
         }
+      };
 
-        // FTP Tests
-        window.updateFTP = function() {
-            const ftpInput = document.getElementById('ftp-input');
-            const ftp = parseInt(ftpInput.value);
-            
-            clearResults('ftp-results');
-            
-            try {
-                powerZoneManager.setFTP(ftp);
-                displayResult('ftp-results', `✅ FTP updated to ${ftp}W`, 'success');
-                logResult(`FTP updated to ${ftp}W`, 'success');
-                updateZonesDisplay();
-            } catch (error) {
-                displayResult('ftp-results', `❌ FTP Update Error: ${error.message}`, 'error');
-                logResult(`FTP update failed: ${error.message}`, 'error');
+      window.testZoneOverlap = function () {
+        try {
+          const testPowers = [0.5, 0.7, 0.9, 1.1, 1.3, 1.6];
+          testPowers.forEach(power => {
+            const zone = powerZoneManager.getZoneByPower(power);
+            const watts = powerZoneManager.percentToWatts(power);
+
+            if (zone) {
+              displayResult(
+                'zones-display',
+                `${(power * 100).toFixed(0)}% FTP (${watts}W) → ${zone.name}`,
+                'success'
+              );
+            } else {
+              displayResult(
+                'zones-display',
+                `${(power * 100).toFixed(0)}% FTP (${watts}W) → No zone found`,
+                'error'
+              );
             }
-        };
+          });
+          logResult('Zone overlap tests completed', 'success');
+        } catch (error) {
+          displayResult(
+            'zones-display',
+            `❌ Zone Overlap Test Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Zone overlap test failed: ${error.message}`, 'error');
+        }
+      };
 
-        window.testFTPConversion = function() {
-            clearResults('ftp-results');
-            
-            try {
-                const testValues = [0.6, 0.8, 1.0, 1.2, 1.5];
-                testValues.forEach(percent => {
-                    const watts = powerZoneManager.percentToWatts(percent);
-                    const backToPercent = powerZoneManager.wattsToPercent(watts);
-                    const match = Math.abs(backToPercent - percent) < 0.001;
-                    
-                    displayResult('ftp-results', 
-                        `${percent * 100}% FTP = ${watts}W → ${(backToPercent * 100).toFixed(1)}% ${match ? '✅' : '❌'}`, 
-                        match ? 'success' : 'error'
-                    );
-                });
-                logResult('FTP conversion tests completed', 'success');
-            } catch (error) {
-                displayResult('ftp-results', `❌ Conversion Test Error: ${error.message}`, 'error');
-                logResult(`FTP conversion test failed: ${error.message}`, 'error');
-            }
-        };
+      // Workout Generator Tests
+      window.testWorkoutGeneration = function () {
+        const description = document.getElementById(
+          'workout-description'
+        ).value;
+        clearResults('workout-results');
 
-        // Zone Model Tests
-        window.switchZoneModel = function() {
-            const modelSelect = document.getElementById('zone-model-select');
-            const model = modelSelect.value;
-            
-            try {
-                powerZoneManager.setZoneModel(model);
-                updateZonesDisplay();
-                displayResult('zones-display', `✅ Switched to ${model} model`, 'success');
-                logResult(`Switched to ${model} zone model`, 'success');
-            } catch (error) {
-                displayResult('zones-display', `❌ Model Switch Error: ${error.message}`, 'error');
-                logResult(`Zone model switch failed: ${error.message}`, 'error');
-            }
-        };
+        try {
+          // Test zone recommendation
+          const recommendation =
+            workoutGenerator.getZoneRecommendation(description);
+          if (recommendation) {
+            displayResult(
+              'workout-results',
+              `🎯 Zone Recommendation: ${recommendation.zone.name} (${(recommendation.overlapPercentage * 100).toFixed(0)}% match)`,
+              'success'
+            );
+          }
 
-        window.testZoneOverlap = function() {
-            try {
-                const testPowers = [0.5, 0.7, 0.9, 1.1, 1.3, 1.6];
-                testPowers.forEach(power => {
-                    const zone = powerZoneManager.getZoneByPower(power);
-                    const watts = powerZoneManager.percentToWatts(power);
-                    
-                    if (zone) {
-                        displayResult('zones-display', 
-                            `${(power * 100).toFixed(0)}% FTP (${watts}W) → ${zone.name}`, 
-                            'success'
-                        );
-                    } else {
-                        displayResult('zones-display', 
-                            `${(power * 100).toFixed(0)}% FTP (${watts}W) → No zone found`, 
-                            'error'
-                        );
-                    }
-                });
-                logResult('Zone overlap tests completed', 'success');
-            } catch (error) {
-                displayResult('zones-display', `❌ Zone Overlap Test Error: ${error.message}`, 'error');
-                logResult(`Zone overlap test failed: ${error.message}`, 'error');
-            }
-        };
+          // Generate workout
+          const workout = workoutGenerator.generateWorkout(description);
+          displayResult(
+            'workout-results',
+            `✅ Generated: "${workout.name}" - ${workout.totalDuration}s, TSS: ${workout.tss}`,
+            'success'
+          );
 
-        // Workout Generator Tests
-        window.testWorkoutGeneration = function() {
-            const description = document.getElementById('workout-description').value;
-            clearResults('workout-results');
-            
-            try {
-                // Test zone recommendation
-                const recommendation = workoutGenerator.getZoneRecommendation(description);
-                if (recommendation) {
-                    displayResult('workout-results', 
-                        `🎯 Zone Recommendation: ${recommendation.zone.name} (${(recommendation.overlapPercentage * 100).toFixed(0)}% match)`, 
-                        'success'
-                    );
-                }
+          // Validate zones
+          const validation = workoutGenerator.validateWorkoutZones(workout);
+          if (validation.valid) {
+            displayResult(
+              'workout-results',
+              `✅ Zone validation passed`,
+              'success'
+            );
+          } else {
+            displayResult(
+              'workout-results',
+              `⚠️ Zone validation warnings: ${validation.warnings.join(', ')}`,
+              'error'
+            );
+          }
 
-                // Generate workout
-                const workout = workoutGenerator.generateWorkout(description);
-                displayResult('workout-results', 
-                    `✅ Generated: "${workout.name}" - ${workout.totalDuration}s, TSS: ${workout.tss}`, 
-                    'success'
-                );
+          validation.info.forEach(info => {
+            displayResult('workout-results', `ℹ️ ${info}`, 'info');
+          });
 
-                // Validate zones
-                const validation = workoutGenerator.validateWorkoutZones(workout);
-                if (validation.valid) {
-                    displayResult('workout-results', `✅ Zone validation passed`, 'success');
-                } else {
-                    displayResult('workout-results', `⚠️ Zone validation warnings: ${validation.warnings.join(', ')}`, 'error');
-                }
+          logResult(
+            `Workout generation test completed for: ${description}`,
+            'success'
+          );
+        } catch (error) {
+          displayResult(
+            'workout-results',
+            `❌ Workout Generation Error: ${error.message}`,
+            'error'
+          );
+          logResult(
+            `Workout generation test failed: ${error.message}`,
+            'error'
+          );
+        }
+      };
 
-                validation.info.forEach(info => {
-                    displayResult('workout-results', `ℹ️ ${info}`, 'info');
-                });
+      window.testZoneTargeting = function () {
+        clearResults('workout-results');
 
-                logResult(`Workout generation test completed for: ${description}`, 'success');
-            } catch (error) {
-                displayResult('workout-results', `❌ Workout Generation Error: ${error.message}`, 'error');
-                logResult(`Workout generation test failed: ${error.message}`, 'error');
-            }
-        };
+        try {
+          const zones = powerZoneManager.getZones();
+          const firstZone = Object.keys(zones)[0];
+          const duration = 30; // 30 minutes
 
-        window.testZoneTargeting = function() {
-            clearResults('workout-results');
-            
-            try {
-                const zones = powerZoneManager.getZones();
-                const firstZone = Object.keys(zones)[0];
-                const duration = 30; // 30 minutes
-                
-                const workout = workoutGenerator.createZoneTargetedWorkout(firstZone, duration);
-                displayResult('workout-results', 
-                    `✅ Zone-targeted workout: "${workout.name}" - ${duration} minutes in ${workout.targetZone.name}`, 
-                    'success'
-                );
-                
-                displayResult('workout-results', 
-                    `📊 Target power: ${(workout.targetZone.min * 100).toFixed(0)}-${(workout.targetZone.max * 100).toFixed(0)}% FTP`, 
-                    'info'
-                );
+          const workout = workoutGenerator.createZoneTargetedWorkout(
+            firstZone,
+            duration
+          );
+          displayResult(
+            'workout-results',
+            `✅ Zone-targeted workout: "${workout.name}" - ${duration} minutes in ${workout.targetZone.name}`,
+            'success'
+          );
 
-                logResult(`Zone targeting test completed for zone: ${firstZone}`, 'success');
-            } catch (error) {
-                displayResult('workout-results', `❌ Zone Targeting Error: ${error.message}`, 'error');
-                logResult(`Zone targeting test failed: ${error.message}`, 'error');
-            }
-        };
+          displayResult(
+            'workout-results',
+            `📊 Target power: ${(workout.targetZone.min * 100).toFixed(0)}-${(workout.targetZone.max * 100).toFixed(0)}% FTP`,
+            'info'
+          );
 
-        // Zone Management Tests
-        window.testCreateZone = function() {
-            clearResults('management-results');
-            
-            try {
-                const testZone = {
-                    name: 'Test Zone',
-                    min: 1.8,
-                    max: 2.2,
-                    color: '#ff0000',
-                    description: 'Test zone for validation'
-                };
-                
-                const zoneId = `test_zone_${Date.now()}`;
-                powerZoneManager.createZone(zoneId, testZone);
-                
-                displayResult('management-results', `✅ Created test zone: ${testZone.name}`, 'success');
-                updateZonesDisplay();
-                logResult(`Created test zone: ${zoneId}`, 'success');
-            } catch (error) {
-                displayResult('management-results', `❌ Zone Creation Error: ${error.message}`, 'error');
-                logResult(`Zone creation test failed: ${error.message}`, 'error');
-            }
-        };
+          logResult(
+            `Zone targeting test completed for zone: ${firstZone}`,
+            'success'
+          );
+        } catch (error) {
+          displayResult(
+            'workout-results',
+            `❌ Zone Targeting Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Zone targeting test failed: ${error.message}`, 'error');
+        }
+      };
 
-        window.testExportImport = function() {
-            clearResults('management-results');
-            
-            try {
-                // Export current configuration
-                const exported = powerZoneManager.exportZones();
-                displayResult('management-results', `✅ Export successful - ${Object.keys(exported.zones).length} zones`, 'success');
-                
-                // Test import (same data)
-                powerZoneManager.importZones(exported);
-                displayResult('management-results', `✅ Import successful - configuration restored`, 'success');
-                
-                logResult('Export/import test completed successfully', 'success');
-            } catch (error) {
-                displayResult('management-results', `❌ Export/Import Error: ${error.message}`, 'error');
-                logResult(`Export/import test failed: ${error.message}`, 'error');
-            }
-        };
+      // Zone Management Tests
+      window.testCreateZone = function () {
+        clearResults('management-results');
 
-        window.testValidation = function() {
-            clearResults('management-results');
-            
-            try {
-                const stats = powerZoneManager.getZoneStatistics();
-                displayResult('management-results', 
-                    `📊 Zone Statistics: ${stats.totalZones} zones, range ${(stats.powerRange.min * 100).toFixed(0)}-${(stats.powerRange.max * 100).toFixed(0)}% FTP`, 
-                    'info'
-                );
-                
-                // Test invalid zone creation
-                try {
-                    powerZoneManager.createZone('invalid', { name: '', min: -1, max: 0.5 });
-                    displayResult('management-results', `❌ Validation test failed - invalid zone was accepted`, 'error');
-                } catch (validationError) {
-                    displayResult('management-results', `✅ Validation working - rejected invalid zone: ${validationError.message}`, 'success');
-                }
-                
-                logResult('Validation tests completed', 'success');
-            } catch (error) {
-                displayResult('management-results', `❌ Validation Test Error: ${error.message}`, 'error');
-                logResult(`Validation test failed: ${error.message}`, 'error');
-            }
-        };
+        try {
+          const testZone = {
+            name: 'Test Zone',
+            min: 1.8,
+            max: 2.2,
+            color: '#ff0000',
+            description: 'Test zone for validation',
+          };
 
-        window.resetToDefaults = function() {
-            clearResults('management-results');
-            
-            try {
-                powerZoneManager.resetToDefaults();
-                document.getElementById('zone-model-select').value = 'coggan';
-                updateZonesDisplay();
-                displayResult('management-results', `✅ Reset to default zones`, 'success');
-                logResult('Reset to defaults completed', 'success');
-            } catch (error) {
-                displayResult('management-results', `❌ Reset Error: ${error.message}`, 'error');
-                logResult(`Reset to defaults failed: ${error.message}`, 'error');
-            }
-        };
+          const zoneId = `test_zone_${Date.now()}`;
+          powerZoneManager.createZone(zoneId, testZone);
 
-        // Update zones display
-        function updateZonesDisplay() {
-            const container = document.getElementById('zones-display');
-            const zones = powerZoneManager.getZones();
-            const wattsMode = powerZoneManager.getWattsMode();
-            
-            // Clear previous zones
-            const existingZones = container.querySelectorAll('.zone-display');
-            existingZones.forEach(el => el.remove());
-            
-            // Create new display
-            const zoneDisplay = document.createElement('div');
-            zoneDisplay.className = 'zone-display';
-            
-            Object.entries(zones).forEach(([zoneId, zone]) => {
-                const minDisplay = wattsMode ? `${powerZoneManager.percentToWatts(zone.min)}W` : `${(zone.min * 100).toFixed(0)}%`;
-                const maxDisplay = wattsMode ? `${powerZoneManager.percentToWatts(zone.max)}W` : `${(zone.max * 100).toFixed(0)}%`;
-                
-                const zoneCard = document.createElement('div');
-                zoneCard.className = 'zone-card';
-                zoneCard.innerHTML = `
+          displayResult(
+            'management-results',
+            `✅ Created test zone: ${testZone.name}`,
+            'success'
+          );
+          updateZonesDisplay();
+          logResult(`Created test zone: ${zoneId}`, 'success');
+        } catch (error) {
+          displayResult(
+            'management-results',
+            `❌ Zone Creation Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Zone creation test failed: ${error.message}`, 'error');
+        }
+      };
+
+      window.testExportImport = function () {
+        clearResults('management-results');
+
+        try {
+          // Export current configuration
+          const exported = powerZoneManager.exportZones();
+          displayResult(
+            'management-results',
+            `✅ Export successful - ${Object.keys(exported.zones).length} zones`,
+            'success'
+          );
+
+          // Test import (same data)
+          powerZoneManager.importZones(exported);
+          displayResult(
+            'management-results',
+            `✅ Import successful - configuration restored`,
+            'success'
+          );
+
+          logResult('Export/import test completed successfully', 'success');
+        } catch (error) {
+          displayResult(
+            'management-results',
+            `❌ Export/Import Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Export/import test failed: ${error.message}`, 'error');
+        }
+      };
+
+      window.testValidation = function () {
+        clearResults('management-results');
+
+        try {
+          const stats = powerZoneManager.getZoneStatistics();
+          displayResult(
+            'management-results',
+            `📊 Zone Statistics: ${stats.totalZones} zones, range ${(stats.powerRange.min * 100).toFixed(0)}-${(stats.powerRange.max * 100).toFixed(0)}% FTP`,
+            'info'
+          );
+
+          // Test invalid zone creation
+          try {
+            powerZoneManager.createZone('invalid', {
+              name: '',
+              min: -1,
+              max: 0.5,
+            });
+            displayResult(
+              'management-results',
+              `❌ Validation test failed - invalid zone was accepted`,
+              'error'
+            );
+          } catch (validationError) {
+            displayResult(
+              'management-results',
+              `✅ Validation working - rejected invalid zone: ${validationError.message}`,
+              'success'
+            );
+          }
+
+          logResult('Validation tests completed', 'success');
+        } catch (error) {
+          displayResult(
+            'management-results',
+            `❌ Validation Test Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Validation test failed: ${error.message}`, 'error');
+        }
+      };
+
+      window.resetToDefaults = function () {
+        clearResults('management-results');
+
+        try {
+          powerZoneManager.resetToDefaults();
+          document.getElementById('zone-model-select').value = 'coggan';
+          updateZonesDisplay();
+          displayResult(
+            'management-results',
+            `✅ Reset to default zones`,
+            'success'
+          );
+          logResult('Reset to defaults completed', 'success');
+        } catch (error) {
+          displayResult(
+            'management-results',
+            `❌ Reset Error: ${error.message}`,
+            'error'
+          );
+          logResult(`Reset to defaults failed: ${error.message}`, 'error');
+        }
+      };
+
+      // Update zones display
+      function updateZonesDisplay() {
+        const container = document.getElementById('zones-display');
+        const zones = powerZoneManager.getZones();
+        const wattsMode = powerZoneManager.getWattsMode();
+
+        // Clear previous zones
+        const existingZones = container.querySelectorAll('.zone-display');
+        existingZones.forEach(el => el.remove());
+
+        // Create new display
+        const zoneDisplay = document.createElement('div');
+        zoneDisplay.className = 'zone-display';
+
+        Object.entries(zones).forEach(([zoneId, zone]) => {
+          const minDisplay = wattsMode
+            ? `${powerZoneManager.percentToWatts(zone.min)}W`
+            : `${(zone.min * 100).toFixed(0)}%`;
+          const maxDisplay = wattsMode
+            ? `${powerZoneManager.percentToWatts(zone.max)}W`
+            : `${(zone.max * 100).toFixed(0)}%`;
+
+          const zoneCard = document.createElement('div');
+          zoneCard.className = 'zone-card';
+          zoneCard.innerHTML = `
                     <div class="zone-header">
                         <div class="zone-color" style="background-color: ${zone.color};"></div>
                         <strong>${zone.name}</strong>
@@ -465,32 +616,33 @@
                     <div>${minDisplay} - ${maxDisplay}</div>
                     <div style="font-size: 0.9em; color: #666;">${zone.description}</div>
                 `;
-                zoneDisplay.appendChild(zoneCard);
-            });
-            
-            container.appendChild(zoneDisplay);
-        }
-
-        // Listen for zone changes
-        window.addEventListener('powerZonesChanged', () => {
-            updateZonesDisplay();
-            checkSystemStatus();
+          zoneDisplay.appendChild(zoneCard);
         });
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkSystemStatus();
-            updateZonesDisplay();
-            
-            // Set initial values
-            document.getElementById('ftp-input').value = powerZoneManager.getFTP();
-            document.getElementById('zone-model-select').value = powerZoneManager.getZoneModel();
-        });
+        container.appendChild(zoneDisplay);
+      }
 
-        // Make functions globally available for testing
-        window.powerZoneManager = powerZoneManager;
-        window.workoutGenerator = workoutGenerator;
-        window.testResults = testResults;
+      // Listen for zone changes
+      window.addEventListener('powerZonesChanged', () => {
+        updateZonesDisplay();
+        checkSystemStatus();
+      });
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        checkSystemStatus();
+        updateZonesDisplay();
+
+        // Set initial values
+        document.getElementById('ftp-input').value = powerZoneManager.getFTP();
+        document.getElementById('zone-model-select').value =
+          powerZoneManager.getZoneModel();
+      });
+
+      // Make functions globally available for testing
+      window.powerZoneManager = powerZoneManager;
+      window.workoutGenerator = workoutGenerator;
+      window.testResults = testResults;
     </script>
-</body>
+  </body>
 </html>

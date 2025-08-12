@@ -22,7 +22,7 @@ A web-based application that loads Zwift workout files (.zwo) and displays them 
 The visualizer supports the following Zwift workout elements:
 
 - **Warmup**: Gradual power ramp from low to high
-- **Cooldown**: Gradual power ramp from high to low  
+- **Cooldown**: Gradual power ramp from high to low
 - **SteadyState**: Constant power output
 - **IntervalsT**: Repeated intervals with on/off periods
 - **Ramp**: Linear power progression
@@ -31,6 +31,7 @@ The visualizer supports the following Zwift workout elements:
 ## How to Use
 
 1. **Start the Server**:
+
    ```bash
    python3 server.py
    ```
@@ -79,7 +80,7 @@ Zwift workout files (.zwo) are XML files with the following structure:
     <workout>
         <Warmup Duration="600" PowerLow="0.5" PowerHigh="0.7"/>
         <SteadyState Duration="300" Power="0.6"/>
-        <IntervalsT Repeat="4" OnDuration="240" OffDuration="120" 
+        <IntervalsT Repeat="4" OnDuration="240" OffDuration="120"
                     PowerOnHigh="1.05" PowerOffHigh="0.5"/>
         <Cooldown Duration="600" PowerHigh="0.6" PowerLow="0.4"/>
     </workout>
@@ -119,11 +120,13 @@ The application automatically calculates TSS for each workout:
 ## Supported Export Formats
 
 ### ERG Format
+
 - **Compatible with**: MyWhoosh, Rouvy, most training platforms
 - **Power values**: Absolute watts (requires FTP setting)
 - **Use case**: Universal compatibility across platforms
 
-### MRC Format  
+### MRC Format
+
 - **Compatible with**: TrainerRoad, Rouvy, some training platforms
 - **Power values**: Percentage of FTP
 - **Use case**: TrainerRoad and percentage-based platforms
@@ -156,4 +159,4 @@ This project uses GitHub Actions for continuous integration. Build and test stat
 
 ---
 
-*Zwift® is a registered trademark of Zwift, Inc. This project is not affiliated with or endorsed by Zwift, Inc.*
+_Zwift® is a registered trademark of Zwift, Inc. This project is not affiliated with or endorsed by Zwift, Inc._

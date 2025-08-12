@@ -1,6 +1,6 @@
 // Test fixtures for workout data
 export const sampleWorkouts = {
-    simple: `<?xml version="1.0" encoding="UTF-8"?>
+  simple: `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
     <author>Test Author</author>
     <name>Simple Test Workout</name>
@@ -16,7 +16,7 @@ export const sampleWorkouts = {
     </workout>
 </workout_file>`,
 
-    complex: `<?xml version="1.0" encoding="UTF-8"?>
+  complex: `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
     <author>Test Author</author>
     <name>Complex Test Workout</name>
@@ -35,7 +35,7 @@ export const sampleWorkouts = {
     </workout>
 </workout_file>`,
 
-    invalid: `<?xml version="1.0" encoding="UTF-8"?>
+  invalid: `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
     <name>Invalid Workout</name>
     <workout>
@@ -43,7 +43,7 @@ export const sampleWorkouts = {
     </workout>
 </workout_file>`,
 
-    empty: `<?xml version="1.0" encoding="UTF-8"?>
+  empty: `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
     <author>Test Author</author>
     <name>Empty Workout</name>
@@ -51,23 +51,21 @@ export const sampleWorkouts = {
     <sportType>bike</sportType>
     <workout>
     </workout>
-</workout_file>`
+</workout_file>`,
 };
 
 export const mockApiResponses = {
-    uploadSuccess: {
-        success: true,
-        message: 'Workout uploaded successfully',
-        workoutId: 'test-123'
-    },
-    uploadError: {
-        success: false,
-        error: 'Invalid file format'
-    },
-    listWorkouts: {
-        success: true,
-        workouts: [
-            { id: 'test-123', name: 'Test Workout', author: 'Test Author' }
-        ]
-    }
+  uploadSuccess: {
+    success: true,
+    message: 'Workout uploaded successfully',
+    workoutId: 'test-123',
+  },
+  uploadError: {
+    success: false,
+    error: 'Invalid file format',
+  },
+  listWorkouts: {
+    success: true,
+    workouts: [{ id: 'test-123', name: 'Test Workout', author: 'Test Author' }],
+  },
 };

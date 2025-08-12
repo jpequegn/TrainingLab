@@ -1,52 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Modern UI Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 min-h-screen">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body
+    class="bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 min-h-screen"
+  >
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <header class="text-center mb-12">
-            <h1 class="text-5xl font-bold text-white mb-4">Modern UI Test</h1>
-        </header>
+      <header class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-white mb-4">Modern UI Test</h1>
+      </header>
 
-        <!-- Test Card -->
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8 border border-white/20">
-            <h2 class="text-2xl font-bold mb-4">Test Card</h2>
-            <p>This card should be upgraded by the modern UI script.</p>
-            
-            <!-- Test Buttons -->
-            <div class="flex gap-4 mt-4">
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">Upload File</button>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Sample Workout</button>
-                <button class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg">Reset</button>
-            </div>
-        </div>
+      <!-- Test Card -->
+      <div
+        class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-8 border border-white/20"
+      >
+        <h2 class="text-2xl font-bold mb-4">Test Card</h2>
+        <p>This card should be upgraded by the modern UI script.</p>
 
-        <!-- Test Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-                <div class="text-xs font-medium text-blue-600 uppercase tracking-wide">Duration</div>
-                <div class="text-2xl font-bold text-blue-900 mt-1">45:30</div>
-            </div>
-            <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
-                <div class="text-xs font-medium text-orange-600 uppercase tracking-wide">TSS</div>
-                <div class="text-2xl font-bold text-orange-900 mt-1">65</div>
-            </div>
+        <!-- Test Buttons -->
+        <div class="flex gap-4 mt-4">
+          <button
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg"
+          >
+            Upload File
+          </button>
+          <button
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            Sample Workout
+          </button>
+          <button
+            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg"
+          >
+            Reset
+          </button>
         </div>
+      </div>
+
+      <!-- Test Stats Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div
+          class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200"
+        >
+          <div
+            class="text-xs font-medium text-blue-600 uppercase tracking-wide"
+          >
+            Duration
+          </div>
+          <div class="text-2xl font-bold text-blue-900 mt-1">45:30</div>
+        </div>
+        <div
+          class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200"
+        >
+          <div
+            class="text-xs font-medium text-orange-600 uppercase tracking-wide"
+          >
+            TSS
+          </div>
+          <div class="text-2xl font-bold text-orange-900 mt-1">65</div>
+        </div>
+      </div>
     </div>
 
     <script>
-        console.log('Test page loaded');
-        window.addEventListener('error', (e) => {
-            console.error('JavaScript Error:', e.error);
-            document.body.innerHTML += `<div style="position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 5px; z-index: 9999;">Error: ${e.error.message}</div>`;
-        });
+      console.log('Test page loaded');
+      window.addEventListener('error', e => {
+        console.error('JavaScript Error:', e.error);
+        document.body.innerHTML += `<div style="position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 5px; z-index: 9999;">Error: ${e.error.message}</div>`;
+      });
     </script>
 
     <script type="module" src="modern-ui-upgrade.js"></script>
-</body>
+  </body>
 </html>

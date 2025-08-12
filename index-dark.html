@@ -1,491 +1,1015 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zwift Workout Visualizer - Dark Futuristic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="library.css">
-    <link rel="stylesheet" href="editor.css">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="library.css" />
+    <link rel="stylesheet" href="editor.css" />
     <style>
-        /* Futuristic Dark Theme */
-        .futuristic-theme {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0f172a 50%, #1a1b3a 100%);
-            color: #e2e8f0;
-        }
-        
-        .glow-cyan {
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-        }
-        
-        .glow-blue {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-        }
-        
-        .glow-purple {
-            box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
-        }
-        
-        .glass-dark {
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-        }
-        
-        .neon-text {
-            text-shadow: 0 0 10px currentColor;
-        }
-        
-        /* Hide upload section when workout is loaded */
-        .workout-loaded #uploadSection {
-            display: none !important;
-        }
-        
-        .workout-loaded #instructionsPanel {
-            margin-bottom: 1rem !important;
-        }
-        
-        .workout-loaded #mainHeader {
-            margin-bottom: 2rem !important;
-        }
-        
-        .workout-loaded #mainHeader h1 {
-            font-size: 2rem !important;
-        }
-        
-        .workout-loaded #mainHeader p {
-            font-size: 1rem !important;
-        }
-        
-        /* Workout visualization should be first when loaded */
-        .workout-loaded .main-content-wrapper {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .workout-loaded #workoutVisualization {
-            order: 1;
-        }
-        
-        .workout-loaded #workoutStats {
-            order: 2;
-        }
-        
-        .workout-loaded .workout-panels {
-            order: 3;
-        }
+      /* Futuristic Dark Theme */
+      .futuristic-theme {
+        background: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 25%,
+          #0f172a 50%,
+          #1a1b3a 100%
+        );
+        color: #e2e8f0;
+      }
+
+      .glow-cyan {
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+      }
+
+      .glow-blue {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      }
+
+      .glow-purple {
+        box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+      }
+
+      .glass-dark {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+      }
+
+      .neon-text {
+        text-shadow: 0 0 10px currentColor;
+      }
+
+      /* Hide upload section when workout is loaded */
+      .workout-loaded #uploadSection {
+        display: none !important;
+      }
+
+      .workout-loaded #instructionsPanel {
+        margin-bottom: 1rem !important;
+      }
+
+      .workout-loaded #mainHeader {
+        margin-bottom: 2rem !important;
+      }
+
+      .workout-loaded #mainHeader h1 {
+        font-size: 2rem !important;
+      }
+
+      .workout-loaded #mainHeader p {
+        font-size: 1rem !important;
+      }
+
+      /* Workout visualization should be first when loaded */
+      .workout-loaded .main-content-wrapper {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .workout-loaded #workoutVisualization {
+        order: 1;
+      }
+
+      .workout-loaded #workoutStats {
+        order: 2;
+      }
+
+      .workout-loaded .workout-panels {
+        order: 3;
+      }
     </style>
-</head>
-<body class="futuristic-theme min-h-screen">
+  </head>
+  <body class="futuristic-theme min-h-screen">
     <!-- Skip Navigation -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-cyan-600 text-white px-4 py-2 rounded-lg z-50 font-medium">Skip to main content</a>
-    
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-cyan-600 text-white px-4 py-2 rounded-lg z-50 font-medium"
+      >Skip to main content</a
+    >
+
     <!-- Screen Reader Announcements -->
-    <div id="sr-announcements" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+    <div
+      id="sr-announcements"
+      aria-live="assertive"
+      aria-atomic="true"
+      class="sr-only"
+    ></div>
 
     <!-- Chat Interface Panel -->
-    <div id="chatPanel" class="fixed right-0 top-0 h-full w-80 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-600/30 z-40 transform transition-transform duration-300" role="complementary" aria-label="Workout creation chat interface">
-        <div class="flex flex-col h-full">
-            <!-- Chat Header -->
-            <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 text-white flex items-center justify-between">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    <h3 class="font-semibold">Workout Creator</h3>
-                </div>
-                <button id="toggleChatPanel" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center font-bold transition-all duration-200" title="Minimize">
-                    >
-                </button>
-            </div>
-            
-            <!-- Chat Messages -->
-            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-800/50" role="log" aria-live="polite" aria-label="Chat conversation">
-                <div class="chat-message llm bg-slate-700/60 rounded-lg p-3 text-sm text-slate-200">
-                    👋 Hi! I can help you create custom workouts. Just describe what kind of workout you want!
-                    <br><br>
-                    <strong>Examples:</strong>
-                    <br>• "Create a 45-minute endurance ride"
-                    <br>• "I want interval training with 4x5 min at threshold"
-                    <br>• "Build me a recovery workout"
-                </div>
-            </div>
-            
-            <!-- Chat Input -->
-            <div class="border-t border-slate-600/30 bg-slate-900/90 p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-slate-400">Mode:</span>
-                    <label class="flex items-center gap-2 text-xs">
-                        <input type="checkbox" id="llmModeToggle" class="rounded">
-                        <span class="text-slate-300">Use LLM (requires API key)</span>
-                    </label>
-                </div>
-                <form id="chatForm" class="flex gap-2" role="search" aria-label="Create workout">
-                    <input 
-                        id="chatInput" 
-                        type="text" 
-                        placeholder="Describe your workout..." 
-                        class="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm text-slate-200"
-                        aria-label="Describe your workout requirements"
-                        aria-describedby="chatInputHelp"
-                    />
-                    <span id="chatInputHelp" class="sr-only">Enter a description of the workout you want to create</span>
-                    <button 
-                        type="submit" 
-                        class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
-                        aria-label="Send workout request"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
-                    </button>
-                </form>
-            </div>
+    <div
+      id="chatPanel"
+      class="fixed right-0 top-0 h-full w-80 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-600/30 z-40 transform transition-transform duration-300"
+      role="complementary"
+      aria-label="Workout creation chat interface"
+    >
+      <div class="flex flex-col h-full">
+        <!-- Chat Header -->
+        <div
+          class="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 text-white flex items-center justify-between"
+        >
+          <div class="flex items-center">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              ></path>
+            </svg>
+            <h3 class="font-semibold">Workout Creator</h3>
+          </div>
+          <button
+            id="toggleChatPanel"
+            class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center font-bold transition-all duration-200"
+            title="Minimize"
+          >
+            >
+          </button>
         </div>
+
+        <!-- Chat Messages -->
+        <div
+          id="chatMessages"
+          class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-800/50"
+          role="log"
+          aria-live="polite"
+          aria-label="Chat conversation"
+        >
+          <div
+            class="chat-message llm bg-slate-700/60 rounded-lg p-3 text-sm text-slate-200"
+          >
+            👋 Hi! I can help you create custom workouts. Just describe what
+            kind of workout you want!
+            <br /><br />
+            <strong>Examples:</strong>
+            <br />• "Create a 45-minute endurance ride" <br />• "I want interval
+            training with 4x5 min at threshold" <br />• "Build me a recovery
+            workout"
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="border-t border-slate-600/30 bg-slate-900/90 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-400">Mode:</span>
+            <label class="flex items-center gap-2 text-xs">
+              <input type="checkbox" id="llmModeToggle" class="rounded" />
+              <span class="text-slate-300">Use LLM (requires API key)</span>
+            </label>
+          </div>
+          <form
+            id="chatForm"
+            class="flex gap-2"
+            role="search"
+            aria-label="Create workout"
+          >
+            <input
+              id="chatInput"
+              type="text"
+              placeholder="Describe your workout..."
+              class="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm text-slate-200"
+              aria-label="Describe your workout requirements"
+              aria-describedby="chatInputHelp"
+            />
+            <span id="chatInputHelp" class="sr-only"
+              >Enter a description of the workout you want to create</span
+            >
+            <button
+              type="submit"
+              class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
+              aria-label="Send workout request"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                ></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div class="main-content-centered">
-        <!-- Main Content Area -->
-        <div class="main-content-wrapper py-8">
-        
-            <!-- Quick Instructions Panel - Minimized when workout loaded -->
-            <div id="instructionsPanel" class="glass-dark rounded-2xl border border-cyan-500/20 mb-8 overflow-hidden transition-all duration-500 glow-cyan">
-                <div class="flex items-center justify-between p-4 cursor-pointer" onclick="toggleInstructions()">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mr-3 glow-cyan">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent neon-text">Quick Start Guide</h3>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="hidden md:flex items-center space-x-6 text-sm text-slate-300">
-                            <span class="flex items-center">
-                                <span class="w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-cyan">1</span>
-                                Upload
-                            </span>
-                            <span class="flex items-center">
-                                <span class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-blue">2</span>
-                                Visualize
-                            </span>
-                            <span class="flex items-center">
-                                <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-purple">3</span>
-                                Export
-                            </span>
-                        </div>
-                        <button id="instructionsToggle" class="text-slate-400 hover:text-cyan-400 transition-all duration-200">
-                            <svg class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div id="instructionsContent" class="px-6 pb-6 max-h-0 overflow-hidden transition-all duration-500">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                        <div class="space-y-4">
-                            <div class="flex items-start text-slate-200">
-                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm leading-relaxed">Upload Zwift .zwo files or try the sample workout</span>
-                            </div>
-                            <div class="flex items-start text-slate-200">
-                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm leading-relaxed">Interactive power zones with hover details</span>
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="flex items-start text-slate-200">
-                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm leading-relaxed">Scale intensity and export to multiple formats</span>
-                            </div>
-                            <div class="flex items-start text-slate-200">
-                                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm leading-relaxed">Compatible with all major training platforms</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <!-- Main Content Area -->
+      <div class="main-content-wrapper py-8">
+        <!-- Quick Instructions Panel - Minimized when workout loaded -->
+        <div
+          id="instructionsPanel"
+          class="glass-dark rounded-2xl border border-cyan-500/20 mb-8 overflow-hidden transition-all duration-500 glow-cyan"
+        >
+          <div
+            class="flex items-center justify-between p-4 cursor-pointer"
+            onclick="toggleInstructions()"
+          >
+            <div class="flex items-center">
+              <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mr-3 glow-cyan"
+              >
+                <svg
+                  class="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+              </div>
+              <h3
+                class="text-lg font-semibold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent neon-text"
+              >
+                Quick Start Guide
+              </h3>
             </div>
-
-            <!-- Header Section -->
-            <header id="mainHeader" class="text-center mb-8 transition-all duration-700" role="banner">
-                <div class="flex justify-end gap-3 mb-6">
-                    <a href="power-zones-ui.html" class="inline-flex items-center px-4 py-2 glass-dark text-slate-200 hover:text-cyan-400 rounded-xl transition-all duration-300 text-sm font-medium border border-slate-600/30 hover:border-cyan-500/50 glow-cyan">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                        Power Zones
-                    </a>
-                    <a href="mcp_manager.html" class="inline-flex items-center px-4 py-2 glass-dark text-slate-200 hover:text-cyan-400 rounded-xl transition-all duration-300 text-sm font-medium border border-slate-600/30 hover:border-cyan-500/50 glow-cyan">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4"></path>
-                        </svg>
-                        MCP Manager
-                    </a>
-                </div>
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl mb-6 glow-cyan transform hover:scale-105 transition-all duration-300">
-                    <span class="text-4xl">🚴‍♂️</span>
-                </div>
-                <h1 class="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-4 tracking-tight neon-text">
-                    Zwift Workout Visualizer
-                </h1>
-                <p class="text-xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
-                    Advanced analytics and visualization for your Zwift workout files
-                </p>
-            </header>
-
-            <!-- Upload Section -->
-            <section id="uploadSection" class="glass-dark rounded-3xl p-8 mb-8 border border-slate-600/30 glow-blue transition-all duration-700" role="main" aria-labelledby="uploadSectionTitle">
-                <div class="text-center">
-                    <div class="mb-8">
-                        <h2 id="uploadSectionTitle" class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-3 neon-text">Get Started</h2>
-                        <p class="text-slate-300 text-lg">Upload your workout file or try our sample</p>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <!-- File Upload Button -->
-                        <div class="relative group">
-                            <input type="file" id="fileInput" accept=".zwo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" aria-label="Choose Zwift workout file to upload" />
-                            <label for="fileInput" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl glow-cyan hover:scale-105 hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-emerald-400/20">
-                                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                </svg>
-                                Upload Workout File
-                            </label>
-                        </div>
-                        
-                        <!-- Divider -->
-                        <div class="flex items-center">
-                            <div class="h-px bg-gradient-to-r from-transparent via-slate-500 to-transparent w-12"></div>
-                            <span class="px-4 text-slate-400 text-sm font-medium glass-dark rounded-full border border-slate-600/30">or</span>
-                            <div class="h-px bg-gradient-to-r from-transparent via-slate-500 to-transparent w-12"></div>
-                        </div>
-                        
-                        <!-- Sample Button -->
-                        <button id="loadSample" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold rounded-2xl glow-blue hover:scale-105 hover:-translate-y-1 transition-all duration-300 border border-blue-400/20">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            Try Sample Workout
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Main Workout Visualization - First Priority When Loaded -->
-            <div id="workoutVisualization" class="chart-container glass-dark rounded-3xl border border-slate-600/30 glow-cyan mb-8" style="display: none;">
-                <div class="p-6 pb-0">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center space-x-4">
-                            <h3 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent neon-text">Workout Power Profile</h3>
-                            <div class="flex items-center space-x-3 text-sm">
-                                <span id="chartDuration" class="px-3 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-cyan-300 rounded-xl font-semibold border border-cyan-500/30 backdrop-blur-sm"></span>
-                                <span id="chartTSS" class="px-3 py-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 rounded-xl font-semibold border border-orange-500/30 backdrop-blur-sm"></span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <button id="undoEditBtn" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 border border-amber-400/30" style="display:none;">
-                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                                </svg>
-                                Undo
-                            </button>
-                            <button id="fullscreenChart" class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold rounded-xl glow-purple transition-all duration-300 transform hover:scale-105 border border-indigo-400/30">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="px-6 pb-6">
-                    <div class="bg-slate-950/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-600/20">
-                        <canvas id="workoutChart" class="w-full rounded-lg" style="height: 500px;" role="img" aria-label="Workout power profile visualization" tabindex="0"></canvas>
-                    </div>
-                </div>
+            <div class="flex items-center space-x-4">
+              <div
+                class="hidden md:flex items-center space-x-6 text-sm text-slate-300"
+              >
+                <span class="flex items-center">
+                  <span
+                    class="w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-cyan"
+                    >1</span
+                  >
+                  Upload
+                </span>
+                <span class="flex items-center">
+                  <span
+                    class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-blue"
+                    >2</span
+                  >
+                  Visualize
+                </span>
+                <span class="flex items-center">
+                  <span
+                    class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center mr-2 glow-purple"
+                    >3</span
+                  >
+                  Export
+                </span>
+              </div>
+              <button
+                id="instructionsToggle"
+                class="text-slate-400 hover:text-cyan-400 transition-all duration-200"
+              >
+                <svg
+                  class="w-5 h-5 transform transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
             </div>
-
-            <!-- Workout Stats Cards - Futuristic Design -->
-            <div id="workoutStats" class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8" style="display: none;">
-                <div class="glass-dark p-6 rounded-2xl border border-blue-400/20 glow-blue hover:scale-105 transition-all duration-300 relative">
-                    <div class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">Duration</div>
-                    <div id="totalDuration" class="text-3xl font-black bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent neon-text"></div>
-                    <div class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg opacity-20"></div>
+          </div>
+          <div
+            id="instructionsContent"
+            class="px-6 pb-6 max-h-0 overflow-hidden transition-all duration-500"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div class="space-y-4">
+                <div class="flex items-start text-slate-200">
+                  <div
+                    class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0"
+                  >
+                    <svg
+                      class="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </div>
+                  <span class="text-sm leading-relaxed"
+                    >Upload Zwift .zwo files or try the sample workout</span
+                  >
                 </div>
-                <div class="glass-dark p-6 rounded-2xl border border-orange-400/20 hover:scale-105 transition-all duration-300 relative" style="box-shadow: 0 0 20px rgba(251, 146, 60, 0.1);">
-                    <div class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">TSS</div>
-                    <div id="workoutTSS" class="text-3xl font-black bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent neon-text"></div>
-                    <div class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg opacity-20"></div>
+                <div class="flex items-start text-slate-200">
+                  <div
+                    class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0"
+                  >
+                    <svg
+                      class="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </div>
+                  <span class="text-sm leading-relaxed"
+                    >Interactive power zones with hover details</span
+                  >
                 </div>
-                <div class="glass-dark p-6 rounded-2xl border border-emerald-400/20 hover:scale-105 transition-all duration-300 relative" style="box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);">
-                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Author</div>
-                    <div id="workoutAuthor" class="text-3xl font-black bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent neon-text"></div>
-                    <div class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-lg opacity-20"></div>
+              </div>
+              <div class="space-y-4">
+                <div class="flex items-start text-slate-200">
+                  <div
+                    class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0"
+                  >
+                    <svg
+                      class="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </div>
+                  <span class="text-sm leading-relaxed"
+                    >Scale intensity and export to multiple formats</span
+                  >
                 </div>
-                <div class="glass-dark p-6 rounded-2xl border border-purple-400/20 glow-purple hover:scale-105 transition-all duration-300 relative">
-                    <div class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">Sport</div>
-                    <div id="workoutSport" class="text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent neon-text"></div>
-                    <div class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg opacity-20"></div>
+                <div class="flex items-start text-slate-200">
+                  <div
+                    class="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0"
+                  >
+                    <svg
+                      class="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                  </div>
+                  <span class="text-sm leading-relaxed"
+                    >Compatible with all major training platforms</span
+                  >
                 </div>
+              </div>
             </div>
-
-            <!-- Workout Panels - Horizontal Layout -->
-            <div class="workout-panels grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <!-- Workout Details -->
-                <div id="workoutInfo" class="lg:col-span-2 glass-dark rounded-2xl border border-slate-600/30 overflow-hidden" style="display: none;">
-                    <div class="bg-gradient-to-r from-indigo-600/80 to-purple-600/80 px-6 py-4 text-white">
-                        <h2 id="workoutName" class="text-xl font-bold mb-1 neon-text"></h2>
-                        <p id="workoutDescription" class="text-indigo-100 opacity-90 text-sm"></p>
-                    </div>
-                    
-                    <div class="p-4 space-y-4">
-                        <div class="glass-dark p-4 rounded-lg border border-slate-600/20">
-                            <div class="flex items-center justify-between mb-3">
-                                <label for="scaleSlider" class="text-sm font-medium text-slate-300">Intensity Scale:</label>
-                                <span class="scale-value text-lg font-semibold text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded border border-cyan-400/20">1.0x</span>
-                            </div>
-                            <input type="range" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" 
-                                   class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer mb-3">
-                            <div class="flex gap-2">
-                                <button id="applyScale" class="flex-1 px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium rounded-lg glow-cyan transition-all duration-200">
-                                    Apply
-                                </button>
-                                <button id="resetWorkout" class="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium rounded-lg transition-all duration-200">
-                                    Reset
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Controls Panel -->
-                <div id="controlsPanel" class="glass-dark rounded-2xl border border-slate-600/30 overflow-hidden" style="display: none;">
-                    <div class="bg-gradient-to-r from-purple-600/80 to-indigo-600/80 px-4 py-3 text-white">
-                        <h3 class="font-bold text-lg neon-text">Actions & Export</h3>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div class="space-y-3">
-                            <button id="exportModified" class="w-full group glass-dark border border-slate-600/30 hover:border-indigo-400/50 rounded-lg p-3 transition-all duration-200 hover:glow-blue">
-                                <div class="flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2 text-slate-400 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                    </svg>
-                                    <span class="font-semibold text-slate-200 group-hover:text-indigo-300">Download ZWO</span>
-                                </div>
-                            </button>
-                            <button id="deployWorkout" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg p-3 glow-purple transition-all duration-200">
-                                <div class="flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                    </svg>
-                                    <span class="font-semibold neon-text">Deploy to Zwift</span>
-                                </div>
-                            </button>
-                        </div>
-                        
-                        <div class="border-t border-slate-600/30 pt-3">
-                            <h4 class="text-sm font-medium text-slate-300 mb-2">Other Platforms</h4>
-                            <div class="space-y-2">
-                                <label for="ftpInput" class="block text-xs text-slate-400">FTP (watts):</label>
-                                <input type="number" id="ftpInput" value="250" min="100" max="500" 
-                                       class="w-full px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500" />
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button id="exportERG" class="px-2 py-1 text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded border border-emerald-500/30 transition-all duration-200">
-                                        ERG File
-                                    </button>
-                                    <button id="exportMRC" class="px-2 py-1 text-xs bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 rounded border border-orange-500/30 transition-all duration-200">
-                                        MRC File
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+
+        <!-- Header Section -->
+        <header
+          id="mainHeader"
+          class="text-center mb-8 transition-all duration-700"
+          role="banner"
+        >
+          <div class="flex justify-end gap-3 mb-6">
+            <a
+              href="power-zones-ui.html"
+              class="inline-flex items-center px-4 py-2 glass-dark text-slate-200 hover:text-cyan-400 rounded-xl transition-all duration-300 text-sm font-medium border border-slate-600/30 hover:border-cyan-500/50 glow-cyan"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                ></path>
+              </svg>
+              Power Zones
+            </a>
+            <a
+              href="mcp_manager.html"
+              class="inline-flex items-center px-4 py-2 glass-dark text-slate-200 hover:text-cyan-400 rounded-xl transition-all duration-300 text-sm font-medium border border-slate-600/30 hover:border-cyan-500/50 glow-cyan"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 12h14M5 12l4-4m-4 4l4 4"
+                ></path>
+              </svg>
+              MCP Manager
+            </a>
+          </div>
+          <div
+            class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl mb-6 glow-cyan transform hover:scale-105 transition-all duration-300"
+          >
+            <span class="text-4xl">🚴‍♂️</span>
+          </div>
+          <h1
+            class="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-4 tracking-tight neon-text"
+          >
+            Zwift Workout Visualizer
+          </h1>
+          <p
+            class="text-xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed"
+          >
+            Advanced analytics and visualization for your Zwift workout files
+          </p>
+        </header>
+
+        <!-- Upload Section -->
+        <section
+          id="uploadSection"
+          class="glass-dark rounded-3xl p-8 mb-8 border border-slate-600/30 glow-blue transition-all duration-700"
+          role="main"
+          aria-labelledby="uploadSectionTitle"
+        >
+          <div class="text-center">
+            <div class="mb-8">
+              <h2
+                id="uploadSectionTitle"
+                class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-3 neon-text"
+              >
+                Get Started
+              </h2>
+              <p class="text-slate-300 text-lg">
+                Upload your workout file or try our sample
+              </p>
+            </div>
+
+            <div
+              class="flex flex-col sm:flex-row items-center justify-center gap-6"
+            >
+              <!-- File Upload Button -->
+              <div class="relative group">
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept=".zwo"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  aria-label="Choose Zwift workout file to upload"
+                />
+                <label
+                  for="fileInput"
+                  class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl glow-cyan hover:scale-105 hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-emerald-400/20"
+                >
+                  <svg
+                    class="w-6 h-6 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    ></path>
+                  </svg>
+                  Upload Workout File
+                </label>
+              </div>
+
+              <!-- Divider -->
+              <div class="flex items-center">
+                <div
+                  class="h-px bg-gradient-to-r from-transparent via-slate-500 to-transparent w-12"
+                ></div>
+                <span
+                  class="px-4 text-slate-400 text-sm font-medium glass-dark rounded-full border border-slate-600/30"
+                  >or</span
+                >
+                <div
+                  class="h-px bg-gradient-to-r from-transparent via-slate-500 to-transparent w-12"
+                ></div>
+              </div>
+
+              <!-- Sample Button -->
+              <button
+                id="loadSample"
+                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold rounded-2xl glow-blue hover:scale-105 hover:-translate-y-1 transition-all duration-300 border border-blue-400/20"
+              >
+                <svg
+                  class="w-6 h-6 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
+                </svg>
+                Try Sample Workout
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Main Workout Visualization - First Priority When Loaded -->
+        <div
+          id="workoutVisualization"
+          class="chart-container glass-dark rounded-3xl border border-slate-600/30 glow-cyan mb-8"
+          style="display: none"
+        >
+          <div class="p-6 pb-0">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center space-x-4">
+                <h3
+                  class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent neon-text"
+                >
+                  Workout Power Profile
+                </h3>
+                <div class="flex items-center space-x-3 text-sm">
+                  <span
+                    id="chartDuration"
+                    class="px-3 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-cyan-300 rounded-xl font-semibold border border-cyan-500/30 backdrop-blur-sm"
+                  ></span>
+                  <span
+                    id="chartTSS"
+                    class="px-3 py-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 rounded-xl font-semibold border border-orange-500/30 backdrop-blur-sm"
+                  ></span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <button
+                  id="undoEditBtn"
+                  class="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 border border-amber-400/30"
+                  style="display: none"
+                >
+                  <svg
+                    class="w-4 h-4 inline mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    ></path>
+                  </svg>
+                  Undo
+                </button>
+                <button
+                  id="fullscreenChart"
+                  class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-semibold rounded-xl glow-purple transition-all duration-300 transform hover:scale-105 border border-indigo-400/30"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="px-6 pb-6">
+            <div
+              class="bg-slate-950/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-600/20"
+            >
+              <canvas
+                id="workoutChart"
+                class="w-full rounded-lg"
+                style="height: 500px"
+                role="img"
+                aria-label="Workout power profile visualization"
+                tabindex="0"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workout Stats Cards - Futuristic Design -->
+        <div
+          id="workoutStats"
+          class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          style="display: none"
+        >
+          <div
+            class="glass-dark p-6 rounded-2xl border border-blue-400/20 glow-blue hover:scale-105 transition-all duration-300 relative"
+          >
+            <div
+              class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2"
+            >
+              Duration
+            </div>
+            <div
+              id="totalDuration"
+              class="text-3xl font-black bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent neon-text"
+            ></div>
+            <div
+              class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg opacity-20"
+            ></div>
+          </div>
+          <div
+            class="glass-dark p-6 rounded-2xl border border-orange-400/20 hover:scale-105 transition-all duration-300 relative"
+            style="box-shadow: 0 0 20px rgba(251, 146, 60, 0.1)"
+          >
+            <div
+              class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2"
+            >
+              TSS
+            </div>
+            <div
+              id="workoutTSS"
+              class="text-3xl font-black bg-gradient-to-r from-orange-300 to-red-300 bg-clip-text text-transparent neon-text"
+            ></div>
+            <div
+              class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-orange-400 to-red-400 rounded-lg opacity-20"
+            ></div>
+          </div>
+          <div
+            class="glass-dark p-6 rounded-2xl border border-emerald-400/20 hover:scale-105 transition-all duration-300 relative"
+            style="box-shadow: 0 0 20px rgba(16, 185, 129, 0.1)"
+          >
+            <div
+              class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2"
+            >
+              Author
+            </div>
+            <div
+              id="workoutAuthor"
+              class="text-3xl font-black bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent neon-text"
+            ></div>
+            <div
+              class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-lg opacity-20"
+            ></div>
+          </div>
+          <div
+            class="glass-dark p-6 rounded-2xl border border-purple-400/20 glow-purple hover:scale-105 transition-all duration-300 relative"
+          >
+            <div
+              class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2"
+            >
+              Sport
+            </div>
+            <div
+              id="workoutSport"
+              class="text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent neon-text"
+            ></div>
+            <div
+              class="absolute top-4 right-4 w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg opacity-20"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Workout Panels - Horizontal Layout -->
+        <div class="workout-panels grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <!-- Workout Details -->
+          <div
+            id="workoutInfo"
+            class="lg:col-span-2 glass-dark rounded-2xl border border-slate-600/30 overflow-hidden"
+            style="display: none"
+          >
+            <div
+              class="bg-gradient-to-r from-indigo-600/80 to-purple-600/80 px-6 py-4 text-white"
+            >
+              <h2
+                id="workoutName"
+                class="text-xl font-bold mb-1 neon-text"
+              ></h2>
+              <p
+                id="workoutDescription"
+                class="text-indigo-100 opacity-90 text-sm"
+              ></p>
+            </div>
+
+            <div class="p-4 space-y-4">
+              <div class="glass-dark p-4 rounded-lg border border-slate-600/20">
+                <div class="flex items-center justify-between mb-3">
+                  <label
+                    for="scaleSlider"
+                    class="text-sm font-medium text-slate-300"
+                    >Intensity Scale:</label
+                  >
+                  <span
+                    class="scale-value text-lg font-semibold text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded border border-cyan-400/20"
+                    >1.0x</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="scaleSlider"
+                  min="0.5"
+                  max="2.0"
+                  step="0.1"
+                  value="1.0"
+                  class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer mb-3"
+                />
+                <div class="flex gap-2">
+                  <button
+                    id="applyScale"
+                    class="flex-1 px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium rounded-lg glow-cyan transition-all duration-200"
+                  >
+                    Apply
+                  </button>
+                  <button
+                    id="resetWorkout"
+                    class="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium rounded-lg transition-all duration-200"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls Panel -->
+          <div
+            id="controlsPanel"
+            class="glass-dark rounded-2xl border border-slate-600/30 overflow-hidden"
+            style="display: none"
+          >
+            <div
+              class="bg-gradient-to-r from-purple-600/80 to-indigo-600/80 px-4 py-3 text-white"
+            >
+              <h3 class="font-bold text-lg neon-text">Actions & Export</h3>
+            </div>
+            <div class="p-4 space-y-4">
+              <div class="space-y-3">
+                <button
+                  id="exportModified"
+                  class="w-full group glass-dark border border-slate-600/30 hover:border-indigo-400/50 rounded-lg p-3 transition-all duration-200 hover:glow-blue"
+                >
+                  <div class="flex items-center justify-center">
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-400 group-hover:text-indigo-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      ></path>
+                    </svg>
+                    <span
+                      class="font-semibold text-slate-200 group-hover:text-indigo-300"
+                      >Download ZWO</span
+                    >
+                  </div>
+                </button>
+                <button
+                  id="deployWorkout"
+                  class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg p-3 glow-purple transition-all duration-200"
+                >
+                  <div class="flex items-center justify-center">
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      ></path>
+                    </svg>
+                    <span class="font-semibold neon-text">Deploy to Zwift</span>
+                  </div>
+                </button>
+              </div>
+
+              <div class="border-t border-slate-600/30 pt-3">
+                <h4 class="text-sm font-medium text-slate-300 mb-2">
+                  Other Platforms
+                </h4>
+                <div class="space-y-2">
+                  <label for="ftpInput" class="block text-xs text-slate-400"
+                    >FTP (watts):</label
+                  >
+                  <input
+                    type="number"
+                    id="ftpInput"
+                    value="250"
+                    min="100"
+                    max="500"
+                    class="w-full px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      id="exportERG"
+                      class="px-2 py-1 text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded border border-emerald-500/30 transition-all duration-200"
+                    >
+                      ERG File
+                    </button>
+                    <button
+                      id="exportMRC"
+                      class="px-2 py-1 text-xs bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 rounded border border-orange-500/30 transition-all duration-200"
+                    >
+                      MRC File
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Workout Editor -->
-    <div id="workoutEditor" class="glass-dark rounded-2xl p-6 mb-8 border border-slate-600/30" style="display: none;">
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-cyan-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                    </svg>
-                    <h3 class="text-xl font-semibold text-slate-200 neon-text">Workout Builder</h3>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button id="newWorkoutBtn" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg glow-cyan transition-all duration-200">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        New Workout
-                    </button>
-                    <button id="toggleEditorBtn" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg glow-purple transition-all duration-200">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Edit Mode
-                    </button>
-                </div>
-            </div>
+    <div
+      id="workoutEditor"
+      class="glass-dark rounded-2xl p-6 mb-8 border border-slate-600/30"
+      style="display: none"
+    >
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <svg
+              class="w-6 h-6 text-cyan-400 mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+              ></path>
+            </svg>
+            <h3 class="text-xl font-semibold text-slate-200 neon-text">
+              Workout Builder
+            </h3>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              id="newWorkoutBtn"
+              class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg glow-cyan transition-all duration-200"
+            >
+              <svg
+                class="w-4 h-4 inline mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                ></path>
+              </svg>
+              New Workout
+            </button>
+            <button
+              id="toggleEditorBtn"
+              class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg glow-purple transition-all duration-200"
+            >
+              <svg
+                class="w-4 h-4 inline mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                ></path>
+              </svg>
+              Edit Mode
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Segment Details Panel -->
-    <div id="segmentDetails" class="glass-dark rounded-2xl border border-slate-600/30 overflow-hidden mb-8" style="display: none;">
-        <div class="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4 text-white flex items-center justify-between">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"></path>
-                </svg>
-                <h3 class="text-lg font-semibold neon-text">Workout Segments</h3>
-            </div>
-            <button id="toggleSegments" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200">−</button>
+    <div
+      id="segmentDetails"
+      class="glass-dark rounded-2xl border border-slate-600/30 overflow-hidden mb-8"
+      style="display: none"
+    >
+      <div
+        class="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4 text-white flex items-center justify-between"
+      >
+        <div class="flex items-center">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"
+            ></path>
+          </svg>
+          <h3 class="text-lg font-semibold neon-text">Workout Segments</h3>
         </div>
-        <div class="p-6">
-            <div id="segmentList" class="space-y-3"></div>
-        </div>
+        <button
+          id="toggleSegments"
+          class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200"
+        >
+          −
+        </button>
+      </div>
+      <div class="p-6">
+        <div id="segmentList" class="space-y-3"></div>
+      </div>
     </div>
 
     <!-- Power Info Tooltip -->
-    <div id="hoverPowerBox" class="fixed top-4 right-4 glass-dark border border-slate-600/30 rounded-lg px-3 py-2 text-sm font-medium z-50" style="display:none;">
-        <div class="text-slate-200"></div>
+    <div
+      id="hoverPowerBox"
+      class="fixed top-4 right-4 glass-dark border border-slate-600/30 rounded-lg px-3 py-2 text-sm font-medium z-50"
+      style="display: none"
+    >
+      <div class="text-slate-200"></div>
     </div>
-    
+
     <!-- Segment Edit Modal -->
-    <div id="segmentEditBox" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" style="display:none;">
-        <div class="glass-dark p-6 max-w-md w-full mx-4 border border-slate-600/30 rounded-2xl"></div>
+    <div
+      id="segmentEditBox"
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
+      style="display: none"
+    >
+      <div
+        class="glass-dark p-6 max-w-md w-full mx-4 border border-slate-600/30 rounded-2xl"
+      ></div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 glass-dark border border-slate-600/30 rounded-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50 glow-cyan">
-        <div class="flex items-center space-x-2 text-slate-200">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="font-medium"></span>
-        </div>
+    <div
+      id="toastNotification"
+      class="fixed bottom-8 left-1/2 transform -translate-x-1/2 glass-dark border border-slate-600/30 rounded-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50 glow-cyan"
+    >
+      <div class="flex items-center space-x-2 text-slate-200">
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        <span class="font-medium"></span>
+      </div>
     </div>
 
     <script type="module" src="themes.js"></script>
@@ -499,124 +1023,127 @@
     <script type="module" src="comparison.js"></script>
     <script type="module" src="editor.js"></script>
     <script type="module" src="script.js"></script>
-    
+
     <script>
-        // Instructions panel toggle functionality
-        function toggleInstructions() {
-            const content = document.getElementById('instructionsContent');
-            const toggle = document.getElementById('instructionsToggle');
-            const isOpen = content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
-            
-            if (isOpen) {
-                content.style.maxHeight = '0px';
-                toggle.style.transform = 'rotate(0deg)';
-            } else {
-                content.style.maxHeight = content.scrollHeight + 'px';
-                toggle.style.transform = 'rotate(180deg)';
-            }
+      // Instructions panel toggle functionality
+      function toggleInstructions() {
+        const content = document.getElementById('instructionsContent');
+        const toggle = document.getElementById('instructionsToggle');
+        const isOpen =
+          content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
+
+        if (isOpen) {
+          content.style.maxHeight = '0px';
+          toggle.style.transform = 'rotate(0deg)';
+        } else {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          toggle.style.transform = 'rotate(180deg)';
         }
-        
-        // Enhanced workout loading functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const body = document.body;
-            
-            // Show panels when workout is loaded and optimize layout
-            function showWorkoutPanels() {
-                // Add workout-loaded class to trigger layout optimization
-                body.classList.add('workout-loaded');
-                
-                // Show panels with stagger animation
-                const workoutVisualization = document.getElementById('workoutVisualization');
-                const workoutStats = document.getElementById('workoutStats');
-                const workoutInfo = document.getElementById('workoutInfo');
-                const controlsPanel = document.getElementById('controlsPanel');
-                
-                if (workoutVisualization) {
-                    workoutVisualization.style.display = 'block';
-                    setTimeout(() => workoutVisualization.style.opacity = '1', 100);
-                }
-                
-                if (workoutStats) {
-                    setTimeout(() => {
-                        workoutStats.style.display = 'grid';
-                        workoutStats.style.opacity = '1';
-                    }, 200);
-                }
-                
-                if (workoutInfo) {
-                    setTimeout(() => {
-                        workoutInfo.style.display = 'block';
-                        workoutInfo.style.opacity = '1';
-                    }, 300);
-                }
-                
-                if (controlsPanel) {
-                    setTimeout(() => {
-                        controlsPanel.style.display = 'block';
-                        controlsPanel.style.opacity = '1';
-                    }, 400);
-                }
-                
-                // Scroll to top to show workout visualization
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            
-            // Fullscreen chart functionality
-            const fullscreenBtn = document.getElementById('fullscreenChart');
-            if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', function() {
-                    const chartContainer = document.querySelector('.chart-container');
-                    if (chartContainer) {
-                        if (!document.fullscreenElement) {
-                            chartContainer.requestFullscreen().catch(err => {
-                                console.log('Fullscreen not supported:', err);
-                                const canvas = document.getElementById('workoutChart');
-                                if (canvas) {
-                                    canvas.style.height = '700px';
-                                }
-                            });
-                        } else {
-                            document.exitFullscreen();
-                            const canvas = document.getElementById('workoutChart');
-                            if (canvas) {
-                                canvas.style.height = '500px';
-                            }
-                        }
-                    }
+      }
+
+      // Enhanced workout loading functionality
+      document.addEventListener('DOMContentLoaded', function () {
+        const body = document.body;
+
+        // Show panels when workout is loaded and optimize layout
+        function showWorkoutPanels() {
+          // Add workout-loaded class to trigger layout optimization
+          body.classList.add('workout-loaded');
+
+          // Show panels with stagger animation
+          const workoutVisualization = document.getElementById(
+            'workoutVisualization'
+          );
+          const workoutStats = document.getElementById('workoutStats');
+          const workoutInfo = document.getElementById('workoutInfo');
+          const controlsPanel = document.getElementById('controlsPanel');
+
+          if (workoutVisualization) {
+            workoutVisualization.style.display = 'block';
+            setTimeout(() => (workoutVisualization.style.opacity = '1'), 100);
+          }
+
+          if (workoutStats) {
+            setTimeout(() => {
+              workoutStats.style.display = 'grid';
+              workoutStats.style.opacity = '1';
+            }, 200);
+          }
+
+          if (workoutInfo) {
+            setTimeout(() => {
+              workoutInfo.style.display = 'block';
+              workoutInfo.style.opacity = '1';
+            }, 300);
+          }
+
+          if (controlsPanel) {
+            setTimeout(() => {
+              controlsPanel.style.display = 'block';
+              controlsPanel.style.opacity = '1';
+            }, 400);
+          }
+
+          // Scroll to top to show workout visualization
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Fullscreen chart functionality
+        const fullscreenBtn = document.getElementById('fullscreenChart');
+        if (fullscreenBtn) {
+          fullscreenBtn.addEventListener('click', function () {
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+              if (!document.fullscreenElement) {
+                chartContainer.requestFullscreen().catch(err => {
+                  console.log('Fullscreen not supported:', err);
+                  const canvas = document.getElementById('workoutChart');
+                  if (canvas) {
+                    canvas.style.height = '700px';
+                  }
                 });
-            }
-            
-            // Enhanced chart responsiveness
-            const chartCanvas = document.getElementById('workoutChart');
-            if (chartCanvas) {
-                function adjustChartHeight() {
-                    const screenHeight = window.innerHeight;
-                    const minHeight = 400;
-                    const maxHeight = Math.min(700, screenHeight * 0.6);
-                    const currentHeight = Math.max(minHeight, maxHeight);
-                    chartCanvas.style.height = currentHeight + 'px';
+              } else {
+                document.exitFullscreen();
+                const canvas = document.getElementById('workoutChart');
+                if (canvas) {
+                  canvas.style.height = '500px';
                 }
-                
-                adjustChartHeight();
-                window.addEventListener('resize', adjustChartHeight);
+              }
             }
-            
-            // Hook into existing workout loading functionality
-            const originalFileInput = document.getElementById('fileInput');
-            const originalLoadSample = document.getElementById('loadSample');
-            
-            if (originalFileInput) {
-                originalFileInput.addEventListener('change', function() {
-                    setTimeout(showWorkoutPanels, 1000);
-                });
-            }
-            
-            if (originalLoadSample) {
-                originalLoadSample.addEventListener('click', function() {
-                    setTimeout(showWorkoutPanels, 1000);
-                });
-            }
-        });
+          });
+        }
+
+        // Enhanced chart responsiveness
+        const chartCanvas = document.getElementById('workoutChart');
+        if (chartCanvas) {
+          function adjustChartHeight() {
+            const screenHeight = window.innerHeight;
+            const minHeight = 400;
+            const maxHeight = Math.min(700, screenHeight * 0.6);
+            const currentHeight = Math.max(minHeight, maxHeight);
+            chartCanvas.style.height = currentHeight + 'px';
+          }
+
+          adjustChartHeight();
+          window.addEventListener('resize', adjustChartHeight);
+        }
+
+        // Hook into existing workout loading functionality
+        const originalFileInput = document.getElementById('fileInput');
+        const originalLoadSample = document.getElementById('loadSample');
+
+        if (originalFileInput) {
+          originalFileInput.addEventListener('change', function () {
+            setTimeout(showWorkoutPanels, 1000);
+          });
+        }
+
+        if (originalLoadSample) {
+          originalLoadSample.addEventListener('click', function () {
+            setTimeout(showWorkoutPanels, 1000);
+          });
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

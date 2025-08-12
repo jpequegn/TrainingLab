@@ -13,6 +13,9 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "dev": "python3 server.py",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:staged": "prettier --write $(git diff --cached --name-only --diff-filter=ACMR)",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
@@ -21,8 +24,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "lint:ts": "tsc --noEmit",
     "lint:py": "ruff check .",
+    "lint:all": "npm run lint && npm run lint:ts && npm run format:check",
     "audit": "npm audit --audit-level=moderate"
   },
   "repository": {
@@ -42,8 +47,11 @@
     "@types/node": "^24.2.1",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.2.0",
     "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"

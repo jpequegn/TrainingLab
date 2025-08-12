@@ -19,7 +19,12 @@
         "host": "localhost",
         "startup_delay": 5
       },
-      "capabilities": ["browser_automation", "screenshot", "testing", "web_scraping"],
+      "capabilities": [
+        "browser_automation",
+        "screenshot",
+        "testing",
+        "web_scraping"
+      ],
       "priority": 7,
       "tags": ["testing", "automation", "browser"]
     },
@@ -42,7 +47,13 @@
         "port": 8001,
         "startup_delay": 3
       },
-      "capabilities": ["workout_parsing", "interval_creation", "tss_calculation", "power_zones", "complex_intervals"],
+      "capabilities": [
+        "workout_parsing",
+        "interval_creation",
+        "tss_calculation",
+        "power_zones",
+        "complex_intervals"
+      ],
       "environment": {
         "WORKOUT_SERVER_PORT": "8001",
         "LOG_LEVEL": "INFO"

@@ -78,9 +78,9 @@ export interface ExportFormat {
   fit?: string;
 }
 
-export type SegmentType = 
+export type SegmentType =
   | 'Warmup'
-  | 'Cooldown' 
+  | 'Cooldown'
   | 'SteadyState'
   | 'IntervalsT'
   | 'Ramp'

@@ -24,7 +24,14 @@ export interface Notification {
 export interface FormField {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'email' | 'file' | 'select' | 'textarea' | 'checkbox';
+  type:
+    | 'text'
+    | 'number'
+    | 'email'
+    | 'file'
+    | 'select'
+    | 'textarea'
+    | 'checkbox';
   required?: boolean;
   placeholder?: string;
   value?: any;
@@ -122,7 +129,13 @@ export interface ProgressBarOptions {
 }
 
 export interface ToastOptions extends Omit<Notification, 'id' | 'timestamp'> {
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
+  position?:
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'top-center'
+    | 'bottom-center';
   autoClose?: boolean;
   showProgress?: boolean;
 }
