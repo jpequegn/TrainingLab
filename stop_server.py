@@ -4,7 +4,6 @@ Simple script to forcefully stop the workout server
 """
 import subprocess
 import sys
-import time
 
 def stop_server():
     """Find and kill all server.py processes"""
@@ -59,7 +58,7 @@ def stop_server():
                     'delete'
                 ], capture_output=True)
                 print("[CLEANUP] Cleaned up MCP server processes")
-            except:
+            except Exception:
                 pass
         
         return True

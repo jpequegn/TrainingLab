@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WkoLibrary Configuration Schema",
+  "type": "object",
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production"]
+    },
+    "debug": {
+      "type": "boolean"
+    },
+    "server": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "default": "0.0.0.0"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8000
+        },
+        "cors_origins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "request_timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 30
+        },
+        "max_upload_size_mb": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        }
+      },
+      "required": ["host", "port"],
+      "additionalProperties": false
+    },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        },
+        "format": {
+          "type": "string",
+          "enum": ["simple", "detailed", "json"]
+        },
+        "file_logging": {
+          "type": "boolean"
+        },
+        "console_logging": {
+          "type": "boolean"
+        },
+        "log_file": {
+          "type": "string"
+        }
+      },
+      "required": ["level"],
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "rate_limit_per_minute": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cors_strict": {
+          "type": "boolean"
+        },
+        "csrf_protection": {
+          "type": "boolean"
+        },
+        "secure_cookies": {
+          "type": "boolean"
+        },
+        "force_https": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "enable_caching": {
+          "type": "boolean"
+        },
+        "cache_ttl": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "enable_compression": {
+          "type": "boolean"
+        },
+        "worker_processes": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "string",
+              "enum": ["auto"]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "enable_ai_features": {
+          "type": "boolean"
+        },
+        "enable_experimental_ui": {
+          "type": "boolean"
+        },
+        "enable_performance_monitoring": {
+          "type": "boolean"
+        },
+        "enable_hot_reload": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "health_check_interval": {
+          "type": "integer",
+          "minimum": 5
+        },
+        "max_retry_attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "auto_restart": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "enable_metrics": {
+          "type": "boolean"
+        },
+        "metrics_endpoint": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "health_check_endpoint": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "detailed_errors": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["environment", "server"],
+  "additionalProperties": false
+}
