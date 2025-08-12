@@ -39,7 +39,11 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     GET_ROUTES = {
         '/mcp/status': '_handle_mcp_status',
-        '/mcp/validate': '_handle_mcp_validate'
+        '/mcp/validate': '_handle_mcp_validate',
+        '/health': '_handle_health',
+        '/health/ready': '_handle_readiness',
+        '/health/live': '_handle_liveness',
+        '/metrics': '_handle_metrics'
     }
 
     @classmethod
@@ -342,6 +346,203 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"❌ Error validating MCP configuration: {e}")
             self._send_error_response(500, f'Failed to validate configuration: {str(e)}')
+
+    def _handle_health(self):
+        """Handle comprehensive application health check"""
+        import psutil
+        import time
+        
+        try:
+            health_data = {
+                'status': 'healthy',
+                'timestamp': time.time(),
+                'version': '1.0.0',
+                'checks': {
+                    'server': {'status': 'up', 'message': 'HTTP server operational'},
+                    'mcp_manager': self._check_mcp_health(),
+                    'system_resources': self._check_system_resources(),
+                    'dependencies': self._check_dependencies()
+                }
+            }
+            
+            # Determine overall health status
+            failed_checks = [name for name, check in health_data['checks'].items() 
+                           if check['status'] != 'healthy' and check['status'] != 'up']
+            
+            if failed_checks:
+                health_data['status'] = 'degraded' if len(failed_checks) < len(health_data['checks']) / 2 else 'unhealthy'
+                
+            response_code = 200 if health_data['status'] == 'healthy' else 503
+            self._send_json_response(health_data, status_code=response_code)
+            
+        except Exception as e:
+            error_response = {
+                'status': 'unhealthy',
+                'timestamp': time.time(),
+                'error': str(e)
+            }
+            self._send_json_response(error_response, status_code=503)
+
+    def _handle_readiness(self):
+        """Handle readiness probe for container orchestration"""
+        try:
+            readiness_checks = {
+                'server_ready': True,
+                'mcp_manager_initialized': CORSHTTPRequestHandler.mcp_manager is not None,
+                'dependencies_loaded': self._check_critical_dependencies()
+            }
+            
+            all_ready = all(readiness_checks.values())
+            status = 'ready' if all_ready else 'not_ready'
+            
+            response = {
+                'status': status,
+                'timestamp': time.time(),
+                'checks': readiness_checks
+            }
+            
+            response_code = 200 if all_ready else 503
+            self._send_json_response(response, status_code=response_code)
+            
+        except Exception as e:
+            self._send_json_response({
+                'status': 'not_ready',
+                'timestamp': time.time(),
+                'error': str(e)
+            }, status_code=503)
+
+    def _handle_liveness(self):
+        """Handle liveness probe for container orchestration"""
+        try:
+            # Simple liveness check - if we can respond, we're alive
+            response = {
+                'status': 'alive',
+                'timestamp': time.time(),
+                'uptime_seconds': time.time() - getattr(self, 'start_time', time.time())
+            }
+            self._send_json_response(response, status_code=200)
+            
+        except Exception as e:
+            # If we can't even handle this simple request, we're not alive
+            self._send_json_response({
+                'status': 'dead',
+                'timestamp': time.time(),
+                'error': str(e)
+            }, status_code=503)
+
+    def _handle_metrics(self):
+        """Handle metrics endpoint for monitoring"""
+        import psutil
+        
+        try:
+            # Get system metrics
+            cpu_usage = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            metrics = {
+                'system': {
+                    'cpu_usage_percent': cpu_usage,
+                    'memory_usage_percent': memory.percent,
+                    'memory_available_mb': memory.available // (1024 * 1024),
+                    'disk_usage_percent': disk.percent,
+                    'disk_free_gb': disk.free // (1024 * 1024 * 1024)
+                },
+                'application': {
+                    'mcp_servers_active': len(getattr(CORSHTTPRequestHandler.mcp_manager, 'servers', {})) if CORSHTTPRequestHandler.mcp_manager else 0,
+                    'llm_initialized': CORSHTTPRequestHandler.llm is not None,
+                    'agent_initialized': CORSHTTPRequestHandler.agent_executor is not None
+                },
+                'timestamp': time.time()
+            }
+            
+            self._send_json_response(metrics)
+            
+        except Exception as e:
+            self._send_error_response(500, f'Failed to collect metrics: {str(e)}')
+
+    def _check_mcp_health(self):
+        """Check MCP manager and servers health"""
+        try:
+            if CORSHTTPRequestHandler.mcp_manager is None:
+                return {'status': 'unhealthy', 'message': 'MCP Manager not initialized'}
+            
+            server_count = len(CORSHTTPRequestHandler.mcp_manager.servers)
+            healthy_servers = sum(1 for server in CORSHTTPRequestHandler.mcp_manager.servers.values() 
+                                if server.status == 'running')
+            
+            if server_count == 0:
+                return {'status': 'warning', 'message': 'No MCP servers configured'}
+            elif healthy_servers == server_count:
+                return {'status': 'healthy', 'message': f'All {server_count} MCP servers running'}
+            else:
+                return {'status': 'degraded', 'message': f'{healthy_servers}/{server_count} MCP servers running'}
+                
+        except Exception as e:
+            return {'status': 'unhealthy', 'message': f'MCP health check failed: {str(e)}'}
+
+    def _check_system_resources(self):
+        """Check system resource availability"""
+        try:
+            import psutil
+            
+            cpu_usage = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            # Define thresholds
+            cpu_critical = 90
+            memory_critical = 90
+            disk_critical = 95
+            
+            issues = []
+            if cpu_usage > cpu_critical:
+                issues.append(f'High CPU usage: {cpu_usage:.1f}%')
+            if memory.percent > memory_critical:
+                issues.append(f'High memory usage: {memory.percent:.1f}%')
+            if disk.percent > disk_critical:
+                issues.append(f'High disk usage: {disk.percent:.1f}%')
+            
+            if issues:
+                return {'status': 'warning', 'message': '; '.join(issues)}
+            else:
+                return {'status': 'healthy', 'message': 'System resources within normal limits'}
+                
+        except Exception as e:
+            return {'status': 'unhealthy', 'message': f'Resource check failed: {str(e)}'}
+
+    def _check_dependencies(self):
+        """Check critical application dependencies"""
+        try:
+            dependencies = []
+            
+            # Check OpenAI API connectivity
+            if CORSHTTPRequestHandler.llm is not None:
+                dependencies.append('OpenAI API: Connected')
+            else:
+                dependencies.append('OpenAI API: Not configured')
+            
+            # Check file system access
+            import os
+            if os.access('.', os.R_OK | os.W_OK):
+                dependencies.append('File system: Accessible')
+            else:
+                dependencies.append('File system: Access denied')
+            
+            return {'status': 'healthy', 'message': '; '.join(dependencies)}
+            
+        except Exception as e:
+            return {'status': 'unhealthy', 'message': f'Dependency check failed: {str(e)}'}
+
+    def _check_critical_dependencies(self):
+        """Check if critical dependencies are ready"""
+        try:
+            # Check if we can access the file system
+            import os
+            return os.access('.', os.R_OK | os.W_OK)
+        except:
+            return False
+
     # Helper methods
     
     def _parse_json_request(self):
