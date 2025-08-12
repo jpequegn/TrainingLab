@@ -1,0 +1,48 @@
+# Simplified Docker Compose for Basic Local Development
+# Lightweight setup with only essential services
+
+version: '3.8'
+
+services:
+  # Main application service
+  wkolibrary:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app-build  # Use development build stage
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      # Mount source code for live development
+      - .:/app
+      - /app/node_modules
+      - /app/__pycache__
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - dev-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    restart: unless-stopped
+    networks:
+      - dev-network
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+
+volumes:
+  redis-dev-data:
+    driver: local
+
+networks:
+  dev-network:
+    driver: bridge
