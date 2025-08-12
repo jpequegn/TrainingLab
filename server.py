@@ -7,7 +7,6 @@ import http.server
 import socketserver
 import socket
 import os
-import sys
 import json
 import signal
 import threading
@@ -349,7 +348,6 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def _handle_health(self):
         """Handle comprehensive application health check"""
-        import psutil
         import time
         
         try:
@@ -540,7 +538,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             # Check if we can access the file system
             import os
             return os.access('.', os.R_OK | os.W_OK)
-        except:
+        except Exception:
             return False
 
     # Helper methods
