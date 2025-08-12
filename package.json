@@ -31,7 +31,11 @@
     "lint:ts": "tsc --noEmit",
     "lint:py": "ruff check .",
     "lint:all": "npm run lint && npm run lint:ts && npm run format:check",
-    "audit": "npm audit --audit-level=moderate"
+    "audit": "npm audit --audit-level=moderate",
+    "prepare": "husky",
+    "hooks:install": "husky",
+    "hooks:skip": "git commit --no-verify",
+    "hooks:test": "sh .husky/pre-commit"
   },
   "repository": {
     "type": "git",
@@ -55,7 +59,9 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.2.0",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "lint-staged": "^16.1.5",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
