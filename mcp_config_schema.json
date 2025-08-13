@@ -23,7 +23,14 @@
             },
             "category": {
               "type": "string",
-              "enum": ["workout", "testing", "automation", "data", "ai", "custom"],
+              "enum": [
+                "workout",
+                "testing",
+                "automation",
+                "data",
+                "ai",
+                "custom"
+              ],
               "description": "Server category for organization"
             },
             "command": {

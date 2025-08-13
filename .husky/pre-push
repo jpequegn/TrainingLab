@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push quality gates..."
+
+# Check if we're pushing to main branch
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" = "main" ]; then
+    echo "⚠️  Pushing to main branch - running full test suite..."
+    
+    # Run all quality checks
+    echo "🔍 Running comprehensive linting..."
+    npm run lint:all
+    
+    # Run full test suite
+    echo "🧪 Running full test suite..."
+    npm run test:run
+    
+    # Run E2E tests
+    echo "🎭 Running E2E tests..."
+    npm run test:e2e
+    
+    echo "✅ All pre-push checks passed for main branch!"
+else
+    echo "📋 Running standard pre-push checks for feature branch..."
+    
+    # Run linting
+    npm run lint
+    
+    # Run unit tests
+    npm run test:run
+    
+    echo "✅ Pre-push checks passed for feature branch!"
+fi

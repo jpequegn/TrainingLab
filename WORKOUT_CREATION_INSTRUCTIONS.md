@@ -9,60 +9,68 @@ The workout generator processes natural language descriptions and converts them 
 ## Input Processing
 
 ### Duration Extraction
+
 Parse time expressions in various formats:
+
 - **Minutes**: "45 minutes", "30 min", "60 mins"
-- **Hours**: "1 hour", "2 hrs", "1.5 hours" 
+- **Hours**: "1 hour", "2 hrs", "1.5 hours"
 - **Mixed**: "1 hour 30 minutes", "1h 30m", "90 min"
 
 **Default**: If no duration specified, use 60 minutes.
 
 ### Workout Type Classification
+
 Identify the primary workout type from keywords:
 
-| Type | Keywords | Default Structure |
-|------|----------|-------------------|
-| **endurance** | endurance, steady, aerobic, base | 15% warmup, 70% steady, 15% cooldown |
-| **interval** | interval, repeat, x, sets | 20% warmup, 60% intervals, 20% cooldown |
-| **recovery** | recovery, easy, active recovery | 10% warmup, 80% easy, 10% cooldown |
-| **tempo** | tempo, sweetspot, threshold- | 25% warmup, 60% tempo, 15% cooldown |
-| **threshold** | threshold, FTP, lactate | 20% warmup, 60% threshold, 20% cooldown |
-| **vo2max** | vo2max, vo2, max, anaerobic | 20% warmup, 60% high intensity, 20% cooldown |
-| **sprint** | sprint, neuromuscular, power | 25% warmup, 50% sprints, 25% cooldown |
+| Type          | Keywords                         | Default Structure                            |
+| ------------- | -------------------------------- | -------------------------------------------- |
+| **endurance** | endurance, steady, aerobic, base | 15% warmup, 70% steady, 15% cooldown         |
+| **interval**  | interval, repeat, x, sets        | 20% warmup, 60% intervals, 20% cooldown      |
+| **recovery**  | recovery, easy, active recovery  | 10% warmup, 80% easy, 10% cooldown           |
+| **tempo**     | tempo, sweetspot, threshold-     | 25% warmup, 60% tempo, 15% cooldown          |
+| **threshold** | threshold, FTP, lactate          | 20% warmup, 60% threshold, 20% cooldown      |
+| **vo2max**    | vo2max, vo2, max, anaerobic      | 20% warmup, 60% high intensity, 20% cooldown |
+| **sprint**    | sprint, neuromuscular, power     | 25% warmup, 50% sprints, 25% cooldown        |
 
 ### Intensity Mapping
+
 Convert intensity keywords to FTP percentages:
 
 ```javascript
 const intensityMap = {
-    'recovery': { min: 35, max: 55 },        // Zone 1
-    'easy': { min: 56, max: 75 },            // Zone 2
-    'endurance': { min: 56, max: 75 },       // Zone 2
-    'tempo': { min: 76, max: 90 },           // Zone 3
-    'sweetspot': { min: 84, max: 97 },       // Zone 3-4
-    'threshold': { min: 91, max: 105 },      // Zone 4
-    'vo2max': { min: 106, max: 120 },        // Zone 5
-    'vo2': { min: 106, max: 120 },           // Zone 5
-    'anaerobic': { min: 121, max: 150 },     // Zone 6
-    'neuromuscular': { min: 151, max: 300 }, // Zone 7
-    'sprint': { min: 151, max: 300 }         // Zone 7
+  recovery: { min: 35, max: 55 }, // Zone 1
+  easy: { min: 56, max: 75 }, // Zone 2
+  endurance: { min: 56, max: 75 }, // Zone 2
+  tempo: { min: 76, max: 90 }, // Zone 3
+  sweetspot: { min: 84, max: 97 }, // Zone 3-4
+  threshold: { min: 91, max: 105 }, // Zone 4
+  vo2max: { min: 106, max: 120 }, // Zone 5
+  vo2: { min: 106, max: 120 }, // Zone 5
+  anaerobic: { min: 121, max: 150 }, // Zone 6
+  neuromuscular: { min: 151, max: 300 }, // Zone 7
+  sprint: { min: 151, max: 300 }, // Zone 7
 };
 ```
 
 ### Interval Pattern Recognition
+
 Extract structured interval information from patterns:
 
 **Simple Patterns:**
+
 - "4x5 min" → 4 sets of 5 minutes
-- "6 x 30 seconds" → 6 sets of 30 seconds  
+- "6 x 30 seconds" → 6 sets of 30 seconds
 - "5x(3min on, 1min off)" → 5 sets with 3min work, 1min rest
 - "8x30sec sprints" → 8 sets of 30-second sprints
 
 **Complex Nested Patterns:**
+
 - "2 x 14' (4') as first 2' @ 105% then 12' at 100%" → Compound intervals with multiple power zones
 - "3 x (5' @ 95%, 3' @ 102%, 2' @ 110%) with 5' recovery" → Multi-zone intervals
 - "4 x 8' as 2' @ 95%, 4' @ 100%, 2' @ 105%" → Progressive power intervals
 
 **Pattern Parsing Rules:**
+
 1. **Main Structure**: "N x Duration (Recovery)" defines the overall interval count and recovery
 2. **Sub-Structure**: "as X @ Y% then Z @ W%" defines power progression within each interval
 3. **Recovery**: Time in parentheses "(4')" is recovery between main intervals
@@ -70,11 +78,12 @@ Extract structured interval information from patterns:
 5. **Remainder**: "Remainder at Zone 2" fills remaining workout time with endurance pace
 
 **Complex Parsing Examples:**
+
 ```
 "2 x 14' (4') as first 2' @ 105% then 12' at 100% @ FTP"
 ↓
 - 2 main intervals of 14 minutes each
-- 4 minutes recovery between intervals  
+- 4 minutes recovery between intervals
 - Each 14-minute interval: 2 min @ 105% + 12 min @ 100%
 - Total main work: 2×14 = 28 minutes
 - Total recovery: 1×4 = 4 minutes (only between intervals)
@@ -82,13 +91,15 @@ Extract structured interval information from patterns:
 ```
 
 **Default Intervals by Type:**
+
 - **Threshold**: 4x8 minutes at 95-105% FTP, 50% recovery between
-- **VO2max**: 5x5 minutes at 110-120% FTP, 50% recovery between  
+- **VO2max**: 5x5 minutes at 110-120% FTP, 50% recovery between
 - **Sprints**: 8x30 seconds at 200%+ FTP, 90 seconds recovery between
 
 ## Workout Structure Generation
 
 ### Warmup Creation
+
 ```javascript
 // Duration: 10-15% of total workout (max 15 minutes)
 {
@@ -103,9 +114,10 @@ Extract structured interval information from patterns:
 ### Main Workout Segments
 
 #### Steady State
+
 ```javascript
 {
-    type: 'SteadyState', 
+    type: 'SteadyState',
     duration: calculated_seconds,
     power: intensity_percentage / 100,  // e.g., 0.75 for 75% FTP
     startTime: calculated_start_time
@@ -113,6 +125,7 @@ Extract structured interval information from patterns:
 ```
 
 #### Intervals
+
 ```javascript
 // Work interval
 {
@@ -122,7 +135,7 @@ Extract structured interval information from patterns:
     startTime: calculated_start_time
 }
 
-// Recovery interval  
+// Recovery interval
 {
     type: 'Interval (Off)',
     duration: recovery_duration_seconds,
@@ -132,13 +145,14 @@ Extract structured interval information from patterns:
 ```
 
 ### Cooldown Creation
+
 ```javascript
 // Duration: 10-15% of total workout (max 10 minutes)
 {
     type: 'Cooldown',
     duration: calculated_seconds,
     powerLow: 0.7,    // 70% FTP
-    powerHigh: 0.5,   // 50% FTP  
+    powerHigh: 0.5,   // 50% FTP
     startTime: calculated_start_time
 }
 ```
@@ -146,12 +160,13 @@ Extract structured interval information from patterns:
 ## Common Workout Examples
 
 ### Example 1: "45 minute endurance ride"
+
 ```javascript
 {
     name: "Custom Endurance Workout",
     description: "45 minute endurance ride",
     author: "Workout Creator",
-    sportType: "bike", 
+    sportType: "bike",
     totalDuration: 2700, // 45 * 60
     segments: [
         {
@@ -163,12 +178,12 @@ Extract structured interval information from patterns:
         },
         {
             type: 'SteadyState',
-            duration: 1500,    // 25 minutes  
+            duration: 1500,    // 25 minutes
             power: 0.68,       // 68% FTP (endurance)
             startTime: 600
         },
         {
-            type: 'Cooldown', 
+            type: 'Cooldown',
             duration: 600,     // 10 minutes
             powerLow: 0.7,
             powerHigh: 0.5,
@@ -179,10 +194,11 @@ Extract structured interval information from patterns:
 ```
 
 ### Example 2: "4x5 minute threshold intervals"
+
 ```javascript
 {
     name: "Custom Threshold Intervals",
-    description: "4x5 minute threshold intervals", 
+    description: "4x5 minute threshold intervals",
     author: "Workout Creator",
     sportType: "bike",
     totalDuration: 3600, // Calculated total
@@ -191,7 +207,7 @@ Extract structured interval information from patterns:
         {
             type: 'Warmup',
             duration: 900,
-            powerLow: 0.5, 
+            powerLow: 0.5,
             powerHigh: 0.7,
             startTime: 0
         },
@@ -202,9 +218,9 @@ Extract structured interval information from patterns:
             power: 1.0,       // 100% FTP
             startTime: 900
         },
-        // Interval 1 (Off) 
+        // Interval 1 (Off)
         {
-            type: 'Interval (Off)', 
+            type: 'Interval (Off)',
             duration: 150,    // 2.5 minutes recovery
             power: 0.6,       // 60% FTP
             startTime: 1200
@@ -229,7 +245,7 @@ Extract structured interval information from patterns:
             type: 'Cooldown',
             duration: 600,
             powerLow: 0.7,
-            powerHigh: 0.5, 
+            powerHigh: 0.5,
             startTime: 2990  // Calculated
         }
     ]
@@ -237,11 +253,12 @@ Extract structured interval information from patterns:
 ```
 
 ### Example 3: Complex Nested Intervals - "2 x 14' (4') as first 2' @ 105% then 12' at 100% FTP"
+
 ```javascript
 {
     name: "Custom Complex Threshold Intervals",
     description: "2 x 14' (4') as first 2' @ 105% then 12' at 100% FTP. Remainder at Zone 2",
-    author: "Workout Creator", 
+    author: "Workout Creator",
     sportType: "bike",
     totalDuration: 3600, // 60 minutes total
     segments: [
@@ -304,40 +321,43 @@ Extract structured interval information from patterns:
 Each segment must include `powerData` array for chart visualization:
 
 ### Steady State Power Data
+
 ```javascript
-const generateSteadyData = (segment) => {
-    const points = Math.max(2, Math.floor(segment.duration / 10));
-    const data = [];
-    
-    for (let i = 0; i < points; i++) {
-        const time = segment.startTime + (i * segment.duration / (points - 1));
-        data.push({
-            x: time,
-            y: segment.power * 100  // Convert to percentage for display
-        });
-    }
-    
-    return data;
+const generateSteadyData = segment => {
+  const points = Math.max(2, Math.floor(segment.duration / 10));
+  const data = [];
+
+  for (let i = 0; i < points; i++) {
+    const time = segment.startTime + (i * segment.duration) / (points - 1);
+    data.push({
+      x: time,
+      y: segment.power * 100, // Convert to percentage for display
+    });
+  }
+
+  return data;
 };
 ```
 
 ### Ramp Power Data (Warmup/Cooldown)
+
 ```javascript
-const generateRampData = (segment) => {
-    const points = Math.max(2, Math.floor(segment.duration / 10));
-    const data = [];
-    
-    for (let i = 0; i < points; i++) {
-        const progress = i / (points - 1);
-        const time = segment.startTime + (i * segment.duration / (points - 1));
-        const power = segment.powerLow + (segment.powerHigh - segment.powerLow) * progress;
-        data.push({
-            x: time,
-            y: power * 100
-        });
-    }
-    
-    return data;
+const generateRampData = segment => {
+  const points = Math.max(2, Math.floor(segment.duration / 10));
+  const data = [];
+
+  for (let i = 0; i < points; i++) {
+    const progress = i / (points - 1);
+    const time = segment.startTime + (i * segment.duration) / (points - 1);
+    const power =
+      segment.powerLow + (segment.powerHigh - segment.powerLow) * progress;
+    data.push({
+      x: time,
+      y: power * 100,
+    });
+  }
+
+  return data;
 };
 ```
 
@@ -346,47 +366,53 @@ const generateRampData = (segment) => {
 Calculate Training Stress Score using normalized power:
 
 ```javascript
-const calculateTSS = (segments) => {
-    let totalWeightedPower = 0;
-    let totalDuration = 0;
+const calculateTSS = segments => {
+  let totalWeightedPower = 0;
+  let totalDuration = 0;
 
-    segments.flat().forEach(segment => {
-        if (segment.duration > 0) {
-            let segmentPower;
-            
-            if (segment.power !== undefined) {
-                segmentPower = segment.power;
-            } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
-                segmentPower = (segment.powerLow + segment.powerHigh) / 2;
-            } else {
-                segmentPower = 0.6; // Default
-            }
+  segments.flat().forEach(segment => {
+    if (segment.duration > 0) {
+      let segmentPower;
 
-            const weightedPower = Math.pow(segmentPower, 4) * segment.duration;
-            totalWeightedPower += weightedPower;
-            totalDuration += segment.duration;
-        }
-    });
+      if (segment.power !== undefined) {
+        segmentPower = segment.power;
+      } else if (
+        segment.powerLow !== undefined &&
+        segment.powerHigh !== undefined
+      ) {
+        segmentPower = (segment.powerLow + segment.powerHigh) / 2;
+      } else {
+        segmentPower = 0.6; // Default
+      }
 
-    if (totalDuration === 0) return 0;
+      const weightedPower = Math.pow(segmentPower, 4) * segment.duration;
+      totalWeightedPower += weightedPower;
+      totalDuration += segment.duration;
+    }
+  });
 
-    const normalizedPower = Math.pow(totalWeightedPower / totalDuration, 0.25);
-    const intensityFactor = normalizedPower / 1.0;
-    const tss = (totalDuration * normalizedPower * intensityFactor) / 3600 * 100;
-    
-    return Math.round(tss);
+  if (totalDuration === 0) return 0;
+
+  const normalizedPower = Math.pow(totalWeightedPower / totalDuration, 0.25);
+  const intensityFactor = normalizedPower / 1.0;
+  const tss =
+    ((totalDuration * normalizedPower * intensityFactor) / 3600) * 100;
+
+  return Math.round(tss);
 };
 ```
 
 ## Error Handling
 
 ### Invalid Inputs
+
 - **No duration found**: Default to 60 minutes
 - **Unrecognized workout type**: Default to endurance
 - **Invalid intensity**: Use moderate endurance (65% FTP)
 - **Malformed intervals**: Create simple steady-state workout
 
 ### Validation Rules
+
 - **Minimum duration**: 15 minutes
 - **Maximum duration**: 6 hours (21600 seconds)
 - **Power range**: 30-300% FTP
@@ -396,6 +422,7 @@ const calculateTSS = (segments) => {
 ## Response Format
 
 Always return a complete workout object with:
+
 1. **Metadata**: name, description, author, sportType
 2. **Duration**: totalDuration in seconds
 3. **Segments**: Array of workout segments with proper timing
@@ -404,13 +431,13 @@ Always return a complete workout object with:
 
 ## Natural Language Examples
 
-| Input | Interpretation | Key Elements |
-|-------|---------------|--------------|
-| "Easy 30 minute recovery ride" | Recovery workout, 30 min, 40-55% FTP | Short warmup, long easy segment |
-| "Build me a VO2max session" | VO2max intervals, 60 min default, 110-120% FTP | 5x5min intervals typical |
-| "Sprint workout with 8x30 seconds" | Sprint intervals, 8 sets, 30s each, 200%+ FTP | Long recovery between sprints |
-| "1 hour threshold at 95%" | Threshold workout, 60 min, 95% FTP | Mostly steady-state at threshold |
-| "Pyramid intervals 1-2-3-2-1 minutes" | Custom intervals, increasing/decreasing | Progressive structure |
+| Input                                 | Interpretation                                 | Key Elements                     |
+| ------------------------------------- | ---------------------------------------------- | -------------------------------- |
+| "Easy 30 minute recovery ride"        | Recovery workout, 30 min, 40-55% FTP           | Short warmup, long easy segment  |
+| "Build me a VO2max session"           | VO2max intervals, 60 min default, 110-120% FTP | 5x5min intervals typical         |
+| "Sprint workout with 8x30 seconds"    | Sprint intervals, 8 sets, 30s each, 200%+ FTP  | Long recovery between sprints    |
+| "1 hour threshold at 95%"             | Threshold workout, 60 min, 95% FTP             | Mostly steady-state at threshold |
+| "Pyramid intervals 1-2-3-2-1 minutes" | Custom intervals, increasing/decreasing        | Progressive structure            |
 
 ## Best Practices
 

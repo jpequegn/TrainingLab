@@ -59,7 +59,8 @@
       "Bash(npm run:*)",
       "Bash(start /b python server.py)",
       "Bash(start /b python -m http.server 3000)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,25 @@
+{
+  "exec": "python3 server.py",
+  "watch": [
+    "server.py",
+    "mcp_manager.py",
+    "mcp_tools.py",
+    "mcp_validator.py",
+    "config/"
+  ],
+  "ext": "py,json",
+  "env": {
+    "NODE_ENV": "development",
+    "DEVELOPMENT": "true"
+  },
+  "delay": 1000,
+  "verbose": true,
+  "ignore": [
+    "node_modules/",
+    "dist/",
+    "*.log",
+    "__pycache__/",
+    "*.pyc"
+  ],
+  "legacyWatch": true
+}

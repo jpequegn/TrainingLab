@@ -1,222 +1,303 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MCP Server Manager - WkoLibrary</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
-        .status-running { @apply bg-green-100 text-green-800; }
-        .status-stopped { @apply bg-gray-100 text-gray-800; }
-        .status-starting { @apply bg-yellow-100 text-yellow-800; }
-        .status-unhealthy { @apply bg-red-100 text-red-800; }
-        .status-failed { @apply bg-red-100 text-red-800; }
-        
-        .card-hover { @apply transition-all duration-200 hover:shadow-lg; }
-        .status-indicator { width: 8px; height: 8px; }
-        
-        .animate-pulse-fast {
-            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        .server-category-workout { @apply border-l-4 border-blue-500; }
-        .server-category-testing { @apply border-l-4 border-purple-500; }
-        .server-category-automation { @apply border-l-4 border-green-500; }
-        .server-category-data { @apply border-l-4 border-yellow-500; }
-        .server-category-ai { @apply border-l-4 border-pink-500; }
-        .server-category-custom { @apply border-l-4 border-gray-500; }
+      .status-running {
+        @apply bg-green-100 text-green-800;
+      }
+      .status-stopped {
+        @apply bg-gray-100 text-gray-800;
+      }
+      .status-starting {
+        @apply bg-yellow-100 text-yellow-800;
+      }
+      .status-unhealthy {
+        @apply bg-red-100 text-red-800;
+      }
+      .status-failed {
+        @apply bg-red-100 text-red-800;
+      }
+
+      .card-hover {
+        @apply transition-all duration-200 hover:shadow-lg;
+      }
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+      }
+
+      .animate-pulse-fast {
+        animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      .server-category-workout {
+        @apply border-l-4 border-blue-500;
+      }
+      .server-category-testing {
+        @apply border-l-4 border-purple-500;
+      }
+      .server-category-automation {
+        @apply border-l-4 border-green-500;
+      }
+      .server-category-data {
+        @apply border-l-4 border-yellow-500;
+      }
+      .server-category-ai {
+        @apply border-l-4 border-pink-500;
+      }
+      .server-category-custom {
+        @apply border-l-4 border-gray-500;
+      }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-server text-2xl text-blue-600"></i>
-                    <h1 class="text-2xl font-bold text-gray-900">MCP Server Manager</h1>
-                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">WkoLibrary</span>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button id="refreshBtn" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
-                        <i class="fas fa-sync-alt mr-2"></i>Refresh
-                    </button>
-                    <a href="index.html" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
-                        <i class="fas fa-arrow-left mr-2"></i>Back to App
-                    </a>
-                </div>
-            </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-4">
+            <i class="fas fa-server text-2xl text-blue-600"></i>
+            <h1 class="text-2xl font-bold text-gray-900">MCP Server Manager</h1>
+            <span
+              class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+              >WkoLibrary</span
+            >
+          </div>
+          <div class="flex items-center space-x-3">
+            <button
+              id="refreshBtn"
+              class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
+            >
+              <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <a
+              href="index.html"
+              class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+            >
+              <i class="fas fa-arrow-left mr-2"></i>Back to App
+            </a>
+          </div>
         </div>
+      </div>
     </header>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-green-100 rounded-lg">
-                        <i class="fas fa-play text-green-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Running</p>
-                        <p class="text-2xl font-semibold text-gray-900" id="runningCount">-</p>
-                    </div>
-                </div>
+      <!-- Overview Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <i class="fas fa-play text-green-600"></i>
             </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-gray-100 rounded-lg">
-                        <i class="fas fa-stop text-gray-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Stopped</p>
-                        <p class="text-2xl font-semibold text-gray-900" id="stoppedCount">-</p>
-                    </div>
-                </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-600">Running</p>
+              <p class="text-2xl font-semibold text-gray-900" id="runningCount">
+                -
+              </p>
             </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-red-100 rounded-lg">
-                        <i class="fas fa-exclamation-triangle text-red-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Unhealthy</p>
-                        <p class="text-2xl font-semibold text-gray-900" id="unhealthyCount">-</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <i class="fas fa-tools text-blue-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Tools</p>
-                        <p class="text-2xl font-semibold text-gray-900" id="totalTools">-</p>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <!-- Server List -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">MCP Servers</h2>
-                <p class="text-sm text-gray-600">Manage and monitor your MCP server instances</p>
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center">
+            <div class="p-2 bg-gray-100 rounded-lg">
+              <i class="fas fa-stop text-gray-600"></i>
             </div>
-            
-            <div id="serverList" class="divide-y divide-gray-200">
-                <!-- Server cards will be populated here -->
-                <div class="p-6 text-center text-gray-500">
-                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                    <p>Loading servers...</p>
-                </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-600">Stopped</p>
+              <p class="text-2xl font-semibold text-gray-900" id="stoppedCount">
+                -
+              </p>
             </div>
+          </div>
         </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center">
+            <div class="p-2 bg-red-100 rounded-lg">
+              <i class="fas fa-exclamation-triangle text-red-600"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-600">Unhealthy</p>
+              <p
+                class="text-2xl font-semibold text-gray-900"
+                id="unhealthyCount"
+              >
+                -
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i class="fas fa-tools text-blue-600"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-600">Total Tools</p>
+              <p class="text-2xl font-semibold text-gray-900" id="totalTools">
+                -
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Server List -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">MCP Servers</h2>
+          <p class="text-sm text-gray-600">
+            Manage and monitor your MCP server instances
+          </p>
+        </div>
+
+        <div id="serverList" class="divide-y divide-gray-200">
+          <!-- Server cards will be populated here -->
+          <div class="p-6 text-center text-gray-500">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading servers...</p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Server Actions Modal -->
-    <div id="actionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Server Action</h3>
-            </div>
-            <div class="px-6 py-4">
-                <p class="text-gray-600" id="modalMessage">Are you sure you want to perform this action?</p>
-            </div>
-            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button id="modalCancel" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
-                    Cancel
-                </button>
-                <button id="modalConfirm" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                    Confirm
-                </button>
-            </div>
+    <div
+      id="actionModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">
+            Server Action
+          </h3>
         </div>
+        <div class="px-6 py-4">
+          <p class="text-gray-600" id="modalMessage">
+            Are you sure you want to perform this action?
+          </p>
+        </div>
+        <div
+          class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3"
+        >
+          <button
+            id="modalCancel"
+            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            id="modalConfirm"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
-        class MCPManager {
-            constructor() {
-                this.servers = {};
-                this.refreshInterval = null;
-                this.init();
+      class MCPManager {
+        constructor() {
+          this.servers = {};
+          this.refreshInterval = null;
+          this.init();
+        }
+
+        init() {
+          this.bindEvents();
+          this.loadServers();
+          this.startAutoRefresh();
+        }
+
+        bindEvents() {
+          document
+            .getElementById('refreshBtn')
+            .addEventListener('click', () => {
+              this.loadServers();
+            });
+
+          document
+            .getElementById('modalCancel')
+            .addEventListener('click', () => {
+              this.hideModal();
+            });
+
+          document
+            .getElementById('modalConfirm')
+            .addEventListener('click', () => {
+              this.executeAction();
+            });
+        }
+
+        async loadServers() {
+          try {
+            const response = await fetch('/mcp/status');
+            const data = await response.json();
+
+            if (data.error) {
+              this.showError('Failed to load server status: ' + data.error);
+              return;
             }
-            
-            init() {
-                this.bindEvents();
-                this.loadServers();
-                this.startAutoRefresh();
-            }
-            
-            bindEvents() {
-                document.getElementById('refreshBtn').addEventListener('click', () => {
-                    this.loadServers();
-                });
-                
-                document.getElementById('modalCancel').addEventListener('click', () => {
-                    this.hideModal();
-                });
-                
-                document.getElementById('modalConfirm').addEventListener('click', () => {
-                    this.executeAction();
-                });
-            }
-            
-            async loadServers() {
-                try {
-                    const response = await fetch('/mcp/status');
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        this.showError('Failed to load server status: ' + data.error);
-                        return;
-                    }
-                    
-                    this.servers = data.servers;
-                    this.renderServers();
-                    this.updateOverview();
-                    
-                } catch (error) {
-                    this.showError('Failed to connect to server: ' + error.message);
-                }
-            }
-            
-            renderServers() {
-                const container = document.getElementById('serverList');
-                
-                if (Object.keys(this.servers).length === 0) {
-                    container.innerHTML = `
+
+            this.servers = data.servers;
+            this.renderServers();
+            this.updateOverview();
+          } catch (error) {
+            this.showError('Failed to connect to server: ' + error.message);
+          }
+        }
+
+        renderServers() {
+          const container = document.getElementById('serverList');
+
+          if (Object.keys(this.servers).length === 0) {
+            container.innerHTML = `
                         <div class="p-6 text-center text-gray-500">
                             <i class="fas fa-server text-2xl mb-2"></i>
                             <p>No MCP servers configured</p>
                         </div>
                     `;
-                    return;
-                }
-                
-                const serverCards = Object.entries(this.servers).map(([id, server]) => {
-                    return this.createServerCard(id, server);
-                }).join('');
-                
-                container.innerHTML = serverCards;
-                
-                // Bind action buttons
-                this.bindServerActions();
-            }
-            
-            createServerCard(id, server) {
-                const statusClass = `status-${server.status}`;
-                const categoryClass = `server-category-${server.category}`;
-                const uptime = server.uptime ? this.formatUptime(server.uptime) : 'N/A';
-                const lastCheck = server.last_check ? new Date(server.last_check * 1000).toLocaleTimeString() : 'Never';
-                
-                return `
+            return;
+          }
+
+          const serverCards = Object.entries(this.servers)
+            .map(([id, server]) => {
+              return this.createServerCard(id, server);
+            })
+            .join('');
+
+          container.innerHTML = serverCards;
+
+          // Bind action buttons
+          this.bindServerActions();
+        }
+
+        createServerCard(id, server) {
+          const statusClass = `status-${server.status}`;
+          const categoryClass = `server-category-${server.category}`;
+          const uptime = server.uptime
+            ? this.formatUptime(server.uptime)
+            : 'N/A';
+          const lastCheck = server.last_check
+            ? new Date(server.last_check * 1000).toLocaleTimeString()
+            : 'Never';
+
+          return `
                     <div class="p-6 card-hover ${categoryClass}">
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
@@ -250,29 +331,44 @@
                                     </div>
                                 </div>
                                 
-                                ${server.capabilities && server.capabilities.length > 0 ? `
+                                ${
+                                  server.capabilities &&
+                                  server.capabilities.length > 0
+                                    ? `
                                     <div class="mt-3">
                                         <span class="text-gray-500 text-sm">Capabilities:</span>
                                         <div class="flex flex-wrap gap-1 mt-1">
-                                            ${server.capabilities.map(cap => `
+                                            ${server.capabilities
+                                              .map(
+                                                cap => `
                                                 <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
                                                     ${cap}
                                                 </span>
-                                            `).join('')}
+                                            `
+                                              )
+                                              .join('')}
                                         </div>
                                     </div>
-                                ` : ''}
+                                `
+                                    : ''
+                                }
                                 
-                                ${server.error_message ? `
+                                ${
+                                  server.error_message
+                                    ? `
                                     <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                                         <p class="text-red-800 text-sm font-medium">Error:</p>
                                         <p class="text-red-700 text-sm">${server.error_message}</p>
                                     </div>
-                                ` : ''}
+                                `
+                                    : ''
+                                }
                             </div>
                             
                             <div class="flex flex-col space-y-2 ml-4">
-                                ${server.status === 'running' ? `
+                                ${
+                                  server.status === 'running'
+                                    ? `
                                     <button class="server-action px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded text-sm"
                                             data-action="restart" data-server="${id}">
                                         <i class="fas fa-redo mr-1"></i>Restart
@@ -281,154 +377,164 @@
                                             data-action="stop" data-server="${id}">
                                         <i class="fas fa-stop mr-1"></i>Stop
                                     </button>
-                                ` : `
+                                `
+                                    : `
                                     <button class="server-action px-3 py-1 bg-green-100 hover:bg-green-200 text-green-800 rounded text-sm"
                                             data-action="start" data-server="${id}">
                                         <i class="fas fa-play mr-1"></i>Start
                                     </button>
-                                `}
+                                `
+                                }
                             </div>
                         </div>
                     </div>
                 `;
+        }
+
+        bindServerActions() {
+          document.querySelectorAll('.server-action').forEach(button => {
+            button.addEventListener('click', e => {
+              const action = e.target.dataset.action;
+              const serverId = e.target.dataset.server;
+              this.showActionModal(action, serverId);
+            });
+          });
+        }
+
+        showActionModal(action, serverId) {
+          const server = this.servers[serverId];
+          const modal = document.getElementById('actionModal');
+          const title = document.getElementById('modalTitle');
+          const message = document.getElementById('modalMessage');
+          const confirmBtn = document.getElementById('modalConfirm');
+
+          title.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} Server`;
+          message.textContent = `Are you sure you want to ${action} the "${server.name || serverId}" server?`;
+
+          confirmBtn.dataset.action = action;
+          confirmBtn.dataset.server = serverId;
+
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+
+        hideModal() {
+          const modal = document.getElementById('actionModal');
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+
+        async executeAction() {
+          const confirmBtn = document.getElementById('modalConfirm');
+          const action = confirmBtn.dataset.action;
+          const serverId = confirmBtn.dataset.server;
+
+          this.hideModal();
+
+          try {
+            confirmBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin mr-1"></i>Processing...';
+            confirmBtn.disabled = true;
+
+            const response = await fetch(`/mcp/${action}/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ server_id: serverId }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              this.showSuccess(`Server ${action} completed successfully`);
+              this.loadServers(); // Refresh the list
+            } else {
+              this.showError(
+                `Failed to ${action} server: ${result.error || 'Unknown error'}`
+              );
             }
-            
-            bindServerActions() {
-                document.querySelectorAll('.server-action').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const action = e.target.dataset.action;
-                        const serverId = e.target.dataset.server;
-                        this.showActionModal(action, serverId);
-                    });
-                });
-            }
-            
-            showActionModal(action, serverId) {
-                const server = this.servers[serverId];
-                const modal = document.getElementById('actionModal');
-                const title = document.getElementById('modalTitle');
-                const message = document.getElementById('modalMessage');
-                const confirmBtn = document.getElementById('modalConfirm');
-                
-                title.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} Server`;
-                message.textContent = `Are you sure you want to ${action} the "${server.name || serverId}" server?`;
-                
-                confirmBtn.dataset.action = action;
-                confirmBtn.dataset.server = serverId;
-                
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-            
-            hideModal() {
-                const modal = document.getElementById('actionModal');
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-            
-            async executeAction() {
-                const confirmBtn = document.getElementById('modalConfirm');
-                const action = confirmBtn.dataset.action;
-                const serverId = confirmBtn.dataset.server;
-                
-                this.hideModal();
-                
-                try {
-                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Processing...';
-                    confirmBtn.disabled = true;
-                    
-                    const response = await fetch(`/mcp/${action}/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ server_id: serverId })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.showSuccess(`Server ${action} completed successfully`);
-                        this.loadServers(); // Refresh the list
-                    } else {
-                        this.showError(`Failed to ${action} server: ${result.error || 'Unknown error'}`);
-                    }
-                    
-                } catch (error) {
-                    this.showError(`Failed to ${action} server: ${error.message}`);
-                } finally {
-                    confirmBtn.innerHTML = 'Confirm';
-                    confirmBtn.disabled = false;
-                }
-            }
-            
-            updateOverview() {
-                const counts = {
-                    running: 0,
-                    stopped: 0,
-                    unhealthy: 0,
-                    totalTools: 0
-                };
-                
-                Object.values(this.servers).forEach(server => {
-                    if (server.status === 'running') counts.running++;
-                    else if (server.status === 'stopped') counts.stopped++;
-                    else if (server.status === 'unhealthy' || server.status === 'failed') counts.unhealthy++;
-                    
-                    counts.totalTools += server.tools_count || 0;
-                });
-                
-                document.getElementById('runningCount').textContent = counts.running;
-                document.getElementById('stoppedCount').textContent = counts.stopped;
-                document.getElementById('unhealthyCount').textContent = counts.unhealthy;
-                document.getElementById('totalTools').textContent = counts.totalTools;
-            }
-            
-            formatUptime(seconds) {
-                if (seconds < 60) return `${Math.floor(seconds)}s`;
-                if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-                return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-            }
-            
-            startAutoRefresh() {
-                this.refreshInterval = setInterval(() => {
-                    this.loadServers();
-                }, 30000); // Refresh every 30 seconds
-            }
-            
-            showError(message) {
-                this.showNotification(message, 'error');
-            }
-            
-            showSuccess(message) {
-                this.showNotification(message, 'success');
-            }
-            
-            showNotification(message, type) {
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-                    type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' : 
-                    'bg-green-100 text-green-800 border border-green-200'
-                }`;
-                notification.innerHTML = `
+          } catch (error) {
+            this.showError(`Failed to ${action} server: ${error.message}`);
+          } finally {
+            confirmBtn.innerHTML = 'Confirm';
+            confirmBtn.disabled = false;
+          }
+        }
+
+        updateOverview() {
+          const counts = {
+            running: 0,
+            stopped: 0,
+            unhealthy: 0,
+            totalTools: 0,
+          };
+
+          Object.values(this.servers).forEach(server => {
+            if (server.status === 'running') counts.running++;
+            else if (server.status === 'stopped') counts.stopped++;
+            else if (
+              server.status === 'unhealthy' ||
+              server.status === 'failed'
+            )
+              counts.unhealthy++;
+
+            counts.totalTools += server.tools_count || 0;
+          });
+
+          document.getElementById('runningCount').textContent = counts.running;
+          document.getElementById('stoppedCount').textContent = counts.stopped;
+          document.getElementById('unhealthyCount').textContent =
+            counts.unhealthy;
+          document.getElementById('totalTools').textContent = counts.totalTools;
+        }
+
+        formatUptime(seconds) {
+          if (seconds < 60) return `${Math.floor(seconds)}s`;
+          if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+          return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+        }
+
+        startAutoRefresh() {
+          this.refreshInterval = setInterval(() => {
+            this.loadServers();
+          }, 30000); // Refresh every 30 seconds
+        }
+
+        showError(message) {
+          this.showNotification(message, 'error');
+        }
+
+        showSuccess(message) {
+          this.showNotification(message, 'success');
+        }
+
+        showNotification(message, type) {
+          const notification = document.createElement('div');
+          notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'error'
+              ? 'bg-red-100 text-red-800 border border-red-200'
+              : 'bg-green-100 text-green-800 border border-green-200'
+          }`;
+          notification.innerHTML = `
                     <div class="flex items-center">
                         <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} mr-2"></i>
                         ${message}
                     </div>
                 `;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.remove();
-                }, 5000);
-            }
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.remove();
+          }, 5000);
         }
-        
-        // Initialize the manager when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new MCPManager();
-        });
+      }
+
+      // Initialize the manager when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        new MCPManager();
+      });
     </script>
-</body>
+  </body>
 </html>

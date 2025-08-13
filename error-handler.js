@@ -4,173 +4,236 @@
  */
 
 export class ErrorHandler {
-    constructor() {
-        this.errorLog = [];
-        this.setupGlobalErrorHandling();
+  constructor() {
+    this.errorLog = [];
+    this.setupGlobalErrorHandling();
+  }
+
+  setupGlobalErrorHandling() {
+    // Catch unhandled promise rejections
+    window.addEventListener('unhandledrejection', event => {
+      this.handleError(event.reason, 'Unhandled Promise Rejection');
+      event.preventDefault();
+    });
+
+    // Catch JavaScript errors
+    window.addEventListener('error', event => {
+      this.handleError(
+        event.error,
+        'JavaScript Error',
+        event.filename,
+        event.lineno
+      );
+    });
+  }
+
+  handleError(error, context = 'Unknown', filename = '', lineno = 0) {
+    const errorInfo = {
+      message: error?.message || String(error),
+      context,
+      filename,
+      lineno,
+      timestamp: new Date().toISOString(),
+      stack: error?.stack,
+    };
+
+    this.errorLog.push(errorInfo);
+    this.showUserFriendlyError(errorInfo);
+    console.error('Error handled:', errorInfo);
+  }
+
+  showUserFriendlyError(errorInfo) {
+    const userMessage = this.createUserFriendlyMessage(errorInfo);
+    this.showErrorToast(
+      userMessage.title,
+      userMessage.message,
+      userMessage.type,
+      8000,
+      userMessage.actions
+    );
+  }
+
+  createUserFriendlyMessage(errorInfo) {
+    const message = errorInfo.message.toLowerCase();
+
+    // XML/Parsing errors
+    if (message.includes('xml') || message.includes('parse')) {
+      return {
+        title: 'File Format Error',
+        message:
+          "The workout file appears to be corrupted or invalid. Please ensure you're uploading a valid Zwift workout file (.zwo).",
+        type: 'error',
+        actions: [
+          {
+            text: 'Try Another File',
+            action: () => document.getElementById('fileInput')?.click(),
+          },
+          {
+            text: 'Load Sample',
+            action: () => window.app?.loadSampleWorkout(),
+          },
+        ],
+      };
     }
 
-    setupGlobalErrorHandling() {
-        // Catch unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-            this.handleError(event.reason, 'Unhandled Promise Rejection');
-            event.preventDefault();
-        });
-
-        // Catch JavaScript errors
-        window.addEventListener('error', (event) => {
-            this.handleError(event.error, 'JavaScript Error', event.filename, event.lineno);
-        });
+    // Network/Fetch errors
+    if (
+      message.includes('fetch') ||
+      message.includes('network') ||
+      message.includes('http')
+    ) {
+      return {
+        title: 'Connection Error',
+        message:
+          'Unable to load the sample workout. Please check your internet connection or try uploading your own file.',
+        type: 'error',
+        actions: [
+          { text: 'Retry', action: () => window.app?.loadSampleWorkout() },
+          {
+            text: 'Upload File',
+            action: () => document.getElementById('fileInput')?.click(),
+          },
+        ],
+      };
     }
 
-    handleError(error, context = 'Unknown', filename = '', lineno = 0) {
-        const errorInfo = {
-            message: error?.message || String(error),
-            context,
-            filename,
-            lineno,
-            timestamp: new Date().toISOString(),
-            stack: error?.stack
-        };
-
-        this.errorLog.push(errorInfo);
-        this.showUserFriendlyError(errorInfo);
-        console.error('Error handled:', errorInfo);
+    // Chart/Visualization errors
+    if (
+      message.includes('chart') ||
+      message.includes('canvas') ||
+      message.includes('render')
+    ) {
+      return {
+        title: 'Visualization Error',
+        message:
+          'There was a problem displaying the workout chart. The data might be too complex or contain invalid values.',
+        type: 'warning',
+        actions: [
+          { text: 'Refresh Page', action: () => window.location.reload() },
+        ],
+      };
     }
 
-    showUserFriendlyError(errorInfo) {
-        const userMessage = this.createUserFriendlyMessage(errorInfo);
-        this.showErrorToast(userMessage.title, userMessage.message, userMessage.type, 8000, userMessage.actions);
+    // Memory/Performance errors
+    if (
+      message.includes('memory') ||
+      message.includes('out of') ||
+      message.includes('maximum')
+    ) {
+      return {
+        title: 'Performance Issue',
+        message:
+          'The workout file is too large or complex for your device. Try a smaller file or refresh the page.',
+        type: 'warning',
+        actions: [
+          { text: 'Refresh Page', action: () => window.location.reload() },
+          { text: 'Try Sample', action: () => window.app?.loadSampleWorkout() },
+        ],
+      };
     }
 
-    createUserFriendlyMessage(errorInfo) {
-        const message = errorInfo.message.toLowerCase();
-
-        // XML/Parsing errors
-        if (message.includes('xml') || message.includes('parse')) {
-            return {
-                title: 'File Format Error',
-                message: 'The workout file appears to be corrupted or invalid. Please ensure you\'re uploading a valid Zwift workout file (.zwo).',
-                type: 'error',
-                actions: [
-                    { text: 'Try Another File', action: () => document.getElementById('fileInput')?.click() },
-                    { text: 'Load Sample', action: () => window.app?.loadSampleWorkout() }
-                ]
-            };
-        }
-
-        // Network/Fetch errors
-        if (message.includes('fetch') || message.includes('network') || message.includes('http')) {
-            return {
-                title: 'Connection Error',
-                message: 'Unable to load the sample workout. Please check your internet connection or try uploading your own file.',
-                type: 'error',
-                actions: [
-                    { text: 'Retry', action: () => window.app?.loadSampleWorkout() },
-                    { text: 'Upload File', action: () => document.getElementById('fileInput')?.click() }
-                ]
-            };
-        }
-
-        // Chart/Visualization errors
-        if (message.includes('chart') || message.includes('canvas') || message.includes('render')) {
-            return {
-                title: 'Visualization Error',
-                message: 'There was a problem displaying the workout chart. The data might be too complex or contain invalid values.',
-                type: 'warning',
-                actions: [
-                    { text: 'Refresh Page', action: () => window.location.reload() }
-                ]
-            };
-        }
-
-        // Memory/Performance errors
-        if (message.includes('memory') || message.includes('out of') || message.includes('maximum')) {
-            return {
-                title: 'Performance Issue',
-                message: 'The workout file is too large or complex for your device. Try a smaller file or refresh the page.',
-                type: 'warning',
-                actions: [
-                    { text: 'Refresh Page', action: () => window.location.reload() },
-                    { text: 'Try Sample', action: () => window.app?.loadSampleWorkout() }
-                ]
-            };
-        }
-
-        // File-related errors
-        if (message.includes('file') || message.includes('upload')) {
-            return {
-                title: '📁 File Error',
-                message: 'There was a problem with the file. Please check that it\'s a valid .zwo workout file and try again.',
-                type: 'error'
-            };
-        }
-
-        // Network-related errors
-        if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
-            return {
-                title: '🌐 Network Error',
-                message: 'Connection problem detected. Please check your internet connection and try again.',
-                type: 'error'
-            };
-        }
-
-        // Parsing errors
-        if (message.includes('parse') || message.includes('xml') || message.includes('invalid')) {
-            return {
-                title: '⚠️ Workout File Error',
-                message: 'The workout file appears to be corrupted or in an unsupported format. Please try a different file.',
-                type: 'error'
-            };
-        }
-
-        // Chart/visualization errors
-        if (message.includes('chart') || message.includes('canvas')) {
-            return {
-                title: '📊 Display Error',
-                message: 'There was a problem displaying the workout chart. Try refreshing the page.',
-                type: 'error'
-            };
-        }
-
-        // Export errors
-        if (message.includes('export') || message.includes('download')) {
-            return {
-                title: '💾 Export Error',
-                message: 'Failed to export the workout. Please check your browser settings and try again.',
-                type: 'error'
-            };
-        }
-
-        // Generic error
-        return {
-            title: '❌ Something went wrong',
-            message: 'An unexpected error occurred. Please try refreshing the page.',
-            type: 'error'
-        };
+    // File-related errors
+    if (message.includes('file') || message.includes('upload')) {
+      return {
+        title: '📁 File Error',
+        message:
+          "There was a problem with the file. Please check that it's a valid .zwo workout file and try again.",
+        type: 'error',
+      };
     }
 
-    showErrorToast(title, message, type = 'error', duration = 8000, actions = []) {
-        // Create error notification
-        const errorDiv = document.createElement('div');
-        errorDiv.className = `fixed top-4 right-4 max-w-sm w-full bg-white border-l-4 ${
-            type === 'error' ? 'border-red-500' : 'border-yellow-500'
-        } rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
-        
-        errorDiv.innerHTML = `
+    // Network-related errors
+    if (
+      message.includes('network') ||
+      message.includes('fetch') ||
+      message.includes('connection')
+    ) {
+      return {
+        title: '🌐 Network Error',
+        message:
+          'Connection problem detected. Please check your internet connection and try again.',
+        type: 'error',
+      };
+    }
+
+    // Parsing errors
+    if (
+      message.includes('parse') ||
+      message.includes('xml') ||
+      message.includes('invalid')
+    ) {
+      return {
+        title: '⚠️ Workout File Error',
+        message:
+          'The workout file appears to be corrupted or in an unsupported format. Please try a different file.',
+        type: 'error',
+      };
+    }
+
+    // Chart/visualization errors
+    if (message.includes('chart') || message.includes('canvas')) {
+      return {
+        title: '📊 Display Error',
+        message:
+          'There was a problem displaying the workout chart. Try refreshing the page.',
+        type: 'error',
+      };
+    }
+
+    // Export errors
+    if (message.includes('export') || message.includes('download')) {
+      return {
+        title: '💾 Export Error',
+        message:
+          'Failed to export the workout. Please check your browser settings and try again.',
+        type: 'error',
+      };
+    }
+
+    // Generic error
+    return {
+      title: '❌ Something went wrong',
+      message: 'An unexpected error occurred. Please try refreshing the page.',
+      type: 'error',
+    };
+  }
+
+  showErrorToast(
+    title,
+    message,
+    type = 'error',
+    duration = 8000,
+    actions = []
+  ) {
+    // Create error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = `fixed top-4 right-4 max-w-sm w-full bg-white border-l-4 ${
+      type === 'error' ? 'border-red-500' : 'border-yellow-500'
+    } rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+
+    errorDiv.innerHTML = `
             <div class="p-4">
                 <div class="flex items-start">
                     <div class="flex-1">
                         <h4 class="text-sm font-semibold text-gray-900 mb-1">${title}</h4>
                         <p class="text-sm text-gray-600">${message}</p>
-                        ${actions && actions.length > 0 ? `
+                        ${
+                          actions && actions.length > 0
+                            ? `
                             <div class="mt-3 flex flex-wrap gap-2">
-                                ${actions.map((action, index) => `
+                                ${actions
+                                  .map(
+                                    (action, index) => `
                                     <button class="action-btn-${index} text-xs px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-md transition-colors duration-200 font-medium">
                                         ${action.text}
                                     </button>
-                                `).join('')}
+                                `
+                                  )
+                                  .join('')}
                             </div>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                     </div>
                     <button class="ml-4 text-gray-400 hover:text-gray-600 transition-colors" onclick="this.parentElement.parentElement.parentElement.remove()">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,60 +241,65 @@ export class ErrorHandler {
                         </svg>
                     </button>
                 </div>
-                ${type === 'error' ? `
+                ${
+                  type === 'error'
+                    ? `
                     <div class="mt-3">
                         <button class="text-xs text-gray-500 hover:text-gray-700 underline" onclick="window.errorHandler?.showErrorDetails('${this.errorLog.length - 1}')">
                             Show technical details
                         </button>
                     </div>
-                ` : ''}
+                `
+                    : ''
+                }
             </div>
         `;
 
-        document.body.appendChild(errorDiv);
+    document.body.appendChild(errorDiv);
 
-        // Set up action button listeners
-        if (actions && actions.length > 0) {
-            actions.forEach((action, index) => {
-                const btn = errorDiv.querySelector(`.action-btn-${index}`);
-                if (btn && action.action) {
-                    btn.addEventListener('click', () => {
-                        try {
-                            action.action();
-                            errorDiv.remove();
-                        } catch (e) {
-                            console.error('Error executing action:', e);
-                        }
-                    });
-                }
-            });
-        }
-
-        // Animate in
-        setTimeout(() => {
-            errorDiv.classList.remove('translate-x-full');
-        }, 100);
-
-        // Auto-remove after duration
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.classList.add('translate-x-full');
-                setTimeout(() => {
-                    if (errorDiv.parentNode) {
-                        errorDiv.remove();
-                    }
-                }, 300);
+    // Set up action button listeners
+    if (actions && actions.length > 0) {
+      actions.forEach((action, index) => {
+        const btn = errorDiv.querySelector(`.action-btn-${index}`);
+        if (btn && action.action) {
+          btn.addEventListener('click', () => {
+            try {
+              action.action();
+              errorDiv.remove();
+            } catch (e) {
+              console.error('Error executing action:', e);
             }
-        }, duration);
+          });
+        }
+      });
     }
 
-    showErrorDetails(errorIndex) {
-        const error = this.errorLog[errorIndex];
-        if (!error) return;
+    // Animate in
+    setTimeout(() => {
+      errorDiv.classList.remove('translate-x-full');
+    }, 100);
 
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
-        modal.innerHTML = `
+    // Auto-remove after duration
+    setTimeout(() => {
+      if (errorDiv.parentNode) {
+        errorDiv.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (errorDiv.parentNode) {
+            errorDiv.remove();
+          }
+        }, 300);
+      }
+    }, duration);
+  }
+
+  showErrorDetails(errorIndex) {
+    const error = this.errorLog[errorIndex];
+    if (!error) return;
+
+    const modal = document.createElement('div');
+    modal.className =
+      'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
             <div class="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-hidden">
                 <div class="p-4 border-b border-gray-200 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-900">Error Details</h3>
@@ -267,105 +335,108 @@ export class ErrorHandler {
             </div>
         `;
 
-        document.body.appendChild(modal);
+    document.body.appendChild(modal);
 
-        // Close on backdrop click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
+    // Close on backdrop click
+    modal.addEventListener('click', e => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  // File validation helpers
+  validateWorkoutFile(file) {
+    const errors = [];
+
+    if (!file) {
+      errors.push('No file selected');
+      return { valid: false, errors };
     }
 
-    // File validation helpers
-    validateWorkoutFile(file) {
-        const errors = [];
-
-        if (!file) {
-            errors.push('No file selected');
-            return { valid: false, errors };
-        }
-
-        if (!file.name.toLowerCase().endsWith('.zwo')) {
-            errors.push('File must have a .zwo extension');
-        }
-
-        if (file.size === 0) {
-            errors.push('File is empty');
-        }
-
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            errors.push('File is too large (maximum 10MB)');
-        }
-
-        return {
-            valid: errors.length === 0,
-            errors
-        };
+    if (!file.name.toLowerCase().endsWith('.zwo')) {
+      errors.push('File must have a .zwo extension');
     }
 
-    // Network operation wrapper with error handling
-    async safeNetworkOperation(operation, operationName) {
-        try {
-            this.showLoadingState(operationName);
-            const result = await operation();
-            this.hideLoadingState();
-            return result;
-        } catch (error) {
-            this.hideLoadingState();
-            this.handleError(error, `Network Operation: ${operationName}`);
-            throw error;
-        }
+    if (file.size === 0) {
+      errors.push('File is empty');
     }
 
-    showLoadingState(operationName) {
-        const toast = document.getElementById('toastNotification');
-        if (toast) {
-            const span = toast.querySelector('span');
-            if (span) {
-                span.innerHTML = `<div class="flex items-center"><div class="spinner mr-2"></div>${operationName}...</div>`;
-                toast.classList.add('show');
-            }
-        }
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      errors.push('File is too large (maximum 10MB)');
     }
 
-    hideLoadingState() {
-        const toast = document.getElementById('toastNotification');
-        if (toast) {
-            toast.classList.remove('show');
-        }
-    }
+    return {
+      valid: errors.length === 0,
+      errors,
+    };
+  }
 
-    // Success message helper
-    showSuccess(message, duration = 3000) {
-        this.showErrorToast('✅ Success', message, 'success', duration);
+  // Network operation wrapper with error handling
+  async safeNetworkOperation(operation, operationName) {
+    try {
+      this.showLoadingState(operationName);
+      const result = await operation();
+      this.hideLoadingState();
+      return result;
+    } catch (error) {
+      this.hideLoadingState();
+      this.handleError(error, `Network Operation: ${operationName}`);
+      throw error;
     }
+  }
 
-    // Warning message helper
-    showWarning(message, duration = 5000) {
-        this.showErrorToast('⚠️ Warning', message, 'warning', duration);
+  showLoadingState(operationName) {
+    const toast = document.getElementById('toastNotification');
+    if (toast) {
+      const span = toast.querySelector('span');
+      if (span) {
+        span.innerHTML = `<div class="flex items-center"><div class="spinner mr-2"></div>${operationName}...</div>`;
+        toast.classList.add('show');
+      }
     }
+  }
 
-    // Get error statistics
-    getErrorStats() {
-        const total = this.errorLog.length;
-        const recent = this.errorLog.filter(e => Date.now() - new Date(e.timestamp).getTime() < 300000).length; // Last 5 minutes
-        
-        return { total, recent };
+  hideLoadingState() {
+    const toast = document.getElementById('toastNotification');
+    if (toast) {
+      toast.classList.remove('show');
     }
+  }
 
-    // Clear error log
-    clearErrorLog() {
-        this.errorLog = [];
-    }
+  // Success message helper
+  showSuccess(message, duration = 3000) {
+    this.showErrorToast('✅ Success', message, 'success', duration);
+  }
+
+  // Warning message helper
+  showWarning(message, duration = 5000) {
+    this.showErrorToast('⚠️ Warning', message, 'warning', duration);
+  }
+
+  // Get error statistics
+  getErrorStats() {
+    const total = this.errorLog.length;
+    const recent = this.errorLog.filter(
+      e => Date.now() - new Date(e.timestamp).getTime() < 300000
+    ).length; // Last 5 minutes
+
+    return { total, recent };
+  }
+
+  // Clear error log
+  clearErrorLog() {
+    this.errorLog = [];
+  }
 }
 
 // Initialize error handler when module loads
 let errorHandler;
 document.addEventListener('DOMContentLoaded', () => {
-    errorHandler = new ErrorHandler();
-    // Make it globally accessible for error detail viewing
-    window.errorHandler = errorHandler;
+  errorHandler = new ErrorHandler();
+  // Make it globally accessible for error detail viewing
+  window.errorHandler = errorHandler;
 });
 
 export { errorHandler };

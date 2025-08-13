@@ -52,7 +52,11 @@ Edit `mcp_config.json`:
         "host": "localhost",
         "port": 8001
       },
-      "capabilities": ["workout_parsing", "interval_creation", "tss_calculation"],
+      "capabilities": [
+        "workout_parsing",
+        "interval_creation",
+        "tss_calculation"
+      ],
       "priority": 1
     }
   },
@@ -194,6 +198,7 @@ tss = calculate_tss(segments, ftp=250)
 ### Server Management Endpoints
 
 #### Get Server Status
+
 ```http
 GET /mcp/status
 ```
@@ -201,6 +206,7 @@ GET /mcp/status
 Returns status of all MCP servers.
 
 #### Start Server
+
 ```http
 POST /mcp/start/
 Content-Type: application/json
@@ -211,6 +217,7 @@ Content-Type: application/json
 ```
 
 #### Stop Server
+
 ```http
 POST /mcp/stop/
 Content-Type: application/json
@@ -221,6 +228,7 @@ Content-Type: application/json
 ```
 
 #### Restart Server
+
 ```http
 POST /mcp/restart/
 Content-Type: application/json
@@ -231,6 +239,7 @@ Content-Type: application/json
 ```
 
 #### Validate Configuration
+
 ```http
 GET /mcp/validate
 ```
@@ -252,13 +261,13 @@ class CustomMCPServer:
     def __init__(self):
         self.app = FastMCP("Custom Server")
         self._setup_tools()
-    
+
     def _setup_tools(self):
         @self.app.tool("custom_tool")
         def custom_tool(input_data: str) -> str:
             """Custom tool implementation"""
             return f"Processed: {input_data}"
-    
+
     def run(self, port: int = 8002):
         self.app.run(port=port)
 
@@ -304,11 +313,13 @@ Tools are automatically discovered and registered with the LangChain agent. Tool
 #### Server Won't Start
 
 1. **Check port availability**
+
    ```bash
    netstat -an | grep :8001
    ```
 
 2. **Verify command exists**
+
    ```bash
    which python
    ```
@@ -327,6 +338,7 @@ Tools are automatically discovered and registered with the LangChain agent. Tool
 #### Configuration Errors
 
 1. **Validate against schema**
+
    ```bash
    python mcp_validator.py mcp_config.json
    ```
