@@ -1,4 +1,3 @@
-// import { parseWorkoutXML } from './parser.js'; // Currently unused
 import {
   formatDuration,
   calculateWorkoutMetrics,
@@ -827,7 +826,7 @@ export class UI {
       if (zoneData && zoneData.time > 0) {
         labels.push(zone.name);
         data.push(Math.round(zoneData.time));
-        colors.push(`${zone.color  }80`); // 50% opacity
+        colors.push(`${zone.color}80`); // 50% opacity
         borderColors.push(zone.color);
       }
     }
@@ -912,7 +911,7 @@ export class UI {
           {
             label: 'Time %',
             data: data,
-            backgroundColor: colors.map(color => `${color  }80`),
+            backgroundColor: colors.map(color => `${color}80`),
             borderColor: colors,
             borderWidth: 1,
           },
@@ -940,7 +939,7 @@ export class UI {
             max: 100,
             ticks: {
               callback: function (value) {
-                return `${value  }%`;
+                return `${value}%`;
               },
             },
           },
@@ -1017,8 +1016,8 @@ export class UI {
         type: 'box',
         yMin: minPercent,
         yMax: maxPercent,
-        backgroundColor: `${zone.color  }20`, // 20% opacity
-        borderColor: `${zone.color  }40`, // 40% opacity
+        backgroundColor: `${zone.color}20`, // 20% opacity
+        borderColor: `${zone.color}40`, // 40% opacity
         borderWidth: 1,
         label: {
           content: zone.name,
@@ -1535,7 +1534,7 @@ export class UI {
 
   createDirectoryItem(item, parentPath = '') {
     const div = document.createElement('div');
-    div.className = `directory-item${  item.is_dir ? ' folder' : ' file'}`;
+    div.className = `directory-item${item.is_dir ? ' folder' : ' file'}`;
     div.textContent = item.name;
     div.dataset.path = item.path;
     if (item.is_dir) {
@@ -1827,13 +1826,13 @@ The JSON should have this exact structure:
           error.message.includes('JSON') ||
           error.message.includes('parse')
         ) {
-          errorMessage +=
-            `**Response Format Error**\n\nThe LLM returned an invalid response format.\n\n**Troubleshooting Steps:**\n1. Try a different workout description\n2. Check the debug output for malformed data\n3. Restart the server to reset the LLM state\n4. Use Local mode as an alternative\n\n**Technical Details:** ${ 
-            error.message}`;
+          errorMessage += `**Response Format Error**\n\nThe LLM returned an invalid response format.\n\n**Troubleshooting Steps:**\n1. Try a different workout description\n2. Check the debug output for malformed data\n3. Restart the server to reset the LLM state\n4. Use Local mode as an alternative\n\n**Technical Details:** ${
+            error.message
+          }`;
         } else {
-          errorMessage +=
-            `**Unexpected Error**\n\nAn unexpected error occurred during LLM communication.\n\n**Troubleshooting Steps:**\n1. Check the browser console (F12) for technical details\n2. Verify the server is running and configured correctly\n3. Try refreshing the page and submitting again\n4. Use Local mode as a fallback\n\n**Technical Details:** ${ 
-            error.message}`;
+          errorMessage += `**Unexpected Error**\n\nAn unexpected error occurred during LLM communication.\n\n**Troubleshooting Steps:**\n1. Check the browser console (F12) for technical details\n2. Verify the server is running and configured correctly\n3. Try refreshing the page and submitting again\n4. Use Local mode as a fallback\n\n**Technical Details:** ${
+            error.message
+          }`;
         }
       } else {
         errorMessage +=
@@ -1866,7 +1865,7 @@ The JSON should have this exact structure:
   appendChatMessage(text, sender) {
     const chatMessages = document.getElementById('chatMessages');
     const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-message ${  sender}`;
+    msgDiv.className = `chat-message ${sender}`;
     msgDiv.textContent = text;
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2010,7 +2009,7 @@ The JSON should have this exact structure:
       '"': '&quot;',
       "'": '&#039;',
     };
-    return text.replace(/[&<>"']/g, (m) => {
+    return text.replace(/[&<>"']/g, m => {
       return map[m];
     });
   }

@@ -119,7 +119,7 @@ export class ModuleLoader {
     const moduleMap = {
       // Core modules (always loaded)
       'state-manager': () => import('./state-manager.js'),
-      'reactive-ui': () => import('./reactive-ui.js'),
+      'reactive-ui': () => import('./utils/reactive-ui.js'),
       'error-handler': () => import('./error-handler.js'),
       'loading-manager': () => import('./loading-manager.js'),
 
@@ -421,7 +421,9 @@ export class ModuleLoader {
    * Utility delay function
    */
   delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      setTimeout(resolve, ms);
+    });
   }
 
   /**

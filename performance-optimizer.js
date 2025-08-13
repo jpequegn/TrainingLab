@@ -562,7 +562,7 @@ export class PerformanceOptimizer {
     const criticalResources = [
       '/chart-utils.js',
       '/state-manager.js',
-      '/reactive-ui.js',
+      '/utils/reactive-ui.js',
     ];
 
     criticalResources.forEach(resource => {

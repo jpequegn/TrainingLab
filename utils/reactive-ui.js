@@ -517,7 +517,7 @@ export class ReactiveUI {
     // Clear event listeners
     this.eventBindings.forEach((bindings, key) => {
       bindings.forEach(({ element, handler }) => {
-        const [selector, eventType] = key.split(':');
+        const [, eventType] = key.split(':');
         element.removeEventListener(eventType, handler);
       });
     });
