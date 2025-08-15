@@ -372,8 +372,8 @@ export class WorkoutChart extends BaseComponent {
     }
 
     if (segmentIndex !== null && segmentIndex >= 0) {
-      const data = this.chartInstance.data.datasets[0].data;
-      const labels = this.chartInstance.data.labels;
+      const { data } = this.chartInstance.data.datasets[0];
+      const { labels } = this.chartInstance.data;
 
       const startIndex = segmentIndex * 2;
       const endIndex = startIndex + 1;
@@ -408,7 +408,7 @@ export class WorkoutChart extends BaseComponent {
       : 'rgba(0, 0, 0, 0.1)';
 
     // Update chart colors
-    const options = this.chartInstance.options;
+    const { options } = this.chartInstance;
 
     options.plugins.title.color = textColor;
     options.plugins.legend.labels.color = textColor;

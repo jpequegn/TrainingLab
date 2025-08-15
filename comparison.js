@@ -309,7 +309,7 @@ export class WorkoutComparison {
     event.stopPropagation();
 
     const card = event.currentTarget;
-    const workoutId = card.dataset.workoutId;
+    const { workoutId } = card.dataset;
 
     if (!workoutId) return;
 
@@ -616,7 +616,7 @@ export class WorkoutComparison {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const workoutData = workout.workoutData;
+    const { workoutData } = workout;
 
     if (!workoutData.segments || workoutData.segments.length === 0) return;
 
@@ -713,7 +713,7 @@ export class WorkoutComparison {
     const longestWorkout = workouts.reduce((longest, current) =>
       current.duration > longest.duration ? current : longest
     );
-    const labels = this.prepareChartData(longestWorkout.workoutData).labels;
+    const { labels } = this.prepareChartData(longestWorkout.workoutData);
 
     this.overlayChart = new Chart(ctx, {
       type: 'line',

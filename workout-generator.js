@@ -666,7 +666,7 @@ export class WorkoutGenerator {
     const warmupDuration = Math.min(600, totalDuration * 0.2);
     const cooldownDuration = Math.min(600, totalDuration * 0.2);
 
-    let intervals = parsed.intervals;
+    let { intervals } = parsed;
     if (!intervals) {
       // Default intervals based on intensity
       const intensity = parsed.intensity || 'threshold';

@@ -126,7 +126,7 @@ export class PerformanceOptimizer {
   observeMemoryUsage() {
     if ('memory' in performance) {
       const checkMemory = () => {
-        const memory = performance.memory;
+        const { memory } = performance;
         this.recordMetric('memory', {
           used: memory.usedJSHeapSize,
           total: memory.totalJSHeapSize,

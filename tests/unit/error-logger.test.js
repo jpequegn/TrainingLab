@@ -153,7 +153,9 @@ describe('ErrorLogger', () => {
       logger.logError(error);
 
       // Wait for async call
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        setTimeout(resolve, 0);
+      });
 
       expect(fetch).toHaveBeenCalledWith(
         'https://api.example.com/logs',
@@ -178,7 +180,9 @@ describe('ErrorLogger', () => {
       logger.logError(error);
 
       // Wait for async call
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        setTimeout(resolve, 0);
+      });
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to send log to remote service:',

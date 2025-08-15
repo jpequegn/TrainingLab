@@ -190,7 +190,7 @@ jobs:
           # Fail on critical vulnerabilities
           fail-on-severity: critical
           # Allow moderate and below
-          allow-dependencies-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
           # Deny specific licenses
           deny-licenses: GPL-3.0, AGPL-3.0
 

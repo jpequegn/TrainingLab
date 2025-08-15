@@ -35,7 +35,7 @@
     "docs:api": "python3 -m http.server 8080 -d api-docs",
     "docs:serve": "npm run docs:api",
     "docs:validate": "swagger-codegen validate -i api-docs/openapi.yaml || echo 'Swagger Codegen not installed - using basic validation'",
-    "quality:complexity": "plato -r -d reports/complexity -x node_modules,dist,coverage,test-results,playwright-report .",
+    "quality:complexity": "mkdir -p reports/complexity && complexity-report --output reports/complexity --format json .",
     "quality:duplicates": "jscpd",
     "quality:dependencies": "madge --circular --extensions js,ts .",
     "quality:dependencies:graph": "madge --image reports/dependencies.svg --extensions js,ts .",
@@ -70,6 +70,7 @@
     "@types/node": "^24.2.1",
     "@vitest/coverage-v8": "^3.2.4",
     "browser-sync": "^3.0.4",
+    "complexity-report": "^2.0.0-alpha",
     "concurrently": "^9.2.0",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.8",
@@ -83,10 +84,10 @@
     "madge": "^8.0.0",
     "nodemon": "^3.1.10",
     "npm-check-updates": "^18.0.2",
-    "plato": "^1.7.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
+    "typhonjs-escomplex": "^0.1.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {

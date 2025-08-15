@@ -278,7 +278,7 @@ export class UI {
     }
 
     // Show the new panel structure with optimized layout
-    const body = document.body;
+    const { body } = document;
     body.classList.add('workout-loaded');
 
     // Show the workout section (remove hidden class)
@@ -1110,8 +1110,7 @@ export class UI {
             context.dataIndex !== undefined &&
             continuousWorkoutData[context.dataIndex]
           ) {
-            const powerZone =
-              continuousWorkoutData[context.dataIndex].powerZone;
+            const { powerZone } = continuousWorkoutData[context.dataIndex];
             return powerZone ? powerZone.color : '#999';
           }
           return '#2563eb';
@@ -1121,7 +1120,7 @@ export class UI {
             // Color line segments based on power zone
             const point = context.p1DataIndex;
             if (point !== undefined && continuousWorkoutData[point]) {
-              const powerZone = continuousWorkoutData[point].powerZone;
+              const { powerZone } = continuousWorkoutData[point];
               return powerZone ? powerZone.color : '#2563eb';
             }
             return '#2563eb';
@@ -1205,7 +1204,7 @@ export class UI {
               label: context => {
                 const percent = context.parsed.y;
                 const actual = Math.round((percent / 100) * ftp);
-                const dataIndex = context.dataIndex;
+                const { dataIndex } = context;
                 const dataPoint = continuousWorkoutData[dataIndex];
                 const segmentType = dataPoint?.segmentType || 'Unknown';
                 const powerZone = dataPoint?.powerZone;
@@ -1225,7 +1224,7 @@ export class UI {
               },
             },
             external: context => {
-              const tooltip = context.tooltip;
+              const { tooltip } = context;
               if (!hoverPowerBox) return;
               if (
                 tooltip &&
@@ -1302,8 +1301,7 @@ export class UI {
 
             // Get segment index from the clicked data point
             if (dataIndex !== undefined && continuousWorkoutData[dataIndex]) {
-              const segmentIndex =
-                continuousWorkoutData[dataIndex].segmentIndex;
+              const { segmentIndex } = continuousWorkoutData[dataIndex];
               onSegmentClick(segmentIndex);
             }
           } else {

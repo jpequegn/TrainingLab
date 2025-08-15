@@ -192,12 +192,12 @@ export class WorkoutEditor {
     // Handle drag start on templates
     document.addEventListener('dragstart', e => {
       if (e.target.classList.contains('segment-template')) {
-        const templateId = e.target.dataset.templateId;
+        const { templateId } = e.target.dataset;
         e.dataTransfer.setData('text/plain', templateId);
         e.dataTransfer.setData('application/x-template-id', templateId);
         e.target.style.opacity = '0.5';
       } else if (e.target.classList.contains('timeline-segment')) {
-        const segmentId = e.target.dataset.segmentId;
+        const { segmentId } = e.target.dataset;
         e.dataTransfer.setData('text/plain', segmentId);
         e.dataTransfer.setData('application/x-segment-id', segmentId);
         e.target.style.opacity = '0.5';

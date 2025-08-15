@@ -281,7 +281,7 @@ export class WorkoutLibrary {
       });
 
     document.getElementById('durationFilter')?.addEventListener('change', e => {
-      const value = e.target.value;
+      const { value } = e.target;
       delete this.currentFilters.minDuration;
       delete this.currentFilters.maxDuration;
 
@@ -526,7 +526,7 @@ export class WorkoutLibrary {
       card.addEventListener('click', e => {
         if (e.target.closest('button')) return; // Don't trigger on button clicks
 
-        const workoutId = card.dataset.workoutId;
+        const { workoutId } = card.dataset;
         this.loadWorkout(workoutId);
       });
     });
@@ -535,7 +535,7 @@ export class WorkoutLibrary {
     document.querySelectorAll('.star-workout').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        const workoutId = btn.dataset.workoutId;
+        const { workoutId } = btn.dataset;
         this.toggleWorkoutStar(workoutId);
       });
     });
@@ -544,7 +544,7 @@ export class WorkoutLibrary {
     document.querySelectorAll('.delete-workout').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        const workoutId = btn.dataset.workoutId;
+        const { workoutId } = btn.dataset;
         this.deleteWorkout(workoutId);
       });
     });
@@ -583,7 +583,7 @@ export class WorkoutLibrary {
     }
 
     try {
-      const workoutData = this.visualizer.workout.workoutData;
+      const { workoutData } = this.visualizer.workout;
       await workoutStorage.saveWorkout(workoutData, {
         source: 'current',
       });
