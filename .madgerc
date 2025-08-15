@@ -12,9 +12,6 @@
     "\\.spec\\.",
     "tests/fixtures"
   ],
-  "dependencyFilter": function(id) {
-    return !id.includes('node_modules');
-  },
   "layout": "dot",
   "imageConfig": {
     "backgroundColor": "#ffffff",
