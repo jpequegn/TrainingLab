@@ -1,0 +1,36 @@
+{
+  "baseDir": "./",
+  "includeNpm": false,
+  "fileExtensions": ["js", "ts"],
+  "excludeRegExp": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "test-results",
+    "playwright-report",
+    "\\.test\\.",
+    "\\.spec\\.",
+    "tests/fixtures"
+  ],
+  "dependencyFilter": function(id) {
+    return !id.includes('node_modules');
+  },
+  "layout": "dot",
+  "imageConfig": {
+    "backgroundColor": "#ffffff",
+    "nodeColor": "#1f4e8c",
+    "noDependencyColor": "#28a745",
+    "cyclicNodeColor": "#dc3545",
+    "edgeColor": "#333333",
+    "graphVizOptions": {
+      "G": {
+        "rankdir": "TB",
+        "concentrate": "true",
+        "splines": "true"
+      }
+    }
+  },
+  "circularConfig": {
+    "skip": false
+  }
+}

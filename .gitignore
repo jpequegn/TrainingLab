@@ -8,6 +8,9 @@ coverage/
 test-results/
 playwright-report/
 
+# Quality analysis reports
+reports/
+
 # IDE and editor files
 .vscode/settings.json.user
 .vscode/sftp.json
