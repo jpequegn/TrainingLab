@@ -60,8 +60,10 @@
       "Bash(start /b python server.py)",
       "Bash(start /b python -m http.server 3000)",
       "Bash(mv:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(timeout 10s npm run docs:serve)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

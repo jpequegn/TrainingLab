@@ -278,8 +278,8 @@ export class ChartUtils {
     }
 
     if (segmentIndex !== null && segmentIndex >= 0) {
-      const data = chart.data.datasets[0].data;
-      const labels = chart.data.labels;
+      const { data } = chart.data.datasets[0];
+      const { labels } = chart.data;
 
       // Calculate segment boundaries
       const startIndex = segmentIndex * 2;

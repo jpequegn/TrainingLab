@@ -293,7 +293,7 @@ export class SegmentEditor extends BaseComponent {
 
   handleInput(event) {
     const field = event.target.name;
-    const value = event.target.value;
+    const { value } = event.target;
 
     // Real-time validation
     this.validateField(field, value);

@@ -77,7 +77,9 @@ export function createMockCanvasContext() {
  * Wait for DOM updates in tests
  */
 export function waitForNextTick() {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise(resolve => {
+    setTimeout(resolve, 0);
+  });
 }
 
 /**

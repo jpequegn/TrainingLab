@@ -228,7 +228,7 @@ export class MobileEnhancements {
 
   handleTouchMove(e) {
     // Handle pull-to-refresh prevention on certain elements
-    const target = e.target;
+    const { target } = e;
     if (
       target.closest('.no-pull-refresh') &&
       e.touches[0].clientY > this.touchStartY
@@ -280,7 +280,7 @@ export class MobileEnhancements {
       window.app.workout &&
       window.app.workout.workoutData.segments
     ) {
-      const segments = window.app.workout.workoutData.segments;
+      const { segments } = window.app.workout.workoutData;
       let newIndex = this.currentSegmentIndex || 0;
 
       if (direction === 'left' && newIndex < segments.length - 1) {

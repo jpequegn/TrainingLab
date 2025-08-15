@@ -121,12 +121,13 @@ export class StateManager {
     const { silent = false, source = 'unknown' } = options;
 
     const oldValue = this.getState(path);
+    let newValue = value;
 
     // Apply middleware
     const middlewareContext = {
       path,
       oldValue,
-      newValue: value,
+      newValue,
       source,
       timestamp: Date.now(),
     };
@@ -138,18 +139,18 @@ export class StateManager {
         return false;
       }
       if (result && typeof result === 'object') {
-        value = result;
+        newValue = result;
       }
     }
 
     // Update state
-    this.setNestedValue(path, value);
+    this.setNestedValue(path, newValue);
 
     // Add to history
     this.addToHistory({
       path,
       oldValue,
-      newValue: value,
+      newValue,
       source,
       timestamp: Date.now(),
     });

@@ -178,16 +178,18 @@ export class LoadingManager {
     for (let i = 0; i < steps.length; i++) {
       this.updateProgress(i);
       // Add small delay for visual feedback
-      await new Promise(resolve =>
-        setTimeout(resolve, 300 + Math.random() * 200)
-      );
+      await new Promise(resolve => {
+        setTimeout(resolve, 300 + Math.random() * 200);
+      });
     }
   }
 }
 
 // Utility function to delay execution (useful for smooth transitions)
 export function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }
 
 // Export singleton instance

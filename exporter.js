@@ -19,11 +19,10 @@ export function generateERGContent(workoutData, ftp) {
 
   const textCues = generateTextCues(workoutData);
 
-  let content = `${header  }\n${  courseData  }\n[END COURSE DATA]`;
+  let content = `${header}\n${courseData}\n[END COURSE DATA]`;
 
   if (textCues.length > 0) {
-    content +=
-      `\n\n[COURSE TEXT]\n${  textCues.join('\n')  }\n[END COURSE TEXT]`;
+    content += `\n\n[COURSE TEXT]\n${textCues.join('\n')}\n[END COURSE TEXT]`;
   }
 
   return content;
@@ -49,11 +48,10 @@ export function generateMRCContent(workoutData) {
 
   const textCues = generateTextCues(workoutData);
 
-  let content = `${header  }\n${  courseData  }\n[END COURSE DATA]`;
+  let content = `${header}\n${courseData}\n[END COURSE DATA]`;
 
   if (textCues.length > 0) {
-    content +=
-      `\n\n[COURSE TEXT]\n${  textCues.join('\n')  }\n[END COURSE TEXT]`;
+    content += `\n\n[COURSE TEXT]\n${textCues.join('\n')}\n[END COURSE TEXT]`;
   }
 
   return content;
@@ -78,7 +76,7 @@ function generateWorkoutDataPoints(workoutData, format, ftp = 250) {
   let currentTime = 0;
 
   allSegments.forEach(segment => {
-    const startTime = segment.startTime;
+    const { startTime } = segment;
     const endTime = segment.startTime + segment.duration;
 
     // Add transition point if there's a gap
@@ -218,7 +216,7 @@ function generateSegmentXML(segment) {
     return xml;
   }
 
-  const duration = segment.duration;
+  const { duration } = segment;
 
   switch (segment.type.toLowerCase()) {
     case 'warmup':

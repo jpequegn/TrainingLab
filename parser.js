@@ -56,7 +56,7 @@ export function parseWorkoutXML(xmlDoc) {
 }
 
 function parseSegment(segment, startTime) {
-  const tagName = segment.tagName;
+  const { tagName } = segment;
   const duration = parseInt(segment.getAttribute('Duration')) || 0;
 
   const segmentData = {

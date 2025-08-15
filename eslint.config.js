@@ -1,8 +1,12 @@
 import globals from 'globals';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import complexity from 'eslint-plugin-complexity';
 
 export default [
   {
+    plugins: {
+      complexity,
+    },
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -56,6 +60,45 @@ export default [
       'no-unreachable-loop': 'error',
       'no-unused-private-class-members': 'error',
       'require-atomic-updates': 'error',
+
+      // Complexity and maintainability rules
+      complexity: ['warn', { max: 15 }],
+      'max-depth': ['warn', { max: 4 }],
+      'max-lines': [
+        'warn',
+        { max: 300, skipBlankLines: true, skipComments: true },
+      ],
+      'max-lines-per-function': [
+        'warn',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-nested-callbacks': ['warn', { max: 3 }],
+      'max-params': ['warn', { max: 5 }],
+      'max-statements': ['warn', { max: 20 }],
+      'max-statements-per-line': ['error', { max: 1 }],
+
+      // Code quality and maintainability
+      'no-magic-numbers': [
+        'warn',
+        {
+          ignore: [-1, 0, 1, 2, 100, 1000],
+          ignoreArrayIndexes: true,
+          ignoreDefaultValues: true,
+          detectObjects: false,
+        },
+      ],
+      'no-nested-ternary': 'warn',
+      'prefer-object-spread': 'error',
+      'prefer-destructuring': [
+        'warn',
+        {
+          array: false,
+          object: true,
+        },
+        {
+          enforceForRenamedProperties: false,
+        },
+      ],
     },
   },
   // Disable ESLint rules that conflict with Prettier

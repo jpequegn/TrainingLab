@@ -1,0 +1,162 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # JavaScript/Node.js dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 10
+    reviewers:
+      - 'jpequegn'
+    assignees:
+      - 'jpequegn'
+    labels:
+      - 'dependencies'
+      - 'enhancement'
+      - 'automated'
+    commit-message:
+      prefix: 'deps'
+      prefix-development: 'deps-dev'
+      include: 'scope'
+    versioning-strategy: 'increase'
+    # Group related updates
+    groups:
+      # Group all ESLint-related packages
+      eslint:
+        patterns:
+          - 'eslint*'
+          - '@eslint/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group all TypeScript-related packages
+      typescript:
+        patterns:
+          - 'typescript'
+          - '@types/*'
+          - 'ts-*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group testing frameworks
+      testing:
+        patterns:
+          - '*test*'
+          - '*spec*'
+          - 'vitest*'
+          - '@vitest/*'
+          - 'playwright*'
+          - '@playwright/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Group build tools
+      build-tools:
+        patterns:
+          - 'prettier'
+          - 'husky'
+          - 'lint-staged'
+          - 'concurrently'
+          - 'nodemon'
+          - 'browser-sync'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Auto-merge rules for safe updates
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'version-update:semver-patch'
+      - dependency-type: 'direct:development'
+        update-type: 'version-update:semver-minor'
+      - dependency-type: 'direct:development'
+        update-type: 'version-update:semver-patch'
+      - dependency-type: 'indirect'
+        update-type: 'version-update:semver-patch'
+    # Ignore specific packages that require manual updates
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: 'chartjs-plugin-annotation'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'playwright'
+        update-types: ['version-update:semver-major']
+      # Temporarily ignore if needed
+      # - dependency-name: "package-name"
+      #   versions: ["1.x", "2.x"]
+
+  # Python dependencies
+  - package-ecosystem: 'pip'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'tuesday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'jpequegn'
+    assignees:
+      - 'jpequegn'
+    labels:
+      - 'dependencies'
+      - 'python'
+      - 'automated'
+    commit-message:
+      prefix: 'deps(python)'
+      include: 'scope'
+    # Group Python AI/ML packages
+    groups:
+      ai-packages:
+        patterns:
+          - 'langchain*'
+          - 'openai'
+          - '*ai*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      dev-tools:
+        patterns:
+          - 'python-dotenv'
+          - 'requests'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+      day: 'first-monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'jpequegn'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
+    commit-message:
+      prefix: 'deps(actions)'
+      include: 'scope'
+
+  # Docker dependencies (if using Dockerfile)
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    open-pull-requests-limit: 2
+    reviewers:
+      - 'jpequegn'
+    labels:
+      - 'dependencies'
+      - 'docker'
+      - 'automated'
+    commit-message:
+      prefix: 'deps(docker)'
