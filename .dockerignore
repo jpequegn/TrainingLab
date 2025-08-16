@@ -110,8 +110,8 @@ mcp_manager.html
 stop_server.py
 test_server.py
 
-# Package locks (will be copied separately)
-package-lock.json
+# Package locks are needed for npm ci
+# package-lock.json
 
 # Ignore this file itself
 .dockerignore
