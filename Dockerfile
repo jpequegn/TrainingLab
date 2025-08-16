@@ -99,6 +99,7 @@ WORKDIR /app
 # Copy dependencies and application from build stage
 COPY --from=app-build --chown=appuser:appgroup /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=app-build --chown=appuser:appgroup /usr/local/bin /usr/local/bin
+COPY --from=node-deps --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=app-build --chown=appuser:appgroup /app ./
 
 # Set secure file permissions
