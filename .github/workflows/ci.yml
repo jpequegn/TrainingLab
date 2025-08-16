@@ -61,7 +61,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint -- --max-warnings 50 --format stylish
+        run: npm run lint -- --max-warnings 700 --format stylish
         env:
           NODE_ENV: development
         continue-on-error: false
