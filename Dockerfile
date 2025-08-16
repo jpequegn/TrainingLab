@@ -10,8 +10,14 @@ WORKDIR /app
 # Install security updates
 RUN apk update && apk upgrade && apk add --no-cache dumb-init
 
+# Verify npm and node are available
+RUN node --version && npm --version
+
 # Copy package files
 COPY package*.json ./
+
+# Verify package-lock.json exists
+RUN ls -la package*.json
 
 # Install Node.js dependencies with security audit
 RUN npm ci --only=production && \
