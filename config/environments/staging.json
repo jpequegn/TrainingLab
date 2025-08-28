@@ -1,0 +1,49 @@
+{
+  "environment": "staging",
+  "debug": false,
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "cors_origins": ["https://staging.wkolibrary.dev"],
+    "request_timeout": 30,
+    "max_upload_size_mb": 25
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "json",
+    "file_logging": true,
+    "console_logging": true,
+    "log_file": "/var/log/wkolibrary/staging.log"
+  },
+  "security": {
+    "rate_limit_per_minute": 90,
+    "cors_strict": true,
+    "csrf_protection": true,
+    "secure_cookies": true,
+    "force_https": true
+  },
+  "performance": {
+    "enable_caching": true,
+    "cache_ttl": 1800,
+    "enable_compression": true,
+    "worker_processes": 2
+  },
+  "features": {
+    "enable_ai_features": true,
+    "enable_experimental_ui": true,
+    "enable_performance_monitoring": true,
+    "enable_hot_reload": false
+  },
+  "mcp": {
+    "health_check_interval": 20,
+    "max_retry_attempts": 4,
+    "timeout_seconds": 8,
+    "auto_restart": true
+  },
+  "monitoring": {
+    "enable_metrics": true,
+    "metrics_endpoint": "/metrics",
+    "health_check_endpoint": "/health",
+    "detailed_errors": true
+  }
+}

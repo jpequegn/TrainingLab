@@ -9,13 +9,13 @@
  * @returns {string} HTML-escaped text
  */
 export function escapeHtml(text) {
-    if (typeof text !== 'string') {
-        return String(text);
-    }
-    
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  if (typeof text !== 'string') {
+    return String(text);
+  }
+
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**
@@ -24,8 +24,8 @@ export function escapeHtml(text) {
  * @param {string} text - Text content to set
  */
 export function safeSetText(element, text) {
-    if (!element) return;
-    element.textContent = text;
+  if (!element) return;
+  element.textContent = text;
 }
 
 /**
@@ -36,26 +36,26 @@ export function safeSetText(element, text) {
  * @returns {HTMLElement} Created element
  */
 export function safeCreateElement(tagName, textContent = '', attributes = {}) {
-    const element = document.createElement(tagName);
-    
-    if (textContent) {
-        element.textContent = textContent;
+  const element = document.createElement(tagName);
+
+  if (textContent) {
+    element.textContent = textContent;
+  }
+
+  // Set attributes safely
+  Object.entries(attributes).forEach(([key, value]) => {
+    if (key === 'className') {
+      element.className = value;
+    } else if (key === 'dataset') {
+      Object.entries(value).forEach(([dataKey, dataValue]) => {
+        element.dataset[dataKey] = dataValue;
+      });
+    } else {
+      element.setAttribute(key, value);
     }
-    
-    // Set attributes safely
-    Object.entries(attributes).forEach(([key, value]) => {
-        if (key === 'className') {
-            element.className = value;
-        } else if (key === 'dataset') {
-            Object.entries(value).forEach(([dataKey, dataValue]) => {
-                element.dataset[dataKey] = dataValue;
-            });
-        } else {
-            element.setAttribute(key, value);
-        }
-    });
-    
-    return element;
+  });
+
+  return element;
 }
 
 /**
@@ -64,13 +64,13 @@ export function safeCreateElement(tagName, textContent = '', attributes = {}) {
  * @param {...HTMLElement} children - Child elements to append
  */
 export function safeAppendChildren(parent, ...children) {
-    if (!parent) return;
-    
-    children.forEach(child => {
-        if (child instanceof HTMLElement) {
-            parent.appendChild(child);
-        }
-    });
+  if (!parent) return;
+
+  children.forEach(child => {
+    if (child instanceof HTMLElement) {
+      parent.appendChild(child);
+    }
+  });
 }
 
 /**
@@ -78,11 +78,11 @@ export function safeAppendChildren(parent, ...children) {
  * @param {HTMLElement} element - Element to clear
  */
 export function safeClearElement(element) {
-    if (!element) return;
-    
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
-    }
+  if (!element) return;
+
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
 }
 
 /**
@@ -92,9 +92,9 @@ export function safeClearElement(element) {
  * @returns {string} Safe HTML string
  */
 export function safeTemplate(template, data = {}) {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-        return escapeHtml(data[key] || '');
-    });
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return escapeHtml(data[key] || '');
+  });
 }
 
 /**
@@ -104,35 +104,42 @@ export function safeTemplate(template, data = {}) {
  * @returns {Object} Validation result
  */
 export function validateFileUpload(file, options = {}) {
-    const defaults = {
-        maxSize: 10 * 1024 * 1024, // 10MB
-        allowedTypes: ['.zwo'],
-        allowedMimeTypes: ['text/xml', 'application/xml']
-    };
-    
-    const config = { ...defaults, ...options };
-    const errors = [];
-    
-    // File size validation
-    if (file.size > config.maxSize) {
-        errors.push(`File size (${Math.round(file.size / 1024 / 1024)}MB) exceeds maximum allowed size (${Math.round(config.maxSize / 1024 / 1024)}MB)`);
-    }
-    
-    // File extension validation
-    const extension = '.' + file.name.split('.').pop().toLowerCase();
-    if (!config.allowedTypes.includes(extension)) {
-        errors.push(`File type "${extension}" is not allowed. Allowed types: ${config.allowedTypes.join(', ')}`);
-    }
-    
-    // MIME type validation
-    if (config.allowedMimeTypes.length > 0 && !config.allowedMimeTypes.includes(file.type)) {
-        errors.push(`MIME type "${file.type}" is not allowed`);
-    }
-    
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
+  const defaults = {
+    maxSize: 10 * 1024 * 1024, // 10MB
+    allowedTypes: ['.zwo'],
+    allowedMimeTypes: ['text/xml', 'application/xml'],
+  };
+
+  const config = { ...defaults, ...options };
+  const errors = [];
+
+  // File size validation
+  if (file.size > config.maxSize) {
+    errors.push(
+      `File size (${Math.round(file.size / 1024 / 1024)}MB) exceeds maximum allowed size (${Math.round(config.maxSize / 1024 / 1024)}MB)`
+    );
+  }
+
+  // File extension validation
+  const extension = `.${  file.name.split('.').pop().toLowerCase()}`;
+  if (!config.allowedTypes.includes(extension)) {
+    errors.push(
+      `File type "${extension}" is not allowed. Allowed types: ${config.allowedTypes.join(', ')}`
+    );
+  }
+
+  // MIME type validation
+  if (
+    config.allowedMimeTypes.length > 0 &&
+    !config.allowedMimeTypes.includes(file.type)
+  ) {
+    errors.push(`MIME type "${file.type}" is not allowed`);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
 }
 
 /**
@@ -141,43 +148,45 @@ export function validateFileUpload(file, options = {}) {
  * @returns {Object} Sanitization result
  */
 export function sanitizeXmlContent(xmlContent) {
-    const errors = [];
-    
-    // Check for XML entities (potential XML bombs)
-    if (xmlContent.includes('<!ENTITY')) {
-        errors.push('XML entities are not allowed');
+  const errors = [];
+
+  // Check for XML entities (potential XML bombs)
+  if (xmlContent.includes('<!ENTITY')) {
+    errors.push('XML entities are not allowed');
+  }
+
+  // Check for external references
+  if (xmlContent.includes('<!DOCTYPE') && xmlContent.includes('SYSTEM')) {
+    errors.push('External DTD references are not allowed');
+  }
+
+  // Check for processing instructions that could be malicious
+  const dangerousPI = ['<?php', '<?xml-stylesheet', '<?import'];
+  for (const pi of dangerousPI) {
+    if (xmlContent.includes(pi)) {
+      errors.push(
+        `Potentially dangerous processing instruction detected: ${pi}`
+      );
     }
-    
-    // Check for external references
-    if (xmlContent.includes('<!DOCTYPE') && xmlContent.includes('SYSTEM')) {
-        errors.push('External DTD references are not allowed');
+  }
+
+  // Basic XML structure validation
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlContent, 'text/xml');
+    const parseError = doc.querySelector('parsererror');
+    if (parseError) {
+      errors.push('Invalid XML structure');
     }
-    
-    // Check for processing instructions that could be malicious
-    const dangerousPI = ['<?php', '<?xml-stylesheet', '<?import'];
-    for (const pi of dangerousPI) {
-        if (xmlContent.includes(pi)) {
-            errors.push(`Potentially dangerous processing instruction detected: ${pi}`);
-        }
-    }
-    
-    // Basic XML structure validation
-    try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xmlContent, 'text/xml');
-        const parseError = doc.querySelector('parsererror');
-        if (parseError) {
-            errors.push('Invalid XML structure');
-        }
-    } catch (error) {
-        errors.push('XML parsing failed');
-    }
-    
-    return {
-        isValid: errors.length === 0,
-        errors,
-        sanitizedContent: xmlContent // For now, return original if valid
-    };
+  } catch (error) {
+    errors.push('XML parsing failed');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    sanitizedContent: xmlContent, // For now, return original if valid
+  };
 }
 
 /**
@@ -185,7 +194,7 @@ export function sanitizeXmlContent(xmlContent) {
  * @returns {string} Random nonce
  */
 export function generateCSPNonce() {
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }

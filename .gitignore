@@ -8,12 +8,21 @@ coverage/
 test-results/
 playwright-report/
 
+# Quality analysis reports
+reports/
+
 # IDE and editor files
-.vscode/
+.vscode/settings.json.user
+.vscode/sftp.json
 .idea/
 *.swp
 *.swo
 *~
+
+# Include VS Code team configuration but exclude user-specific files
+!.vscode/
+.vscode/settings.json.user
+.vscode/sftp.json
 
 # OS generated files
 .DS_Store

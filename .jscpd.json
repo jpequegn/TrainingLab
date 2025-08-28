@@ -1,0 +1,36 @@
+{
+  "threshold": 5,
+  "reporters": ["html", "console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/test-results/**",
+    "**/playwright-report/**",
+    "**/*.min.js",
+    "**/*.test.js",
+    "**/*.spec.js",
+    "**/tests/fixtures/**"
+  ],
+  "gitignore": true,
+  "format": ["javascript", "typescript"],
+  "min-lines": 5,
+  "min-tokens": 100,
+  "output": "./reports/jscpd",
+  "blame": true,
+  "silent": false,
+  "verbose": false,
+  "debug": false,
+  "config": ".jscpd.json",
+  "patterns": [
+    "**/*.js",
+    "**/*.ts",
+    "!**/node_modules/**",
+    "!**/dist/**",
+    "!**/coverage/**"
+  ],
+  "formatsExts": {
+    "javascript": ["js"],
+    "typescript": ["ts"]
+  }
+}

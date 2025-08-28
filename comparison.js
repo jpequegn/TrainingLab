@@ -1,7 +1,7 @@
 /**
  * WorkoutComparison Manager
  * Side-by-side workout comparison, visual overlay, and progression analysis
- * 
+ *
  * @class WorkoutComparison
  * @description Manages workout comparison interface and analysis tools
  */
@@ -9,38 +9,39 @@ import { workoutStorage } from './storage.js';
 import { formatDuration } from './workout.js';
 
 export class WorkoutComparison {
-    constructor(visualizer) {
-        this.visualizer = visualizer;
-        this.selectedWorkouts = new Map(); // Map of workoutId -> workout data
-        this.comparisonMode = 'sidebyside'; // 'sidebyside', 'overlay', 'metrics'
-        this.isComparisonActive = false;
-        
-        // Chart instances for comparison
-        this.comparisonCharts = new Map();
-        
-        // Bind methods
-        this.handleWorkoutSelection = this.handleWorkoutSelection.bind(this);
-        this.closeComparison = this.closeComparison.bind(this);
-    }
+  constructor(visualizer) {
+    this.visualizer = visualizer;
+    this.selectedWorkouts = new Map(); // Map of workoutId -> workout data
+    this.comparisonMode = 'sidebyside'; // 'sidebyside', 'overlay', 'metrics'
+    this.isComparisonActive = false;
 
-    /**
-     * Initialize comparison functionality
-     */
-    initialize() {
-        this.createComparisonInterface();
-        this.bindComparisonEvents();
-    }
+    // Chart instances for comparison
+    this.comparisonCharts = new Map();
 
-    /**
-     * Create the comparison interface UI
-     */
-    createComparisonInterface() {
-        // Create comparison panel (initially hidden)
-        const comparisonPanel = document.createElement('div');
-        comparisonPanel.id = 'comparisonPanel';
-        comparisonPanel.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden';
-        
-        comparisonPanel.innerHTML = `
+    // Bind methods
+    this.handleWorkoutSelection = this.handleWorkoutSelection.bind(this);
+    this.closeComparison = this.closeComparison.bind(this);
+  }
+
+  /**
+   * Initialize comparison functionality
+   */
+  initialize() {
+    this.createComparisonInterface();
+    this.bindComparisonEvents();
+  }
+
+  /**
+   * Create the comparison interface UI
+   */
+  createComparisonInterface() {
+    // Create comparison panel (initially hidden)
+    const comparisonPanel = document.createElement('div');
+    comparisonPanel.id = 'comparisonPanel';
+    comparisonPanel.className =
+      'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden';
+
+    comparisonPanel.innerHTML = `
             <div class="h-full flex flex-col">
                 <!-- Comparison Header -->
                 <div class="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -126,19 +127,19 @@ export class WorkoutComparison {
             </div>
         `;
 
-        document.body.appendChild(comparisonPanel);
+    document.body.appendChild(comparisonPanel);
 
-        // Add comparison toggle to library
-        this.addComparisonControls();
-    }
+    // Add comparison toggle to library
+    this.addComparisonControls();
+  }
 
-    /**
-     * Add comparison controls to the library interface
-     */
-    addComparisonControls() {
-        // Add selection checkboxes to workout cards (will be handled in library.js)
-        const style = document.createElement('style');
-        style.textContent = `
+  /**
+   * Add comparison controls to the library interface
+   */
+  addComparisonControls() {
+    // Add selection checkboxes to workout cards (will be handled in library.js)
+    const style = document.createElement('style');
+    style.textContent = `
             .workout-card.comparison-mode {
                 position: relative;
                 cursor: pointer;
@@ -182,15 +183,15 @@ export class WorkoutComparison {
                 transform: translateY(0);
             }
         `;
-        document.head.appendChild(style);
+    document.head.appendChild(style);
 
-        // Add comparison toolbar to library panel
-        const libraryPanel = document.getElementById('libraryPanel');
-        if (libraryPanel) {
-            const toolbar = document.createElement('div');
-            toolbar.id = 'comparisonToolbar';
-            toolbar.className = 'comparison-toolbar';
-            toolbar.innerHTML = `
+    // Add comparison toolbar to library panel
+    const libraryPanel = document.getElementById('libraryPanel');
+    if (libraryPanel) {
+      const toolbar = document.createElement('div');
+      toolbar.id = 'comparisonToolbar';
+      toolbar.className = 'comparison-toolbar';
+      toolbar.innerHTML = `
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <span id="comparisonCount" class="text-sm font-medium text-gray-700">0 selected</span>
@@ -208,618 +209,691 @@ export class WorkoutComparison {
                     </div>
                 </div>
             `;
-            libraryPanel.appendChild(toolbar);
+      libraryPanel.appendChild(toolbar);
+    }
+  }
+
+  /**
+   * Bind comparison event listeners
+   */
+  bindComparisonEvents() {
+    // Comparison mode buttons
+    document.getElementById('sideBySideMode')?.addEventListener('click', () => {
+      this.switchComparisonMode('sidebyside');
+    });
+
+    document.getElementById('overlayMode')?.addEventListener('click', () => {
+      this.switchComparisonMode('overlay');
+    });
+
+    document.getElementById('metricsMode')?.addEventListener('click', () => {
+      this.switchComparisonMode('metrics');
+    });
+
+    // Close comparison
+    document
+      .getElementById('closeComparison')
+      ?.addEventListener('click', this.closeComparison);
+
+    // Clear selection
+    document.getElementById('clearSelection')?.addEventListener('click', () => {
+      this.clearSelection();
+    });
+
+    // Comparison toolbar events
+    document
+      .getElementById('enableComparison')
+      ?.addEventListener('click', () => {
+        this.toggleComparisonMode();
+      });
+
+    document
+      .getElementById('compareSelected')
+      ?.addEventListener('click', () => {
+        this.startComparison();
+      });
+
+    document
+      .getElementById('clearComparisonSelection')
+      ?.addEventListener('click', () => {
+        this.clearSelection();
+      });
+
+    // Close comparison panel on backdrop click
+    document.getElementById('comparisonPanel')?.addEventListener('click', e => {
+      if (e.target.id === 'comparisonPanel') {
+        this.closeComparison();
+      }
+    });
+  }
+
+  /**
+   * Toggle comparison mode in library
+   */
+  toggleComparisonMode() {
+    const libraryContent = document.getElementById('libraryContent');
+    const enableBtn = document.getElementById('enableComparison');
+
+    if (!libraryContent) return;
+
+    const isComparisonMode =
+      libraryContent.classList.contains('comparison-mode');
+
+    if (isComparisonMode) {
+      // Exit comparison mode
+      libraryContent.classList.remove('comparison-mode');
+      document.querySelectorAll('.workout-card').forEach(card => {
+        card.classList.remove('comparison-mode', 'selected');
+        card.removeEventListener('click', this.handleWorkoutSelection);
+      });
+      enableBtn.textContent = 'Enable Comparison Mode';
+      this.hideComparisonToolbar();
+      this.clearSelection();
+    } else {
+      // Enter comparison mode
+      libraryContent.classList.add('comparison-mode');
+      document.querySelectorAll('.workout-card').forEach(card => {
+        card.classList.add('comparison-mode');
+        card.addEventListener('click', this.handleWorkoutSelection);
+      });
+      enableBtn.textContent = 'Exit Comparison Mode';
+      this.showComparisonToolbar();
+    }
+  }
+
+  /**
+   * Handle workout selection for comparison
+   */
+  async handleWorkoutSelection(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const card = event.currentTarget;
+    const { workoutId } = card.dataset;
+
+    if (!workoutId) return;
+
+    const isSelected = card.classList.contains('selected');
+
+    if (isSelected) {
+      // Deselect workout
+      card.classList.remove('selected');
+      this.selectedWorkouts.delete(workoutId);
+    } else {
+      // Select workout (max 5 workouts)
+      if (this.selectedWorkouts.size >= 5) {
+        this.showToast('Maximum 5 workouts can be compared at once', 'warning');
+        return;
+      }
+
+      card.classList.add('selected');
+
+      try {
+        const workout = await workoutStorage.getWorkout(workoutId);
+        if (workout) {
+          this.selectedWorkouts.set(workoutId, workout);
         }
+      } catch (error) {
+        console.error('Error loading workout for comparison:', error);
+        card.classList.remove('selected');
+        this.showToast('Error loading workout', 'error');
+        return;
+      }
     }
 
-    /**
-     * Bind comparison event listeners
-     */
-    bindComparisonEvents() {
-        // Comparison mode buttons
-        document.getElementById('sideBySideMode')?.addEventListener('click', () => {
-            this.switchComparisonMode('sidebyside');
-        });
+    this.updateComparisonControls();
+  }
 
-        document.getElementById('overlayMode')?.addEventListener('click', () => {
-            this.switchComparisonMode('overlay');
-        });
+  /**
+   * Update comparison controls based on selection
+   */
+  updateComparisonControls() {
+    const count = this.selectedWorkouts.size;
+    const countElement = document.getElementById('comparisonCount');
+    const compareBtn = document.getElementById('compareSelected');
 
-        document.getElementById('metricsMode')?.addEventListener('click', () => {
-            this.switchComparisonMode('metrics');
-        });
-
-        // Close comparison
-        document.getElementById('closeComparison')?.addEventListener('click', this.closeComparison);
-
-        // Clear selection
-        document.getElementById('clearSelection')?.addEventListener('click', () => {
-            this.clearSelection();
-        });
-
-        // Comparison toolbar events
-        document.getElementById('enableComparison')?.addEventListener('click', () => {
-            this.toggleComparisonMode();
-        });
-
-        document.getElementById('compareSelected')?.addEventListener('click', () => {
-            this.startComparison();
-        });
-
-        document.getElementById('clearComparisonSelection')?.addEventListener('click', () => {
-            this.clearSelection();
-        });
-
-        // Close comparison panel on backdrop click
-        document.getElementById('comparisonPanel')?.addEventListener('click', (e) => {
-            if (e.target.id === 'comparisonPanel') {
-                this.closeComparison();
-            }
-        });
+    if (countElement) {
+      countElement.textContent = `${count} selected`;
     }
 
-    /**
-     * Toggle comparison mode in library
-     */
-    toggleComparisonMode() {
-        const libraryContent = document.getElementById('libraryContent');
-        const enableBtn = document.getElementById('enableComparison');
-        
-        if (!libraryContent) return;
-
-        const isComparisonMode = libraryContent.classList.contains('comparison-mode');
-        
-        if (isComparisonMode) {
-            // Exit comparison mode
-            libraryContent.classList.remove('comparison-mode');
-            document.querySelectorAll('.workout-card').forEach(card => {
-                card.classList.remove('comparison-mode', 'selected');
-                card.removeEventListener('click', this.handleWorkoutSelection);
-            });
-            enableBtn.textContent = 'Enable Comparison Mode';
-            this.hideComparisonToolbar();
-            this.clearSelection();
-        } else {
-            // Enter comparison mode
-            libraryContent.classList.add('comparison-mode');
-            document.querySelectorAll('.workout-card').forEach(card => {
-                card.classList.add('comparison-mode');
-                card.addEventListener('click', this.handleWorkoutSelection);
-            });
-            enableBtn.textContent = 'Exit Comparison Mode';
-            this.showComparisonToolbar();
-        }
+    if (compareBtn) {
+      compareBtn.disabled = count < 2;
     }
 
-    /**
-     * Handle workout selection for comparison
-     */
-    async handleWorkoutSelection(event) {
-        event.preventDefault();
-        event.stopPropagation();
+    // Show/hide toolbar based on selection
+    if (count > 0) {
+      this.showComparisonToolbar();
+    } else {
+      this.hideComparisonToolbar();
+    }
+  }
 
-        const card = event.currentTarget;
-        const workoutId = card.dataset.workoutId;
-        
-        if (!workoutId) return;
+  /**
+   * Show comparison toolbar
+   */
+  showComparisonToolbar() {
+    const toolbar = document.getElementById('comparisonToolbar');
+    if (toolbar) {
+      toolbar.classList.add('show');
+    }
+  }
 
-        const isSelected = card.classList.contains('selected');
+  /**
+   * Hide comparison toolbar
+   */
+  hideComparisonToolbar() {
+    const toolbar = document.getElementById('comparisonToolbar');
+    if (toolbar) {
+      toolbar.classList.remove('show');
+    }
+  }
 
-        if (isSelected) {
-            // Deselect workout
-            card.classList.remove('selected');
-            this.selectedWorkouts.delete(workoutId);
-        } else {
-            // Select workout (max 5 workouts)
-            if (this.selectedWorkouts.size >= 5) {
-                this.showToast('Maximum 5 workouts can be compared at once', 'warning');
-                return;
-            }
-
-            card.classList.add('selected');
-            
-            try {
-                const workout = await workoutStorage.getWorkout(workoutId);
-                if (workout) {
-                    this.selectedWorkouts.set(workoutId, workout);
-                }
-            } catch (error) {
-                console.error('Error loading workout for comparison:', error);
-                card.classList.remove('selected');
-                this.showToast('Error loading workout', 'error');
-                return;
-            }
-        }
-
-        this.updateComparisonControls();
+  /**
+   * Start comparison with selected workouts
+   */
+  startComparison() {
+    if (this.selectedWorkouts.size < 2) {
+      this.showToast('Select at least 2 workouts to compare', 'warning');
+      return;
     }
 
-    /**
-     * Update comparison controls based on selection
-     */
-    updateComparisonControls() {
-        const count = this.selectedWorkouts.size;
-        const countElement = document.getElementById('comparisonCount');
-        const compareBtn = document.getElementById('compareSelected');
+    this.isComparisonActive = true;
+    document.getElementById('comparisonPanel').classList.remove('hidden');
+    this.updateSelectedCount();
+    this.renderComparison();
+  }
 
-        if (countElement) {
-            countElement.textContent = `${count} selected`;
-        }
+  /**
+   * Switch comparison mode
+   */
+  switchComparisonMode(mode) {
+    this.comparisonMode = mode;
 
-        if (compareBtn) {
-            compareBtn.disabled = count < 2;
-        }
+    // Update mode buttons
+    document
+      .querySelectorAll('#comparisonPanel button[id$="Mode"]')
+      .forEach(btn => {
+        btn.className =
+          'px-3 py-1 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300';
+      });
 
-        // Show/hide toolbar based on selection
-        if (count > 0) {
-            this.showComparisonToolbar();
-        } else {
-            this.hideComparisonToolbar();
-        }
+    const activeBtn = document.getElementById(
+      `${mode.replace('sidebyside', 'sideBySide')}Mode`
+    );
+    if (activeBtn) {
+      activeBtn.className =
+        'px-3 py-1 text-sm rounded-lg bg-blue-600 text-white';
     }
 
-    /**
-     * Show comparison toolbar
-     */
-    showComparisonToolbar() {
-        const toolbar = document.getElementById('comparisonToolbar');
-        if (toolbar) {
-            toolbar.classList.add('show');
-        }
+    // Show/hide views
+    document
+      .getElementById('sideBySideView')
+      .classList.toggle('hidden', mode !== 'sidebyside');
+    document
+      .getElementById('overlayView')
+      .classList.toggle('hidden', mode !== 'overlay');
+    document
+      .getElementById('metricsView')
+      .classList.toggle('hidden', mode !== 'metrics');
+
+    this.renderComparison();
+  }
+
+  /**
+   * Render comparison based on current mode
+   */
+  renderComparison() {
+    if (!this.isComparisonActive || this.selectedWorkouts.size === 0) return;
+
+    switch (this.comparisonMode) {
+      case 'sidebyside':
+        this.renderSideBySideComparison();
+        break;
+      case 'overlay':
+        this.renderOverlayComparison();
+        break;
+      case 'metrics':
+        this.renderMetricsComparison();
+        break;
+    }
+  }
+
+  /**
+   * Render side-by-side comparison
+   */
+  renderSideBySideComparison() {
+    const content = document.getElementById('sideBySideContent');
+    if (!content) return;
+
+    const workouts = Array.from(this.selectedWorkouts.values());
+
+    content.className = `grid gap-6 grid-cols-${Math.min(workouts.length, 3)}`;
+    content.innerHTML = '';
+
+    workouts.forEach(workout => {
+      const card = this.createWorkoutComparisonCard(workout);
+      content.appendChild(card);
+    });
+  }
+
+  /**
+   * Create a workout comparison card
+   */
+  createWorkoutComparisonCard(workout) {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+
+    const difficultyStars =
+      '★'.repeat(workout.difficulty) + '☆'.repeat(5 - workout.difficulty);
+    const duration = formatDuration(workout.duration);
+
+    // Create header section safely
+    const header = document.createElement('div');
+    header.className = 'p-4 border-b border-gray-200';
+
+    const title = document.createElement('h4');
+    title.className = 'font-semibold text-gray-900 truncate';
+    title.textContent = workout.name; // Safe text content
+
+    const author = document.createElement('p');
+    author.className = 'text-sm text-gray-600';
+    author.textContent = workout.author; // Safe text content
+
+    header.appendChild(title);
+    header.appendChild(author);
+
+    // Create content section safely
+    const content = document.createElement('div');
+    content.className = 'p-4';
+
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 gap-3 mb-4';
+
+    // Helper function to create metric sections
+    const createMetricDiv = (value, label, colorClass) => {
+      const metricDiv = document.createElement('div');
+      metricDiv.className = 'text-center';
+
+      const valueDiv = document.createElement('div');
+      valueDiv.className = `text-lg font-semibold ${colorClass}`;
+      valueDiv.textContent = value;
+
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'text-xs text-gray-500';
+      labelDiv.textContent = label;
+
+      metricDiv.appendChild(valueDiv);
+      metricDiv.appendChild(labelDiv);
+      return metricDiv;
+    };
+
+    // Create metric sections
+    grid.appendChild(createMetricDiv(duration, 'Duration', 'text-blue-600'));
+    grid.appendChild(createMetricDiv(workout.tss, 'TSS', 'text-orange-600'));
+    grid.appendChild(
+      createMetricDiv(`${workout.averagePower}%`, 'Avg Power', 'text-green-600')
+    );
+    grid.appendChild(
+      createMetricDiv(`${workout.maxPower}%`, 'Max Power', 'text-red-600')
+    );
+
+    // Create category and difficulty section
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'mb-3';
+
+    const metaInner = document.createElement('div');
+    metaInner.className = 'flex items-center justify-between text-sm';
+
+    const categorySpan = document.createElement('span');
+    categorySpan.className = 'bg-gray-100 px-2 py-1 rounded';
+    categorySpan.textContent = workout.category;
+
+    const difficultySpan = document.createElement('span');
+    difficultySpan.className = 'text-yellow-600';
+    difficultySpan.textContent = difficultyStars;
+
+    metaInner.appendChild(categorySpan);
+    metaInner.appendChild(difficultySpan);
+    metaDiv.appendChild(metaInner);
+
+    // Create chart container
+    const chartDiv = document.createElement('div');
+    chartDiv.className = 'mb-4';
+
+    const canvas = document.createElement('canvas');
+    canvas.id = `comparisonChart${workout.id}`;
+    canvas.className = 'w-full h-32';
+
+    chartDiv.appendChild(canvas);
+
+    // Assemble the card
+    content.appendChild(grid);
+    content.appendChild(metaDiv);
+    content.appendChild(chartDiv);
+
+    card.appendChild(header);
+    card.appendChild(content);
+
+    // Create action buttons
+    const buttonDiv = document.createElement('div');
+    buttonDiv.className = 'flex justify-between';
+
+    const loadButton = document.createElement('button');
+    loadButton.className =
+      'px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200';
+    loadButton.textContent = 'Load Workout';
+    loadButton.addEventListener('click', () =>
+      window.workoutComparison.loadWorkout(workout.id)
+    );
+
+    const removeButton = document.createElement('button');
+    removeButton.className =
+      'px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200';
+    removeButton.textContent = 'Remove';
+    removeButton.addEventListener('click', () =>
+      window.workoutComparison.removeFromComparison(workout.id)
+    );
+
+    buttonDiv.appendChild(loadButton);
+    buttonDiv.appendChild(removeButton);
+    content.appendChild(buttonDiv);
+
+    return card;
+
+    // Create mini chart for this workout
+    setTimeout(() => {
+      this.createMiniChart(workout);
+    }, 100);
+
+    return card;
+  }
+
+  /**
+   * Create mini chart for workout comparison card
+   */
+  createMiniChart(workout) {
+    const canvas = document.getElementById(`comparisonChart${workout.id}`);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const { workoutData } = workout;
+
+    if (!workoutData.segments || workoutData.segments.length === 0) return;
+
+    // Prepare chart data
+    const chartData = this.prepareChartData(workoutData);
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartData.labels,
+        datasets: [
+          {
+            label: 'Power',
+            data: chartData.powerData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        scales: {
+          x: {
+            display: false,
+          },
+          y: {
+            display: false,
+            min: 0,
+            max: 200,
+          },
+        },
+        elements: {
+          point: {
+            radius: 0,
+          },
+        },
+      },
+    });
+
+    this.comparisonCharts.set(workout.id, chart);
+  }
+
+  /**
+   * Render overlay comparison
+   */
+  renderOverlayComparison() {
+    const canvas = document.getElementById('overlayChart');
+    const legend = document.getElementById('overlayLegend');
+
+    if (!canvas || !legend) return;
+
+    // Destroy existing chart
+    if (this.overlayChart) {
+      this.overlayChart.destroy();
     }
 
-    /**
-     * Hide comparison toolbar
-     */
-    hideComparisonToolbar() {
-        const toolbar = document.getElementById('comparisonToolbar');
-        if (toolbar) {
-            toolbar.classList.remove('show');
-        }
-    }
+    const ctx = canvas.getContext('2d');
+    const workouts = Array.from(this.selectedWorkouts.values());
 
-    /**
-     * Start comparison with selected workouts
-     */
-    startComparison() {
-        if (this.selectedWorkouts.size < 2) {
-            this.showToast('Select at least 2 workouts to compare', 'warning');
-            return;
-        }
+    const colors = [
+      '#3b82f6',
+      '#ef4444',
+      '#10b981',
+      '#f59e0b',
+      '#8b5cf6',
+      '#ec4899',
+      '#14b8a6',
+      '#f97316',
+    ];
 
-        this.isComparisonActive = true;
-        document.getElementById('comparisonPanel').classList.remove('hidden');
-        this.updateSelectedCount();
-        this.renderComparison();
-    }
+    const datasets = workouts.map((workout, index) => {
+      const chartData = this.prepareChartData(workout.workoutData);
+      return {
+        label: workout.name,
+        data: chartData.powerData,
+        borderColor: colors[index % colors.length],
+        backgroundColor: `${colors[index % colors.length]}20`,
+        borderWidth: 2,
+        fill: false,
+        tension: 0.1,
+      };
+    });
 
-    /**
-     * Switch comparison mode
-     */
-    switchComparisonMode(mode) {
-        this.comparisonMode = mode;
+    // Use the longest workout for labels
+    const longestWorkout = workouts.reduce((longest, current) =>
+      current.duration > longest.duration ? current : longest
+    );
+    const { labels } = this.prepareChartData(longestWorkout.workoutData);
 
-        // Update mode buttons
-        document.querySelectorAll('#comparisonPanel button[id$="Mode"]').forEach(btn => {
-            btn.className = 'px-3 py-1 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300';
-        });
-
-        const activeBtn = document.getElementById(`${mode.replace('sidebyside', 'sideBySide')}Mode`);
-        if (activeBtn) {
-            activeBtn.className = 'px-3 py-1 text-sm rounded-lg bg-blue-600 text-white';
-        }
-
-        // Show/hide views
-        document.getElementById('sideBySideView').classList.toggle('hidden', mode !== 'sidebyside');
-        document.getElementById('overlayView').classList.toggle('hidden', mode !== 'overlay');
-        document.getElementById('metricsView').classList.toggle('hidden', mode !== 'metrics');
-
-        this.renderComparison();
-    }
-
-    /**
-     * Render comparison based on current mode
-     */
-    renderComparison() {
-        if (!this.isComparisonActive || this.selectedWorkouts.size === 0) return;
-
-        switch (this.comparisonMode) {
-        case 'sidebyside':
-            this.renderSideBySideComparison();
-            break;
-        case 'overlay':
-            this.renderOverlayComparison();
-            break;
-        case 'metrics':
-            this.renderMetricsComparison();
-            break;
-        }
-    }
-
-    /**
-     * Render side-by-side comparison
-     */
-    renderSideBySideComparison() {
-        const content = document.getElementById('sideBySideContent');
-        if (!content) return;
-
-        const workouts = Array.from(this.selectedWorkouts.values());
-        
-        content.className = `grid gap-6 grid-cols-${Math.min(workouts.length, 3)}`;
-        content.innerHTML = '';
-
-        workouts.forEach(workout => {
-            const card = this.createWorkoutComparisonCard(workout);
-            content.appendChild(card);
-        });
-    }
-
-    /**
-     * Create a workout comparison card
-     */
-    createWorkoutComparisonCard(workout) {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
-        
-        const difficultyStars = '★'.repeat(workout.difficulty) + '☆'.repeat(5 - workout.difficulty);
-        const duration = formatDuration(workout.duration);
-
-        // Create header section safely
-        const header = document.createElement('div');
-        header.className = 'p-4 border-b border-gray-200';
-        
-        const title = document.createElement('h4');
-        title.className = 'font-semibold text-gray-900 truncate';
-        title.textContent = workout.name; // Safe text content
-        
-        const author = document.createElement('p');
-        author.className = 'text-sm text-gray-600';
-        author.textContent = workout.author; // Safe text content
-        
-        header.appendChild(title);
-        header.appendChild(author);
-        
-        // Create content section safely
-        const content = document.createElement('div');
-        content.className = 'p-4';
-        
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-2 gap-3 mb-4';
-        
-        // Helper function to create metric sections
-        const createMetricDiv = (value, label, colorClass) => {
-            const metricDiv = document.createElement('div');
-            metricDiv.className = 'text-center';
-            
-            const valueDiv = document.createElement('div');
-            valueDiv.className = `text-lg font-semibold ${colorClass}`;
-            valueDiv.textContent = value;
-            
-            const labelDiv = document.createElement('div');
-            labelDiv.className = 'text-xs text-gray-500';
-            labelDiv.textContent = label;
-            
-            metricDiv.appendChild(valueDiv);
-            metricDiv.appendChild(labelDiv);
-            return metricDiv;
-        };
-        
-        // Create metric sections
-        grid.appendChild(createMetricDiv(duration, 'Duration', 'text-blue-600'));
-        grid.appendChild(createMetricDiv(workout.tss, 'TSS', 'text-orange-600'));
-        grid.appendChild(createMetricDiv(`${workout.averagePower}%`, 'Avg Power', 'text-green-600'));
-        grid.appendChild(createMetricDiv(`${workout.maxPower}%`, 'Max Power', 'text-red-600'));
-        
-        // Create category and difficulty section
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'mb-3';
-        
-        const metaInner = document.createElement('div');
-        metaInner.className = 'flex items-center justify-between text-sm';
-        
-        const categorySpan = document.createElement('span');
-        categorySpan.className = 'bg-gray-100 px-2 py-1 rounded';
-        categorySpan.textContent = workout.category;
-        
-        const difficultySpan = document.createElement('span');
-        difficultySpan.className = 'text-yellow-600';
-        difficultySpan.textContent = difficultyStars;
-        
-        metaInner.appendChild(categorySpan);
-        metaInner.appendChild(difficultySpan);
-        metaDiv.appendChild(metaInner);
-        
-        // Create chart container
-        const chartDiv = document.createElement('div');
-        chartDiv.className = 'mb-4';
-        
-        const canvas = document.createElement('canvas');
-        canvas.id = `comparisonChart${workout.id}`;
-        canvas.className = 'w-full h-32';
-        
-        chartDiv.appendChild(canvas);
-        
-        // Assemble the card
-        content.appendChild(grid);
-        content.appendChild(metaDiv);
-        content.appendChild(chartDiv);
-        
-        card.appendChild(header);
-        card.appendChild(content);
-        
-        // Create action buttons
-        const buttonDiv = document.createElement('div');
-        buttonDiv.className = 'flex justify-between';
-        
-        const loadButton = document.createElement('button');
-        loadButton.className = 'px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200';
-        loadButton.textContent = 'Load Workout';
-        loadButton.addEventListener('click', () => window.workoutComparison.loadWorkout(workout.id));
-        
-        const removeButton = document.createElement('button');
-        removeButton.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200';
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', () => window.workoutComparison.removeFromComparison(workout.id));
-        
-        buttonDiv.appendChild(loadButton);
-        buttonDiv.appendChild(removeButton);
-        content.appendChild(buttonDiv);
-
-        return card;
-
-        // Create mini chart for this workout
-        setTimeout(() => {
-            this.createMiniChart(workout);
-        }, 100);
-
-        return card;
-    }
-
-    /**
-     * Create mini chart for workout comparison card
-     */
-    createMiniChart(workout) {
-        const canvas = document.getElementById(`comparisonChart${workout.id}`);
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        const workoutData = workout.workoutData;
-
-        if (!workoutData.segments || workoutData.segments.length === 0) return;
-
-        // Prepare chart data
-        const chartData = this.prepareChartData(workoutData);
-
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    label: 'Power',
-                    data: chartData.powerData,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1
-                }]
+    this.overlayChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets,
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            callbacks: {
+              title: context => {
+                const minutes = Math.floor(context[0].dataIndex / 60);
+                const seconds = context[0].dataIndex % 60;
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+              },
+              label: context => {
+                return `${context.dataset.label}: ${context.parsed.y}% FTP`;
+              },
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        display: false
-                    },
-                    y: {
-                        display: false,
-                        min: 0,
-                        max: 200
-                    }
-                },
-                elements: {
-                    point: {
-                        radius: 0
-                    }
-                }
-            }
-        });
-
-        this.comparisonCharts.set(workout.id, chart);
-    }
-
-    /**
-     * Render overlay comparison
-     */
-    renderOverlayComparison() {
-        const canvas = document.getElementById('overlayChart');
-        const legend = document.getElementById('overlayLegend');
-        
-        if (!canvas || !legend) return;
-
-        // Destroy existing chart
-        if (this.overlayChart) {
-            this.overlayChart.destroy();
-        }
-
-        const ctx = canvas.getContext('2d');
-        const workouts = Array.from(this.selectedWorkouts.values());
-        
-        const colors = [
-            '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-            '#ec4899', '#14b8a6', '#f97316'
-        ];
-
-        const datasets = workouts.map((workout, index) => {
-            const chartData = this.prepareChartData(workout.workoutData);
-            return {
-                label: workout.name,
-                data: chartData.powerData,
-                borderColor: colors[index % colors.length],
-                backgroundColor: `${colors[index % colors.length]}20`,
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-            };
-        });
-
-        // Use the longest workout for labels
-        const longestWorkout = workouts.reduce((longest, current) => 
-            current.duration > longest.duration ? current : longest
-        );
-        const labels = this.prepareChartData(longestWorkout.workoutData).labels;
-
-        this.overlayChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Time',
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: (context) => {
-                                const minutes = Math.floor(context[0].dataIndex / 60);
-                                const seconds = context[0].dataIndex % 60;
-                                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                            },
-                            label: (context) => {
-                                return `${context.dataset.label}: ${context.parsed.y}% FTP`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Power (% FTP)'
-                        },
-                        min: 0,
-                        max: 200
-                    }
-                }
-            }
-        });
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Power (% FTP)',
+            },
+            min: 0,
+            max: 200,
+          },
+        },
+      },
+    });
 
-        // Create legend
-        legend.innerHTML = workouts.map((workout, index) => `
+    // Create legend
+    legend.innerHTML = workouts
+      .map(
+        (workout, index) => `
             <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 rounded-full" style="background-color: ${colors[index % colors.length]}"></div>
                 <span class="text-sm">${this.escapeHtml(workout.name)}</span>
             </div>
-        `).join('');
-    }
+        `
+      )
+      .join('');
+  }
 
-    /**
-     * Render metrics comparison table
-     */
-    renderMetricsComparison() {
-        const table = document.getElementById('metricsTable');
-        const tbody = document.getElementById('metricsTableBody');
-        
-        if (!table || !tbody) return;
+  /**
+   * Render metrics comparison table
+   */
+  renderMetricsComparison() {
+    const table = document.getElementById('metricsTable');
+    const tbody = document.getElementById('metricsTableBody');
 
-        const workouts = Array.from(this.selectedWorkouts.values());
-        
-        // Update table header
-        const thead = table.querySelector('thead tr');
-        thead.innerHTML = `
+    if (!table || !tbody) return;
+
+    const workouts = Array.from(this.selectedWorkouts.values());
+
+    // Update table header
+    const thead = table.querySelector('thead tr');
+    thead.innerHTML = `
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Metric
             </th>
-            ${workouts.map(workout => `
+            ${workouts
+              .map(
+                workout => `
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ${this.escapeHtml(workout.name)}
                 </th>
-            `).join('')}
+            `
+              )
+              .join('')}
         `;
 
-        // Metrics to compare
-        const metrics = [
-            { key: 'duration', label: 'Duration', format: (value) => formatDuration(value) },
-            { key: 'tss', label: 'TSS', format: (value) => value },
-            { key: 'averagePower', label: 'Average Power', format: (value) => `${value}%` },
-            { key: 'maxPower', label: 'Max Power', format: (value) => `${value}%` },
-            { key: 'category', label: 'Category', format: (value) => value },
-            { key: 'difficulty', label: 'Difficulty', format: (value) => '★'.repeat(value) + '☆'.repeat(5 - value) },
-            { key: 'author', label: 'Author', format: (value) => value },
-            { key: 'dateCreated', label: 'Date Created', format: (value) => new Date(value).toLocaleDateString() }
-        ];
+    // Metrics to compare
+    const metrics = [
+      {
+        key: 'duration',
+        label: 'Duration',
+        format: value => formatDuration(value),
+      },
+      { key: 'tss', label: 'TSS', format: value => value },
+      {
+        key: 'averagePower',
+        label: 'Average Power',
+        format: value => `${value}%`,
+      },
+      { key: 'maxPower', label: 'Max Power', format: value => `${value}%` },
+      { key: 'category', label: 'Category', format: value => value },
+      {
+        key: 'difficulty',
+        label: 'Difficulty',
+        format: value => '★'.repeat(value) + '☆'.repeat(5 - value),
+      },
+      { key: 'author', label: 'Author', format: value => value },
+      {
+        key: 'dateCreated',
+        label: 'Date Created',
+        format: value => new Date(value).toLocaleDateString(),
+      },
+    ];
 
-        tbody.innerHTML = metrics.map(metric => `
+    tbody.innerHTML = metrics
+      .map(
+        metric => `
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     ${metric.label}
                 </td>
-                ${workouts.map(workout => `
+                ${workouts
+                  .map(
+                    workout => `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${metric.format(workout[metric.key] || '-')}
                     </td>
-                `).join('')}
+                `
+                  )
+                  .join('')}
             </tr>
-        `).join('');
+        `
+      )
+      .join('');
 
-        // Render progression analysis
-        this.renderProgressionAnalysis(workouts);
-    }
+    // Render progression analysis
+    this.renderProgressionAnalysis(workouts);
+  }
 
-    /**
-     * Render progression analysis
-     */
-    renderProgressionAnalysis(workouts) {
-        const content = document.getElementById('progressionContent');
-        if (!content) return;
+  /**
+   * Render progression analysis
+   */
+  renderProgressionAnalysis(workouts) {
+    const content = document.getElementById('progressionContent');
+    if (!content) return;
 
-        // Sort workouts by date for progression analysis
-        const sortedWorkouts = [...workouts].sort((a, b) => 
-            new Date(a.dateCreated) - new Date(b.dateCreated)
-        );
+    // Sort workouts by date for progression analysis
+    const sortedWorkouts = [...workouts].sort(
+      (a, b) => new Date(a.dateCreated) - new Date(b.dateCreated)
+    );
 
-        if (sortedWorkouts.length < 2) {
-            content.innerHTML = `
+    if (sortedWorkouts.length < 2) {
+      content.innerHTML = `
                 <div class="text-center text-gray-500 py-8">
                     <p>Need at least 2 workouts for progression analysis</p>
                 </div>
             `;
-            return;
-        }
+      return;
+    }
 
-        // Calculate progression metrics
-        const firstWorkout = sortedWorkouts[0];
-        const lastWorkout = sortedWorkouts[sortedWorkouts.length - 1];
-        
-        const durationChange = lastWorkout.duration - firstWorkout.duration;
-        const tssChange = lastWorkout.tss - firstWorkout.tss;
-        const avgPowerChange = lastWorkout.averagePower - firstWorkout.averagePower;
-        const maxPowerChange = lastWorkout.maxPower - firstWorkout.maxPower;
+    // Calculate progression metrics
+    const firstWorkout = sortedWorkouts[0];
+    const lastWorkout = sortedWorkouts[sortedWorkouts.length - 1];
 
-        const daysBetween = Math.ceil(
-            (new Date(lastWorkout.dateCreated) - new Date(firstWorkout.dateCreated)) / (1000 * 60 * 60 * 24)
-        );
+    const durationChange = lastWorkout.duration - firstWorkout.duration;
+    const tssChange = lastWorkout.tss - firstWorkout.tss;
+    const avgPowerChange = lastWorkout.averagePower - firstWorkout.averagePower;
+    const maxPowerChange = lastWorkout.maxPower - firstWorkout.maxPower;
 
-        content.innerHTML = `
+    const daysBetween = Math.ceil(
+      (new Date(lastWorkout.dateCreated) - new Date(firstWorkout.dateCreated)) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    content.innerHTML = `
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <div class="text-xs font-medium text-blue-600 uppercase">Duration Change</div>
@@ -876,171 +950,178 @@ export class WorkoutComparison {
                 </div>
             </div>
         `;
+  }
+
+  /**
+   * Generate progression insights
+   */
+  generateProgressionInsights(workouts) {
+    const insights = [];
+
+    const categories = [...new Set(workouts.map(w => w.category))];
+    if (categories.length > 1) {
+      insights.push(`✨ Workout variety: ${categories.join(', ')}`);
     }
 
-    /**
-     * Generate progression insights
-     */
-    generateProgressionInsights(workouts) {
-        const insights = [];
-        
-        const categories = [...new Set(workouts.map(w => w.category))];
-        if (categories.length > 1) {
-            insights.push(`✨ Workout variety: ${categories.join(', ')}`);
-        }
+    const avgTSS =
+      workouts.reduce((sum, w) => sum + w.tss, 0) / workouts.length;
+    insights.push(`📊 Average TSS: ${Math.round(avgTSS)}`);
 
-        const avgTSS = workouts.reduce((sum, w) => sum + w.tss, 0) / workouts.length;
-        insights.push(`📊 Average TSS: ${Math.round(avgTSS)}`);
+    const difficulties = workouts.map(w => w.difficulty);
+    const avgDifficulty =
+      difficulties.reduce((sum, d) => sum + d, 0) / difficulties.length;
+    insights.push(`⭐ Average difficulty: ${avgDifficulty.toFixed(1)}/5`);
 
-        const difficulties = workouts.map(w => w.difficulty);
-        const avgDifficulty = difficulties.reduce((sum, d) => sum + d, 0) / difficulties.length;
-        insights.push(`⭐ Average difficulty: ${avgDifficulty.toFixed(1)}/5`);
+    return insights
+      .map(insight => `<p class="text-sm text-gray-700">${insight}</p>`)
+      .join('');
+  }
 
-        return insights.map(insight => `<p class="text-sm text-gray-700">${insight}</p>`).join('');
+  /**
+   * Prepare chart data from workout data
+   */
+  prepareChartData(workoutData) {
+    if (!workoutData.segments || workoutData.segments.length === 0) {
+      return { labels: [], powerData: [] };
     }
 
-    /**
-     * Prepare chart data from workout data
-     */
-    prepareChartData(workoutData) {
-        if (!workoutData.segments || workoutData.segments.length === 0) {
-            return { labels: [], powerData: [] };
-        }
+    const labels = [];
+    const powerData = [];
+    let currentTime = 0;
 
-        const labels = [];
-        const powerData = [];
-        let currentTime = 0;
+    workoutData.segments.forEach(segment => {
+      const duration = segment.duration || 0;
+      let power = 65; // Default power
 
-        workoutData.segments.forEach(segment => {
-            const duration = segment.duration || 0;
-            let power = 65; // Default power
+      if (segment.power !== undefined) {
+        power = segment.power * 100;
+      } else if (
+        segment.powerLow !== undefined &&
+        segment.powerHigh !== undefined
+      ) {
+        power = ((segment.powerLow + segment.powerHigh) / 2) * 100;
+      }
 
-            if (segment.power !== undefined) {
-                power = segment.power * 100;
-            } else if (segment.powerLow !== undefined && segment.powerHigh !== undefined) {
-                power = ((segment.powerLow + segment.powerHigh) / 2) * 100;
-            }
+      // Add data points for this segment
+      for (let i = 0; i < duration; i++) {
+        const minutes = Math.floor(currentTime / 60);
+        const seconds = currentTime % 60;
+        labels.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        powerData.push(Math.round(power));
+        currentTime++;
+      }
+    });
 
-            // Add data points for this segment
-            for (let i = 0; i < duration; i++) {
-                const minutes = Math.floor(currentTime / 60);
-                const seconds = currentTime % 60;
-                labels.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-                powerData.push(Math.round(power));
-                currentTime++;
-            }
-        });
+    return { labels, powerData };
+  }
 
-        return { labels, powerData };
+  /**
+   * Load a workout from comparison
+   */
+  async loadWorkout(workoutId) {
+    try {
+      const workout = this.selectedWorkouts.get(workoutId);
+      if (!workout) return;
+
+      this.visualizer.createWorkoutFromData(workout.workoutData);
+      this.showToast(`Loaded "${workout.name}" from comparison`, 'success');
+      this.closeComparison();
+    } catch (error) {
+      console.error('Error loading workout:', error);
+      this.showToast('Failed to load workout', 'error');
+    }
+  }
+
+  /**
+   * Remove workout from comparison
+   */
+  removeFromComparison(workoutId) {
+    this.selectedWorkouts.delete(workoutId);
+
+    // Update UI
+    const card = document.querySelector(`[data-workout-id="${workoutId}"]`);
+    if (card) {
+      card.classList.remove('selected');
     }
 
-    /**
-     * Load a workout from comparison
-     */
-    async loadWorkout(workoutId) {
-        try {
-            const workout = this.selectedWorkouts.get(workoutId);
-            if (!workout) return;
+    this.updateSelectedCount();
+    this.updateComparisonControls();
 
-            this.visualizer.createWorkoutFromData(workout.workoutData);
-            this.showToast(`Loaded "${workout.name}" from comparison`, 'success');
-            this.closeComparison();
-        } catch (error) {
-            console.error('Error loading workout:', error);
-            this.showToast('Failed to load workout', 'error');
-        }
+    if (this.selectedWorkouts.size < 2) {
+      this.closeComparison();
+    } else {
+      this.renderComparison();
     }
+  }
 
-    /**
-     * Remove workout from comparison
-     */
-    removeFromComparison(workoutId) {
-        this.selectedWorkouts.delete(workoutId);
-        
-        // Update UI
-        const card = document.querySelector(`[data-workout-id="${workoutId}"]`);
-        if (card) {
-            card.classList.remove('selected');
-        }
+  /**
+   * Clear all selected workouts
+   */
+  clearSelection() {
+    // Clear selected workouts
+    this.selectedWorkouts.clear();
 
-        this.updateSelectedCount();
-        this.updateComparisonControls();
+    // Update UI
+    document.querySelectorAll('.workout-card.selected').forEach(card => {
+      card.classList.remove('selected');
+    });
 
-        if (this.selectedWorkouts.size < 2) {
-            this.closeComparison();
-        } else {
-            this.renderComparison();
-        }
+    this.updateSelectedCount();
+    this.updateComparisonControls();
+
+    if (this.isComparisonActive) {
+      this.closeComparison();
     }
+  }
 
-    /**
-     * Clear all selected workouts
-     */
-    clearSelection() {
-        // Clear selected workouts
-        this.selectedWorkouts.clear();
+  /**
+   * Update selected count display
+   */
+  updateSelectedCount() {
+    const count = this.selectedWorkouts.size;
+    const countElement = document.getElementById('selectedCount');
 
-        // Update UI
-        document.querySelectorAll('.workout-card.selected').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        this.updateSelectedCount();
-        this.updateComparisonControls();
-        
-        if (this.isComparisonActive) {
-            this.closeComparison();
-        }
+    if (countElement) {
+      countElement.textContent = `${count} workout${count !== 1 ? 's' : ''} selected`;
     }
+  }
 
-    /**
-     * Update selected count display
-     */
-    updateSelectedCount() {
-        const count = this.selectedWorkouts.size;
-        const countElement = document.getElementById('selectedCount');
-        
-        if (countElement) {
-            countElement.textContent = `${count} workout${count !== 1 ? 's' : ''} selected`;
-        }
+  /**
+   * Close comparison panel
+   */
+  closeComparison() {
+    this.isComparisonActive = false;
+    document.getElementById('comparisonPanel').classList.add('hidden');
+
+    // Destroy charts
+    this.comparisonCharts.forEach(chart => chart.destroy());
+    this.comparisonCharts.clear();
+
+    if (this.overlayChart) {
+      this.overlayChart.destroy();
+      this.overlayChart = null;
     }
+  }
 
-    /**
-     * Close comparison panel
-     */
-    closeComparison() {
-        this.isComparisonActive = false;
-        document.getElementById('comparisonPanel').classList.add('hidden');
-
-        // Destroy charts
-        this.comparisonCharts.forEach(chart => chart.destroy());
-        this.comparisonCharts.clear();
-
-        if (this.overlayChart) {
-            this.overlayChart.destroy();
-            this.overlayChart = null;
-        }
+  /**
+   * Show toast notification
+   */
+  showToast(message, type = 'info') {
+    if (this.visualizer && this.visualizer.ui && this.visualizer.ui.showToast) {
+      this.visualizer.ui.showToast(message, type);
+    } else {
+      console.log(`${type.toUpperCase()}: ${message}`);
     }
+  }
 
-    /**
-     * Show toast notification
-     */
-    showToast(message, type = 'info') {
-        if (this.visualizer && this.visualizer.ui && this.visualizer.ui.showToast) {
-            this.visualizer.ui.showToast(message, type);
-        } else {
-            console.log(`${type.toUpperCase()}: ${message}`);
-        }
-    }
-
-    /**
-     * Escape HTML to prevent XSS
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+  /**
+   * Escape HTML to prevent XSS
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 }
 
 // Export for global access

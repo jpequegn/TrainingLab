@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Generated files
+*.generated.*
+coverage/
+.nyc_output/
+
+# Configuration files that should maintain their original formatting
+package-lock.json
+yarn.lock
+.env*
+*.log
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Python files (use different formatter)
+*.py
+__pycache__/
+*.pyc
+
+# Screenshots and binary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.woff*
+*.ttf
+*.eot
+
+# Zwift workout files
+*.zwo
+
+# Documentation that should maintain specific formatting
+CHANGELOG.md
+LICENSE
+DESIGN_SYSTEM.md
+
+# Legacy HTML files with structural issues
+index-legacy.html
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
