@@ -267,7 +267,7 @@ export class WorkoutChart extends BaseComponent {
         
         try {
             // Load chart utilities for data preparation
-            const chartUtils = await moduleLoader.loadModule('chart-engine');
+            await moduleLoader.loadModule('chart-engine');
             
             // Prepare chart data
             const chartData = this.prepareChartData(workoutData);

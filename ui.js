@@ -1408,33 +1408,38 @@ export class UI {
 
         const chatPanel = document.getElementById('chatPanel');
         const chatToggle = document.getElementById('toggleChatPanel');
-        const container = document.querySelector('.container');
         
-        if (chatToggle && chatPanel && container) {
-            // Initialize container state based on chat panel visibility
-            if (chatPanel.classList.contains('minimized')) {
-                container.style.paddingRight = '3rem';
-                container.classList.add('chat-closed');
-            } else {
-                container.style.paddingRight = '22rem';
-                container.classList.add('chat-open');
-            }
+        if (chatToggle && chatPanel) {
+            // Debug: Log initial state
+            console.log('🚨 CHAT PANEL DEBUG:');
+            console.log('Panel element:', chatPanel);
+            console.log('Panel classes:', chatPanel.className);
+            console.log('Panel computed style transform:', window.getComputedStyle(chatPanel).transform);
+            console.log('Panel computed style visibility:', window.getComputedStyle(chatPanel).visibility);
+            console.log('Panel computed style display:', window.getComputedStyle(chatPanel).display);
+            console.log('Window width:', window.innerWidth);
+            console.log('Should be visible on screens ≥1280px:', window.innerWidth >= 1280);
             
             chatToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                chatPanel.classList.toggle('minimized');
-                chatToggle.textContent = chatPanel.classList.contains('minimized') ? '<' : '>';
-                chatToggle.title = chatPanel.classList.contains('minimized') ? 'Restore' : 'Minimize';
+                console.log('🚨 Chat toggle clicked!');
                 
-                // Adjust main content padding
-                if (chatPanel.classList.contains('minimized')) {
-                    container.style.paddingRight = '3rem';
-                    container.classList.remove('chat-open');
-                    container.classList.add('chat-closed');
+                // For now, let's use a simple approach - just force show/hide
+                const currentTransform = window.getComputedStyle(chatPanel).transform;
+                console.log('Current transform:', currentTransform);
+                
+                if (currentTransform.includes('matrix(1, 0, 0, 1, 320, 0)') || chatPanel.style.transform.includes('translateX(100%)')) {
+                    // Panel is hidden, show it
+                    chatPanel.style.transform = 'translateX(0)';
+                    chatToggle.textContent = '>';
+                    chatToggle.title = 'Hide Chat';
+                    console.log('🚨 Showing panel');
                 } else {
-                    container.style.paddingRight = '22rem';
-                    container.classList.remove('chat-closed');
-                    container.classList.add('chat-open');
+                    // Panel is visible, hide it
+                    chatPanel.style.transform = 'translateX(100%)';
+                    chatToggle.textContent = '<';
+                    chatToggle.title = 'Show Chat';
+                    console.log('🚨 Hiding panel');
                 }
             });
         }

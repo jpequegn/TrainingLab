@@ -309,7 +309,7 @@ export class PowerZoneManager {
         }
         
         // Validate imported zones
-        for (const [zoneId, zone] of Object.entries(config.zones)) {
+        for (const zone of Object.values(config.zones)) {
             this._validateZoneConfig(zone);
         }
         

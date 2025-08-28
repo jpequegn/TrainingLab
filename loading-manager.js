@@ -161,7 +161,7 @@ export class LoadingManager {
      */
     createFileLoadingState() {
         return new Promise((resolve) => {
-            const overlay = this.showLoading('Preparing to load workout...');
+            this.showLoading('Preparing to load workout...');
             
             // Simulate preparation time
             setTimeout(() => {

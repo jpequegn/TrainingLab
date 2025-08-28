@@ -76,7 +76,7 @@ export class WorkoutGenerator {
                     let mappedZone = null;
                     
                     // Try to find matching zone by name
-                    for (const [zoneId, zone] of Object.entries(zones)) {
+                    for (const zone of Object.values(zones)) {
                         const zoneName = zone.name.toLowerCase();
                         if (aliases.some(alias => zoneName.includes(alias.toLowerCase()))) {
                             mappedZone = zone;
@@ -453,14 +453,7 @@ export class WorkoutGenerator {
     parseSubStructure(subStructure) {
         const segments = [];
         
-        // Match patterns like "first 2' @ 105% then 12' at 100%"
-        const patterns = [
-            /(?:first\s+)?(\d+)'?\s*@\s*(\d+)%/gi,  // "first 2' @ 105%"
-            /then\s+(\d+)'?\s*at\s+(\d+)%/gi,      // "then 12' at 100%"
-            /(\d+)'?\s*@\s*(\d+)%/gi               // Generic "X' @ Y%"
-        ];
-        
-        const totalTime = 0;
+        // Parse segments from the description (patterns available for future use)
         
         // Try to parse "first X @ Y% then Z @ W%" structure
         const firstMatch = subStructure.match(/(?:first\s+)?(\d+)'?\s*@\s*(\d+)%/i);
@@ -1050,7 +1043,8 @@ export class WorkoutGenerator {
             return { valid: true, warnings: [], info: 'No power zone validation available' };
         }
         
-        const zones = this.powerZoneManager.getZones();
+        // Power zone validation currently not implemented
+        // const zones = this.powerZoneManager.getZones();
         const warnings = [];
         const info = [];
         

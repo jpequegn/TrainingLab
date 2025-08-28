@@ -219,7 +219,7 @@ export function calculateWorkoutMetrics(workout) {
             totalDuration += segment.duration;
 
             // Calculate time in zones
-            for (const [zoneName, zone] of Object.entries(powerZones)) {
+            for (const zone of Object.values(powerZones)) {
                 if (powerPercent >= zone.min && powerPercent <= zone.max) {
                     zone.time += segment.duration;
                     break;
@@ -282,7 +282,6 @@ export function calculatePowerCurve(workout, durations = [5, 10, 15, 20, 30, 60,
 
     // Create a continuous power data array with 1-second resolution
     const powerData = [];
-    const currentTime = 0;
 
     const allSegments = [];
     workout.segments.forEach(segment => {
@@ -353,7 +352,7 @@ export function calculateWorkoutDifficultyScore(workout, metrics) {
 
     const tss = calculateTSS(workout);
     const duration = workout.totalDuration / 3600; // Convert to hours
-    const { intensityFactor, variabilityIndex, timeInZones } = metrics;
+    const { variabilityIndex, timeInZones } = metrics;
 
     // TSS Component (0-40 points): Base difficulty from training stress
     let tssComponent = 0;
