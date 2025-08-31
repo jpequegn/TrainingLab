@@ -1,7 +1,7 @@
 {
-  "name": "wkolibrary",
+  "name": "traininglab",
   "version": "1.0.0",
-  "description": "A web-based application that loads Zwift workout files (.zwo) and displays them as interactive graphs.",
+  "description": "A comprehensive training platform for cyclists with workout visualization, analytics, and performance tracking.",
   "type": "module",
   "main": "script.js",
   "directories": {
@@ -55,15 +55,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jpequegn/WkoLibrary.git"
+    "url": "git+https://github.com/jpequegn/TrainingLab.git"
   },
-  "keywords": [],
+  "keywords": [
+    "cycling",
+    "training",
+    "workout",
+    "analytics",
+    "zwift",
+    "fitness"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jpequegn/WkoLibrary/issues"
+    "url": "https://github.com/jpequegn/TrainingLab/issues"
   },
-  "homepage": "https://github.com/jpequegn/WkoLibrary#readme",
+  "homepage": "https://github.com/jpequegn/TrainingLab#readme",
   "devDependencies": {
     "@playwright/test": "^1.54.2",
     "@types/chart.js": "^2.9.41",
