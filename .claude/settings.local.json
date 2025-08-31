@@ -61,7 +61,8 @@
       "Bash(start /b python -m http.server 3000)",
       "Bash(mv:*)",
       "Bash(chmod:*)",
-      "Bash(timeout 10s npm run docs:serve)"
+      "Bash(timeout 10s npm run docs:serve)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
