@@ -28,9 +28,15 @@ export class StateManager {
       chartData: null,
       chartOptions: null,
 
-      // User Preferences
+      // User Preferences (Legacy - will be migrated to userProfile)
       ftp: 250,
       units: 'metric', // metric, imperial
+
+      // User Profile State
+      userProfile: null,
+      ftpHistory: [],
+      profileLoading: false,
+      profileError: null,
 
       // Error State
       errors: [],
@@ -363,6 +369,68 @@ export class StateManager {
       SET_UNITS: units => {
         this.setState('units', units);
       },
+
+      // Profile actions
+      SET_PROFILE_LOADING: loading => {
+        this.setState('profileLoading', loading);
+      },
+
+      SET_PROFILE_ERROR: error => {
+        this.setState('profileError', error);
+      },
+
+      LOAD_USER_PROFILE: profile => {
+        this.setState('userProfile', profile);
+        this.setState('profileError', null);
+        
+        // Update legacy preferences for backward compatibility
+        if (profile) {
+          this.setState('ftp', profile.ftp || 250);
+          this.setState('units', profile.units || 'metric');
+          this.setState('themeMode', profile.preferences?.theme || 'light');
+        }
+      },
+
+      UPDATE_USER_PROFILE: profileData => {
+        const currentProfile = this.getState('userProfile');
+        if (currentProfile) {
+          const updatedProfile = {
+            ...currentProfile,
+            ...profileData,
+            dateModified: new Date().toISOString(),
+          };
+          this.setState('userProfile', updatedProfile);
+          
+          // Update legacy preferences for backward compatibility
+          if (profileData.ftp !== undefined) {
+            this.setState('ftp', profileData.ftp);
+          }
+          if (profileData.units !== undefined) {
+            this.setState('units', profileData.units);
+          }
+          if (profileData.preferences?.theme !== undefined) {
+            this.setState('themeMode', profileData.preferences.theme);
+          }
+        }
+      },
+
+      CLEAR_USER_PROFILE: () => {
+        this.setState('userProfile', null);
+        this.setState('ftpHistory', []);
+        this.setState('profileError', null);
+      },
+
+      LOAD_FTP_HISTORY: ftpHistory => {
+        this.setState('ftpHistory', ftpHistory);
+      },
+
+      ADD_FTP_HISTORY_ENTRY: entry => {
+        const currentHistory = this.getState('ftpHistory') || [];
+        const newHistory = [entry, ...currentHistory].sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+        this.setState('ftpHistory', newHistory);
+      },
     };
 
     const handler = actionHandlers[action];
@@ -462,7 +530,7 @@ export class StateManager {
    * Setup auto-save for preferences
    */
   setupAutoSave() {
-    const preferencePaths = ['ftp', 'units', 'themeMode'];
+    const preferencePaths = ['ftp', 'units', 'themeMode', 'userProfile'];
 
     preferencePaths.forEach(path => {
       this.subscribe(path, () => {
@@ -476,10 +544,12 @@ export class StateManager {
    */
   savePreferences() {
     try {
+      const userProfile = this.getState('userProfile');
       const preferences = {
         ftp: this.getState('ftp'),
         units: this.getState('units'),
         theme: this.getState('themeMode'),
+        profileId: userProfile?.id || null, // Store profile ID for quick access
       };
       localStorage.setItem(
         'workout-visualizer-preferences',
