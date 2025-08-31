@@ -4,14 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zwift Workout Visualizer - Modern Edition</title>
+    <!-- Nebula UI Typography - Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="../styles/styles.css" />
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: [
+                'Inter',
+                'Roboto',
+                '-apple-system',
+                'BlinkMacSystemFont',
+                'Segoe UI',
+                'system-ui',
+                'sans-serif',
+              ],
+            },
+            fontSize: {
+              'nebula-h1': [
+                '24px',
+                { lineHeight: '1.4', letterSpacing: '-0.02em' },
+              ],
+              'nebula-h2': [
+                '20px',
+                { lineHeight: '1.4', letterSpacing: '-0.02em' },
+              ],
+              'nebula-h3': ['16px', { lineHeight: '1.5', letterSpacing: '0' }],
+              'nebula-body': [
+                '14px',
+                { lineHeight: '1.5', letterSpacing: '0' },
+              ],
+              'nebula-small': [
+                '12px',
+                { lineHeight: '1.4', letterSpacing: '0' },
+              ],
+            },
             colors: {
               border: 'hsl(var(--border))',
               input: 'hsl(var(--input))',
@@ -60,19 +97,132 @@
   <body
     class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 text-foreground"
   >
+    <!-- Chat Interface Panel -->
+    <div
+      id="chatPanel"
+      class="fixed right-0 top-0 h-full w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-gray-200/30 dark:border-slate-600/30 z-40 transform transition-transform duration-300"
+      role="complementary"
+      aria-label="Workout creation chat interface"
+    >
+      <div class="flex flex-col h-full">
+        <!-- Chat Header -->
+        <div
+          class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white flex items-center justify-between"
+        >
+          <div class="flex items-center">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              ></path>
+            </svg>
+            <h3 class="font-semibold">Workout Creator</h3>
+          </div>
+          <button
+            id="toggleChatPanel"
+            class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center font-bold transition-all duration-200"
+            title="Minimize"
+          >
+            >
+          </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div
+          id="chatMessages"
+          class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50 dark:bg-slate-800/50"
+          role="log"
+          aria-live="polite"
+          aria-label="Chat conversation"
+        >
+          <div
+            class="chat-message llm bg-white dark:bg-slate-700/60 rounded-lg p-3 text-sm text-gray-800 dark:text-slate-200 border border-gray-200/50 dark:border-slate-600/30"
+          >
+            👋 Hi! I can help you create custom workouts. Just describe what
+            kind of workout you want!
+            <br /><br />
+            <strong>Examples:</strong>
+            <br />• "Create a 45-minute endurance ride" <br />• "I want interval
+            training with 4x5 min at threshold" <br />• "Build me a recovery
+            workout"
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div
+          class="border-t border-gray-200/50 dark:border-slate-600/30 bg-white/90 dark:bg-slate-900/90 p-4"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-gray-600 dark:text-slate-400">Mode:</span>
+            <label class="flex items-center gap-2 text-xs">
+              <input type="checkbox" id="llmModeToggle" class="rounded" />
+              <span class="text-gray-700 dark:text-slate-300"
+                >Use LLM (requires API key)</span
+              >
+            </label>
+          </div>
+          <form
+            id="chatForm"
+            class="flex gap-2"
+            role="search"
+            aria-label="Create workout"
+          >
+            <input
+              id="chatInput"
+              type="text"
+              placeholder="Describe your workout..."
+              class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 dark:text-slate-200"
+              aria-label="Describe your workout requirements"
+              aria-describedby="chatInputHelp"
+            />
+            <span id="chatInputHelp" class="sr-only"
+              >Enter a description of the workout you want to create</span
+            >
+            <button
+              type="submit"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
+              aria-label="Send workout request"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                ></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Navigation Bar -->
     <nav
       class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     >
-      <div class="container flex h-12 items-center justify-between px-4">
-        <div class="flex items-center space-x-3">
+      <div class="container flex h-16 items-center justify-between px-4">
+        <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
             <div
-              class="w-8 h-8 bg-gradient-to-r from-blue-700 to-blue-800 rounded-lg flex items-center justify-center"
+              class="w-8 h-8 bg-gradient-to-r from-blue-700 to-blue-800 flex items-center justify-center"
+              style="border-radius: 4px"
             >
               <span class="text-white font-bold text-sm">ZW</span>
             </div>
-            <h1 class="text-xl font-bold text-foreground">
+            <h1 class="text-nebula-h3 font-bold text-foreground">
               Workout Visualizer
             </h1>
           </div>
@@ -82,7 +232,8 @@
           <!-- Theme Toggle -->
           <button
             id="themeToggle"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+            class="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+            style="border-radius: 2px"
           >
             <span class="sr-only">Toggle theme</span>
             <svg
@@ -103,7 +254,8 @@
           <!-- Help Button -->
           <button
             id="helpButton"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+            class="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+            style="border-radius: 2px"
           >
             <span class="sr-only">Help</span>
             <svg
@@ -125,30 +277,31 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative py-12 px-4 overflow-hidden">
+    <section class="relative py-20 px-4 overflow-hidden xl:pr-80">
       <div
         class="absolute inset-0 bg-gradient-to-r from-blue-700/20 to-blue-800/20 blur-3xl"
       ></div>
       <div class="container relative mx-auto text-center">
         <div
-          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-700 to-blue-800 rounded-2xl mb-6 shadow-lg"
+          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-700 to-blue-800 mb-6 shadow-lg"
+          style="border-radius: 4px"
         >
           <span class="text-3xl">🚴‍♂️</span>
         </div>
         <h1
-          class="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 to-blue-800 bg-clip-text text-transparent mb-6"
+          class="text-nebula-h1 md:text-nebula-h1 font-bold bg-gradient-to-r from-blue-700 to-blue-800 bg-clip-text text-transparent mb-6"
+          style="font-size: 24px; line-height: 1.4"
         >
           Visualize Your Training
         </h1>
-        <p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+        <p
+          class="text-nebula-body text-muted-foreground mb-8 max-w-2xl mx-auto"
+        >
           Transform your Zwift workout files into stunning interactive
           visualizations with advanced analytics and export capabilities.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            id="uploadButton"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
-          >
+          <button id="uploadButton" class="btn-modern h-11 px-8">
             <svg
               class="w-4 h-4 mr-2"
               fill="none"
@@ -164,10 +317,7 @@
             </svg>
             Upload Workout
           </button>
-          <button
-            id="loadSample"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6"
-          >
+          <button id="loadSample" class="btn-modern btn-outline h-11 px-8">
             <svg
               class="w-4 h-4 mr-2"
               fill="none"
@@ -191,31 +341,31 @@
     </section>
 
     <!-- Workout Display Section -->
-    <section id="workoutSection" class="py-6 px-4 hidden">
-      <div class="container mx-auto max-w-7xl space-y-6">
+    <section id="workoutSection" class="py-8 px-4 hidden xl:pr-80">
+      <div class="container mx-auto max-w-7xl space-y-8">
         <!-- Workout Stats Cards -->
         <div
           id="workoutStats"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           <!-- Stats will be populated by JavaScript -->
         </div>
 
         <!-- Chart Section -->
-        <div class="card-modern p-4">
-          <div class="flex items-center justify-between mb-4">
+        <div class="card-modern p-6">
+          <div class="flex items-center justify-between mb-6">
             <div>
-              <h3 class="text-lg font-semibold text-foreground">
+              <h3 class="text-nebula-h3 font-semibold text-foreground">
                 Power Profile
               </h3>
-              <p class="text-sm text-muted-foreground">
+              <p class="text-nebula-small text-muted-foreground">
                 Interactive workout visualization
               </p>
             </div>
             <div class="flex items-center space-x-2">
               <button
                 id="undoEditBtn"
-                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-yellow-500 text-white hover:bg-yellow-600 h-9 px-3 hidden"
+                class="btn-modern bg-yellow-500 text-white hover:bg-yellow-600 h-9 px-3 hidden"
               >
                 <svg
                   class="w-4 h-4 mr-1"
@@ -234,7 +384,7 @@
               </button>
             </div>
           </div>
-          <div class="bg-muted/50 rounded-lg p-4">
+          <div class="bg-muted/50 p-4" style="border-radius: 4px">
             <canvas id="workoutChart" class="w-full h-96"></canvas>
           </div>
         </div>
@@ -242,33 +392,33 @@
         <!-- Zone Distribution Charts -->
         <div
           id="zoneAnalytics"
-          class="grid grid-cols-1 lg:grid-cols-2 gap-4 hidden"
+          class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden"
         >
           <!-- Zone Distribution Pie Chart -->
-          <div class="card-modern p-4">
-            <div class="flex items-center justify-between mb-4">
+          <div class="card-modern p-6">
+            <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-semibold text-foreground">
+                <h3 class="text-nebula-h3 font-semibold text-foreground">
                   Zone Distribution
                 </h3>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-nebula-small text-muted-foreground">
                   Time spent in each power zone
                 </p>
               </div>
             </div>
-            <div class="bg-muted/50 rounded-lg p-4">
+            <div class="bg-muted/50 p-4" style="border-radius: 4px">
               <canvas id="zoneDistributionChart" class="w-full h-64"></canvas>
             </div>
           </div>
 
           <!-- Advanced Analytics -->
-          <div class="card-modern p-4">
-            <div class="flex items-center justify-between mb-4">
+          <div class="card-modern p-6">
+            <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-semibold text-foreground">
+                <h3 class="text-nebula-h3 font-semibold text-foreground">
                   Advanced Analytics
                 </h3>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-nebula-small text-muted-foreground">
                   Enhanced workout metrics
                 </p>
               </div>
@@ -277,7 +427,7 @@
               <div id="advancedMetrics" class="grid grid-cols-2 gap-4">
                 <!-- Metrics will be populated by JavaScript -->
               </div>
-              <div class="bg-muted/50 rounded-lg p-4">
+              <div class="bg-muted/50 p-4" style="border-radius: 4px">
                 <canvas id="zoneBarChart" class="w-full h-32"></canvas>
               </div>
             </div>
@@ -289,7 +439,9 @@
           <div
             class="bg-gradient-to-r from-blue-700 to-blue-800 px-6 py-6 text-white"
           >
-            <h2 id="workoutName" class="text-2xl font-bold mb-2"></h2>
+            <h2 id="workoutName" class="text-nebula-h2 font-bold mb-2">
+              <span class="sr-only">Workout Name</span>
+            </h2>
             <p id="workoutDescription" class="text-blue-100 opacity-90"></p>
             <div class="flex items-center space-x-4 mt-4 text-sm">
               <span id="workoutAuthor" class="flex items-center">
@@ -328,11 +480,11 @@
           </div>
 
           <!-- Controls Section -->
-          <div class="p-4 space-y-4">
+          <div class="p-6 space-y-6">
             <!-- Scaling Controls -->
             <div class="card-glass p-4">
               <h4
-                class="text-sm font-semibold text-foreground mb-4 flex items-center"
+                class="text-nebula-small font-semibold text-foreground mb-4 flex items-center"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -353,11 +505,12 @@
                 <div class="flex items-center justify-between">
                   <label
                     for="scaleSlider"
-                    class="text-sm font-medium text-foreground"
+                    class="text-nebula-small font-medium text-foreground"
                     >Scale Factor:</label
                   >
                   <span
-                    class="scale-value text-sm font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded"
+                    class="scale-value text-nebula-small font-bold text-primary bg-primary/10 px-2 py-1"
+                    style="border-radius: 2px"
                     >1.0x</span
                   >
                 </div>
@@ -368,7 +521,8 @@
                   max="2.0"
                   step="0.1"
                   value="1.0"
-                  class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+                  class="w-full h-2 bg-secondary appearance-none cursor-pointer"
+                  style="border-radius: 2px"
                 />
                 <div class="flex space-x-2">
                   <button id="applyScale" class="flex-1 btn-modern">
@@ -376,7 +530,7 @@
                   </button>
                   <button
                     id="resetWorkout"
-                    class="btn-outline px-3 py-1.5 rounded-lg"
+                    class="btn-modern btn-outline px-4 py-2"
                   >
                     Reset
                   </button>
@@ -387,7 +541,7 @@
             <!-- Export Section -->
             <div class="card-glass p-4">
               <h4
-                class="text-sm font-semibold text-foreground mb-4 flex items-center"
+                class="text-nebula-small font-semibold text-foreground mb-4 flex items-center"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -409,7 +563,7 @@
               <div class="mb-4">
                 <label
                   for="ftpInput"
-                  class="block text-sm font-medium text-foreground mb-2"
+                  class="block text-nebula-small font-medium text-foreground mb-2"
                   >FTP (watts):</label
                 >
                 <input
@@ -424,7 +578,7 @@
               </div>
 
               <div class="grid grid-cols-2 gap-3">
-                <button id="exportERG" class="btn-outline text-sm py-1.5">
+                <button id="exportERG" class="btn-outline text-sm py-2">
                   <svg
                     class="w-4 h-4 mr-1"
                     fill="none"
@@ -440,7 +594,7 @@
                   </svg>
                   ERG File
                 </button>
-                <button id="exportMRC" class="btn-outline text-sm py-1.5">
+                <button id="exportMRC" class="btn-outline text-sm py-2">
                   <svg
                     class="w-4 h-4 mr-1"
                     fill="none"
@@ -484,35 +638,37 @@
             </div>
             <button
               id="toggleSegments"
-              class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white font-bold transition-all duration-200"
+              class="w-8 h-8 bg-white/20 hover:bg-white/30 flex items-center justify-center text-white font-bold transition-all duration-200"
+              style="border-radius: 2px"
             >
               −
             </button>
           </div>
-          <div class="p-4">
-            <div id="segmentList" class="space-y-2"></div>
+          <div class="p-6">
+            <div id="segmentList" class="space-y-3"></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Feature Cards -->
-    <section class="py-12 px-4">
+    <section class="py-16 px-4 xl:pr-80">
       <div class="container mx-auto">
         <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-foreground mb-4">
+          <h2 class="text-nebula-h2 font-bold text-foreground mb-4">
             Powerful Features
           </h2>
-          <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p class="text-nebula-body text-muted-foreground max-w-2xl mx-auto">
             Everything you need to analyze, modify, and export your training
             data
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="card-modern p-4 text-center animate-on-scroll">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="card-modern p-6 text-center animate-on-scroll">
             <div
-              class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-4"
+              class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-4"
+              style="border-radius: 4px"
             >
               <svg
                 class="w-6 h-6 text-white"
@@ -528,17 +684,18 @@
                 ></path>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-foreground mb-2">
+            <h3 class="text-nebula-h3 font-semibold text-foreground mb-2">
               Interactive Charts
             </h3>
-            <p class="text-muted-foreground">
+            <p class="text-nebula-body text-muted-foreground">
               Visualize power profiles with hover details and segment breakdown
             </p>
           </div>
 
-          <div class="card-modern p-4 text-center animate-on-scroll">
+          <div class="card-modern p-6 text-center animate-on-scroll">
             <div
-              class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4"
+              class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-4"
+              style="border-radius: 4px"
             >
               <svg
                 class="w-6 h-6 text-white"
@@ -554,17 +711,18 @@
                 ></path>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-foreground mb-2">
+            <h3 class="text-nebula-h3 font-semibold text-foreground mb-2">
               Workout Scaling
             </h3>
-            <p class="text-muted-foreground">
+            <p class="text-nebula-body text-muted-foreground">
               Adjust intensity levels with real-time preview and TSS calculation
             </p>
           </div>
 
-          <div class="card-modern p-4 text-center animate-on-scroll">
+          <div class="card-modern p-6 text-center animate-on-scroll">
             <div
-              class="w-12 h-12 bg-gradient-to-r from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mx-auto mb-4"
+              class="w-12 h-12 bg-gradient-to-r from-blue-700 to-blue-800 flex items-center justify-center mx-auto mb-4"
+              style="border-radius: 4px"
             >
               <svg
                 class="w-6 h-6 text-white"
@@ -580,10 +738,10 @@
                 ></path>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-foreground mb-2">
+            <h3 class="text-nebula-h3 font-semibold text-foreground mb-2">
               Multi-Format Export
             </h3>
-            <p class="text-muted-foreground">
+            <p class="text-nebula-body text-muted-foreground">
               Export to ERG, MRC, and ZWO formats for any training platform
             </p>
           </div>
@@ -593,13 +751,14 @@
 
     <!-- Footer -->
     <footer class="border-t bg-background/95 backdrop-blur">
-      <div class="container mx-auto py-6 px-4">
+      <div class="container mx-auto py-8 px-4">
         <div
           class="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0"
         >
           <div class="flex items-center space-x-2">
             <div
-              class="w-6 h-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded"
+              class="w-6 h-6 bg-gradient-to-r from-blue-700 to-blue-800"
+              style="border-radius: 2px"
             ></div>
             <span class="text-sm text-muted-foreground"
               >Zwift Workout Visualizer</span
@@ -624,7 +783,8 @@
     <!-- Power Info Tooltip -->
     <div
       id="hoverPowerBox"
-      class="fixed top-4 right-4 bg-popover border rounded-lg shadow-lg px-2 py-1 text-sm font-medium z-50 hidden"
+      class="fixed top-4 right-4 bg-popover border shadow-lg px-3 py-2 text-sm font-medium z-50 hidden"
+      style="border-radius: 4px"
     >
       <div class="text-popover-foreground"></div>
     </div>
@@ -634,13 +794,14 @@
       id="segmentEditBox"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden"
     >
-      <div class="card-modern p-4 max-w-md w-full mx-4"></div>
+      <div class="card-modern p-6 max-w-md w-full mx-4"></div>
     </div>
 
     <!-- Toast Notification -->
     <div
       id="toastNotification"
-      class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border rounded-lg shadow-lg px-3 py-2 transition-all duration-300 opacity-0 pointer-events-none z-50"
+      class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-popover border shadow-lg px-4 py-3 transition-all duration-300 opacity-0 pointer-events-none z-50"
+      style="border-radius: 4px"
     >
       <div class="flex items-center space-x-2 text-popover-foreground">
         <svg
@@ -661,20 +822,18 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="components/ui.js"></script>
     <!-- Development configuration (hot reload, debugging) -->
-    <script src="dev-config.js"></script>
+    <script src="../dev-config.js"></script>
     
-    <script type="module" src="themes.js"></script>
-    <script type="module" src="shortcuts.js"></script>
-    <script type="module" src="error-handler.js"></script>
-    <script type="module" src="script.js"></script>
+    <script type="module" src="../components/ui.js"></script>
+    <script type="module" src="../src/ui/themes.js"></script>
+    <script type="module" src="../src/ui/shortcuts.js"></script>
+    <script type="module" src="../src/error/error-handler.js"></script>
+    <script type="module" src="../src/main.js"></script>
 
     <script>
       // Initialize modern UI components
       document.addEventListener('DOMContentLoaded', () => {
-        const modernUI = new ModernUI();
-
         // Connect upload button to file input
         document
           .getElementById('uploadButton')

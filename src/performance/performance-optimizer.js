@@ -3,7 +3,7 @@
  * Implements performance monitoring, optimization, and analytics
  */
 
-import { stateManager } from './state-manager.js';
+import { stateManager } from '../services/state-manager.js';
 
 export class PerformanceOptimizer {
   constructor() {

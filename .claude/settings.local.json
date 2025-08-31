@@ -62,7 +62,8 @@
       "Bash(mv:*)",
       "Bash(chmod:*)",
       "Bash(timeout 10s npm run docs:serve)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

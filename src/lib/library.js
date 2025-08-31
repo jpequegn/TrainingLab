@@ -5,9 +5,9 @@
  * @class WorkoutLibrary
  * @description Manages the workout library interface and interactions
  */
-import { workoutStorage } from './storage.js';
-import { formatDuration } from './workout.js';
-import { WorkoutComparison } from './comparison.js';
+import { workoutStorage } from '../services/storage.js';
+import { formatDuration } from '../core/workout.js';
+import { WorkoutComparison } from '../utils/comparison.js';
 
 export class WorkoutLibrary {
   constructor(visualizer) {

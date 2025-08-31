@@ -3,7 +3,7 @@
  * Provides consistent error handling and response processing
  */
 
-import { createLogger } from './utils/logger.js';
+import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('API');
 

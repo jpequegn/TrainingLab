@@ -1,18 +1,18 @@
-import { parseWorkoutXML } from './parser.js';
-import { Workout } from './workout.js';
+import { parseWorkoutXML } from './core/parser.js';
+import { Workout } from './core/workout.js';
 import {
   generateERGContent,
   generateMRCContent,
   downloadFile,
   generateZWOContent,
-} from './exporter.js';
-import { deployWorkout } from './api.js';
-import { UI } from './ui.js';
-import { WorkoutLibrary } from './library.js';
-import { loadingManager, delay } from './loading-manager.js';
-import { stateManager } from './state-manager.js';
-import { performanceOptimizer } from './performance-optimizer.js';
-import { WorkoutEditor } from './editor.js';
+} from './utils/exporter.js';
+import { deployWorkout } from './services/api.js';
+import { UI } from './ui/ui.js';
+import { WorkoutLibrary } from './lib/library.js';
+import { loadingManager, delay } from './services/loading-manager.js';
+import { stateManager } from './services/state-manager.js';
+import { performanceOptimizer } from './performance/performance-optimizer.js';
+import { WorkoutEditor } from './ui/editor.js';
 import { createLogger } from './utils/logger.js';
 import { reportError } from './utils/error-reporting.js';
 

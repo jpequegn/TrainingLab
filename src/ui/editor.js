@@ -4,7 +4,7 @@
  * Provides a visual drag-and-drop interface for creating and editing workouts
  */
 
-import { formatDuration, calculateTSS } from './workout.js';
+import { formatDuration, calculateTSS } from '../core/workout.js';
 
 export class WorkoutEditor {
   constructor(visualizer) {

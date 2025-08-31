@@ -5,8 +5,8 @@
  * @class WorkoutComparison
  * @description Manages workout comparison interface and analysis tools
  */
-import { workoutStorage } from './storage.js';
-import { formatDuration } from './workout.js';
+import { workoutStorage } from '../services/storage.js';
+import { formatDuration } from '../core/workout.js';
 
 export class WorkoutComparison {
   constructor(visualizer) {

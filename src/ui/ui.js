@@ -2,8 +2,8 @@ import {
   formatDuration,
   calculateWorkoutMetrics,
   calculatePowerCurve,
-} from './workout.js';
-import { downloadFile, generateZWOContent } from './exporter.js';
+} from '../core/workout.js';
+import { downloadFile, generateZWOContent } from '../utils/exporter.js';
 import {
   fetchDirectory,
   fetchWorkoutFile,
@@ -11,9 +11,9 @@ import {
   getZwiftWorkoutDirectory,
   saveAsWorkout,
   selectFolder,
-} from './api.js';
-import { WorkoutGenerator } from './workout-generator.js';
-import { powerZoneManager } from './power-zones.js';
+} from '../services/api.js';
+import { WorkoutGenerator } from '../core/workout-generator.js';
+import { powerZoneManager } from '../core/power-zones.js';
 
 /**
  * UI Manager Class
