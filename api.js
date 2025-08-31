@@ -3,6 +3,10 @@
  * Provides consistent error handling and response processing
  */
 
+import { createLogger } from './utils/logger.js';
+
+const logger = createLogger('API');
+
 // API configuration
 const API_CONFIG = {
   timeout: 30000, // 30 seconds
@@ -170,7 +174,10 @@ export async function sendChatMessage(message) {
 
     if (!response.ok) {
       // Handle HTTP errors (500, 404, etc.)
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch((parseError) => {
+        logger.warn('Failed to parse error response JSON', parseError);
+        return {};
+      });
       const error = new Error(
         `Server error (${response.status}): ${response.statusText}`
       );
@@ -316,7 +323,10 @@ export async function getMCPStatus() {
     const response = await enhancedFetch('/mcp/status');
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch((parseError) => {
+        logger.warn('Failed to parse error response JSON', parseError);
+        return {};
+      });
       throw new Error(
         errorData.error || `Failed to get MCP status (${response.status})`
       );

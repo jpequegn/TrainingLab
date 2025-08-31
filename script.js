@@ -13,6 +13,11 @@ import { loadingManager, delay } from './loading-manager.js';
 import { stateManager } from './state-manager.js';
 import { performanceOptimizer } from './performance-optimizer.js';
 import { WorkoutEditor } from './editor.js';
+import { createLogger } from './utils/logger.js';
+import { reportError } from './utils/error-reporting.js';
+
+// Create logger for main script
+const logger = createLogger('Main');
 
 // Global Error Handling - Security Feature
 window.addEventListener('error', event => {
@@ -28,16 +33,13 @@ window.addEventListener('error', event => {
     url: window.location.href,
   };
 
-  console.error('🚨 Unhandled JavaScript Error:', errorData);
+  logger.error('Unhandled JavaScript Error', event.error, errorData);
 
-  // Send to error reporting service in production
-  if (
-    typeof window !== 'undefined' &&
-    window.location.hostname !== 'localhost'
-  ) {
-    // TODO: Integrate with error reporting service (Sentry, etc.)
-    // reportError(errorData);
-  }
+  // Send to error reporting service
+  reportError(event.error || new Error(errorData.message), {
+    type: 'unhandled_error',
+    ...errorData
+  });
 
   // Show user-friendly error message
   if (window.app && window.app.ui) {
@@ -58,16 +60,13 @@ window.addEventListener('unhandledrejection', event => {
     url: window.location.href,
   };
 
-  console.error('🚨 Unhandled Promise Rejection:', errorData);
+  logger.error('Unhandled Promise Rejection', new Error(errorData.reason), errorData);
 
-  // Send to error reporting service in production
-  if (
-    typeof window !== 'undefined' &&
-    window.location.hostname !== 'localhost'
-  ) {
-    // TODO: Integrate with error reporting service
-    // reportError(errorData);
-  }
+  // Send to error reporting service
+  reportError(new Error(errorData.reason), {
+    type: 'unhandled_rejection',
+    ...errorData
+  });
 
   // Show user-friendly error message
   if (window.app && window.app.ui) {
@@ -89,8 +88,8 @@ window.eval = function () {
 
 // Security: Remove any potential XSS vectors
 if (window.setTimeout.toString().indexOf('[native code]') === -1) {
-  console.warn(
-    '⚠️ setTimeout appears to be overridden - potential security risk'
+  logger.warn(
+    'setTimeout appears to be overridden - potential security risk'
   );
 }
 
@@ -146,8 +145,8 @@ class ZwiftWorkoutVisualizer {
         (window.location.hostname === 'localhost' ||
           window.location.hostname === '127.0.0.1')
       ) {
-        console.log(
-          `State change: ${path} = ${JSON.stringify(newValue)} (source: ${source})`
+        logger.debug(
+          `State change: ${path}`, { newValue, source }
         );
       }
 
