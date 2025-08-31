@@ -1,10 +1,10 @@
-# 🚴‍♂️ Zwift Workout Visualizer
+# 🏋️‍♂️ TrainingLab
 
-[![Build Status](https://github.com/<your-username>/<your-repo>/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/<your-repo>/actions)
-[![Tests](https://github.com/<your-username>/<your-repo>/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/<your-username>/<your-repo>/actions)
+[![Build Status](https://github.com/jpequegn/TrainingLab/actions/workflows/ci.yml/badge.svg)](https://github.com/jpequegn/TrainingLab/actions)
+[![Tests](https://github.com/jpequegn/TrainingLab/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/jpequegn/TrainingLab/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A web-based application that loads Zwift workout files (.zwo) and displays them as interactive graphs.
+A comprehensive training platform for cyclists featuring workout visualization, performance analytics, and intelligent training insights.
 
 ## Features
 
@@ -57,7 +57,7 @@ The visualizer supports the following Zwift workout elements:
 ## File Structure
 
 ```
-WkoLibrary/
+TrainingLab/
 ├── index.html          # Main application page
 ├── styles.css          # Application styling
 ├── script.js           # JavaScript logic and XML parsing

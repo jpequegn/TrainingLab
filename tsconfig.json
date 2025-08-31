@@ -21,9 +21,16 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"],
-      "@components/*": ["./components/*"],
-      "@utils/*": ["./utils/*"],
-      "@config/*": ["./config/*"]
+      "@core/*": ["./src/core/*"],
+      "@models/*": ["./src/core/models/*"],
+      "@services/*": ["./src/core/services/*"],
+      "@features/*": ["./src/features/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@ui/*": ["./src/ui/*"],
+      "@components/*": ["./src/ui/components/*", "./components/*"],
+      "@utils/*": ["./src/core/utils/*", "./utils/*"],
+      "@config/*": ["./config/*"],
+      "@types/*": ["./src/types/*"]
     }
   },
   "include": [
