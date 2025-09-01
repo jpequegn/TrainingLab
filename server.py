@@ -18,6 +18,9 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from mcp_manager import load_mcp_tools, terminate_mcp_processes, MCPManager
 from src.services.trainingpeaks_backend import TrainingPeaksBackendService
+import sys
+sys.path.append('src/services')
+from strava_backend import strava_service
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Enhanced HTTP request handler with CORS support and comprehensive error handling"""
@@ -36,13 +39,23 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         '/mcp/start/': '_handle_mcp_start',
         '/mcp/stop/': '_handle_mcp_stop', 
         '/mcp/restart/': '_handle_mcp_restart',
+        # TrainingPeaks Integration Routes
         '/api/trainingpeaks/auth/': '_handle_tp_auth',
         '/api/trainingpeaks/callback': '_handle_tp_callback',
         '/api/trainingpeaks/refresh-token/': '_handle_tp_refresh_token',
         '/api/trainingpeaks/sync/': '_handle_tp_sync',
         '/api/trainingpeaks/disconnect/': '_handle_tp_disconnect',
         '/api/trainingpeaks/settings/': '_handle_tp_update_settings',
-        '/api/trainingpeaks/webhook/': '_handle_tp_webhook'
+        '/api/trainingpeaks/webhook/': '_handle_tp_webhook',
+        # Strava Integration Routes
+        '/api/strava/token': '_handle_strava_token_exchange',
+        '/api/strava/refresh-token/': '_handle_strava_refresh_token',
+        '/api/strava/disconnect/': '_handle_strava_disconnect',
+        '/api/strava/sync/': '_handle_strava_sync',
+        '/api/strava/import-historical/': '_handle_strava_import_historical',
+        '/api/strava/webhook': '_handle_strava_webhook',
+        '/api/strava/webhook-subscription': '_handle_strava_create_webhook_subscription',
+        '/api/strava/webhook-subscription/': '_handle_strava_delete_webhook_subscription'
     }
     
     GET_ROUTES = {
@@ -52,9 +65,21 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         '/health/ready': '_handle_readiness',
         '/health/live': '_handle_liveness',
         '/metrics': '_handle_metrics',
+        # TrainingPeaks Integration Routes
         '/api/trainingpeaks/token/': '_handle_tp_get_token',
         '/api/trainingpeaks/status/': '_handle_tp_get_status',
-        '/api/trainingpeaks/settings/': '_handle_tp_get_settings'
+        '/api/trainingpeaks/settings/': '_handle_tp_get_settings',
+        # Strava Integration Routes
+        '/api/strava/auth-status/': '_handle_strava_auth_status',
+        '/api/strava/connection-status/': '_handle_strava_connection_status',
+        '/api/strava/token/': '_handle_strava_get_token',
+        '/api/strava/callback': '_handle_strava_callback',
+        '/api/strava/webhook-subscription': '_handle_strava_get_webhook_subscription',
+        '/api/strava/webhook-status': '_handle_strava_webhook_status'
+    }
+    
+    PUT_ROUTES = {
+        '/api/strava/settings/': '_handle_strava_update_settings'
     }
 
     @classmethod
@@ -177,6 +202,26 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
         except Exception as e:
             print(f"❌ Error handling POST request to {self.path}: {e}")
+            self._send_error_response(500, f'Internal server error: {str(e)}')
+
+    def do_PUT(self):
+        """Handle PUT requests with improved error handling and routing"""
+        try:
+            # Route to appropriate handler
+            handler_name = None
+            for route, handler in self.PUT_ROUTES.items():
+                if self.path == route or (route.endswith('/') and self.path.startswith(route)):
+                    handler_name = handler
+                    break
+            
+            if handler_name:
+                handler_method = getattr(self, handler_name)
+                handler_method()
+            else:
+                self._send_error_response(404, 'Endpoint not found')
+                
+        except Exception as e:
+            print(f"❌ Error handling PUT request to {self.path}: {e}")
             self._send_error_response(500, f'Internal server error: {str(e)}')
     
     def _handle_deploy(self):
@@ -944,6 +989,327 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({'content': content}).encode('utf-8'))
         else:
             super().do_GET()
+
+    # Strava Integration Handler Methods
+    
+    def _handle_strava_token_exchange(self):
+        """Handle Strava OAuth token exchange"""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            code = data.get('code')
+            user_id = data.get('userId')
+            
+            if not code or not user_id:
+                self._send_error_response(400, 'Missing code or userId')
+                return
+            
+            result = strava_service.exchange_code_for_token(code, user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            self._send_error_response(500, f'Token exchange failed: {str(e)}')
+    
+    def _handle_strava_refresh_token(self):
+        """Handle Strava token refresh"""
+        try:
+            # Extract user_id from URL path
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/refresh-token/{user_id}
+            
+            result = strava_service.refresh_access_token(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            self._send_error_response(500, f'Token refresh failed: {str(e)}')
+    
+    def _handle_strava_auth_status(self):
+        """Handle Strava authentication status check"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/auth-status/{user_id}
+            
+            authenticated = strava_service.is_user_connected(user_id)
+            self._send_json_response({'authenticated': authenticated})
+            
+        except Exception as e:
+            self._send_error_response(500, f'Auth status check failed: {str(e)}')
+    
+    def _handle_strava_connection_status(self):
+        """Handle Strava connection status and profile"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/connection-status/{user_id}
+            
+            status = strava_service.get_connection_status(user_id)
+            if status:
+                self._send_json_response(status)
+            else:
+                self._send_json_response({'connected': False})
+                
+        except Exception as e:
+            self._send_error_response(500, f'Connection status failed: {str(e)}')
+    
+    def _handle_strava_get_token(self):
+        """Handle getting access token for API calls"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/token/{user_id}
+            
+            access_token = strava_service.get_access_token(user_id)
+            self._send_json_response({'access_token': access_token})
+            
+        except Exception as e:
+            self._send_error_response(401, f'Token retrieval failed: {str(e)}')
+    
+    def _handle_strava_disconnect(self):
+        """Handle Strava account disconnection"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/disconnect/{user_id}
+            
+            success = strava_service.disconnect_user(user_id)
+            self._send_json_response({'success': success})
+            
+        except Exception as e:
+            self._send_error_response(500, f'Disconnect failed: {str(e)}')
+    
+    def _handle_strava_sync(self):
+        """Handle manual Strava activity sync"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/sync/{user_id}
+            
+            result = strava_service.sync_user_activities(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            self._send_error_response(500, f'Sync failed: {str(e)}')
+    
+    def _handle_strava_import_historical(self):
+        """Handle historical activity import with streaming response"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/import-historical/{user_id}
+            
+            # Set up Server-Sent Events response
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Cache-Control', 'no-cache')
+            self.send_header('Connection', 'keep-alive')
+            self.end_headers()
+            
+            def progress_callback(data):
+                # Send progress updates as Server-Sent Events
+                event_data = f"data: {json.dumps(data)}\n\n"
+                self.wfile.write(event_data.encode('utf-8'))
+                self.wfile.flush()
+            
+            result = strava_service.import_historical_activities(user_id, progress_callback)
+            
+            # Send final result
+            final_data = f"data: {json.dumps({'complete': True, 'result': result})}\n\n"
+            self.wfile.write(final_data.encode('utf-8'))
+            self.wfile.flush()
+            
+        except Exception as e:
+            error_data = f"data: {json.dumps({'error': str(e)})}\n\n"
+            self.wfile.write(error_data.encode('utf-8'))
+            self.wfile.flush()
+    
+    def _handle_strava_update_settings(self):
+        """Handle updating Strava integration settings"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format')
+                return
+            
+            user_id = path_parts[4]  # /api/strava/settings/{user_id}
+            
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            settings = json.loads(post_data.decode('utf-8'))
+            
+            success = strava_service.update_user_settings(user_id, settings)
+            self._send_json_response({'success': success})
+            
+        except Exception as e:
+            self._send_error_response(500, f'Settings update failed: {str(e)}')
+    
+    def _handle_strava_callback(self):
+        """Handle Strava OAuth callback"""
+        try:
+            from urllib.parse import parse_qs, urlparse
+            
+            parsed_url = urlparse(self.path)
+            # Note: OAuth callback parameters are parsed but handled by frontend
+            parse_qs(parsed_url.query)  # Parse for validation but not currently used
+            
+            # This would typically redirect to a success page
+            # For now, just return a simple success response
+            success_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Strava Connection Successful</title>
+                <script>
+                    // Close popup window and notify parent
+                    if (window.opener) {
+                        window.opener.postMessage({type: 'strava_auth_complete'}, '*');
+                        window.close();
+                    } else {
+                        // Redirect to main app
+                        window.location.href = '/';
+                    }
+                </script>
+            </head>
+            <body>
+                <h1>Strava Connected Successfully!</h1>
+                <p>You can close this window now.</p>
+            </body>
+            </html>
+            """
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(success_html.encode('utf-8'))
+            
+        except Exception as e:
+            self._send_error_response(500, f'Callback failed: {str(e)}')
+    
+    def _handle_strava_webhook(self):
+        """Handle Strava webhook events"""
+        if self.command == 'GET':
+            # Webhook subscription verification
+            try:
+                from urllib.parse import parse_qs, urlparse
+                
+                parsed_url = urlparse(self.path)
+                query_params = parse_qs(parsed_url.query)
+                
+                hub_mode = query_params.get('hub.mode', [None])[0]
+                hub_challenge = query_params.get('hub.challenge', [None])[0]
+                hub_verify_token = query_params.get('hub.verify_token', [None])[0]
+                
+                if hub_mode == 'subscribe':
+                    challenge = strava_service.verify_webhook_subscription(hub_challenge, hub_verify_token)
+                    if challenge:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'hub.challenge': challenge}).encode('utf-8'))
+                    else:
+                        self._send_error_response(403, 'Verification failed')
+                else:
+                    self._send_error_response(400, 'Invalid hub mode')
+                    
+            except Exception as e:
+                self._send_error_response(500, f'Webhook verification failed: {str(e)}')
+                
+        elif self.command == 'POST':
+            # Webhook event processing
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                event_data = json.loads(post_data.decode('utf-8'))
+                
+                success = strava_service.process_webhook_event(event_data)
+                
+                if success:
+                    self.send_response(200)
+                    self.end_headers()
+                else:
+                    self._send_error_response(400, 'Event processing failed')
+                    
+            except Exception as e:
+                self._send_error_response(500, f'Webhook processing failed: {str(e)}')
+    
+    def _handle_strava_create_webhook_subscription(self):
+        """Handle creating Strava webhook subscription"""
+        try:
+            subscription = strava_service.create_webhook_subscription()
+            if subscription:
+                self._send_json_response({
+                    'success': True,
+                    'subscription': subscription
+                })
+            else:
+                self._send_error_response(400, 'Failed to create webhook subscription')
+                
+        except Exception as e:
+            self._send_error_response(500, f'Webhook subscription creation failed: {str(e)}')
+    
+    def _handle_strava_get_webhook_subscription(self):
+        """Handle getting Strava webhook subscriptions"""
+        try:
+            subscriptions = strava_service.get_webhook_subscriptions()
+            self._send_json_response({
+                'subscriptions': subscriptions,
+                'count': len(subscriptions)
+            })
+            
+        except Exception as e:
+            self._send_error_response(500, f'Failed to get webhook subscriptions: {str(e)}')
+    
+    def _handle_strava_delete_webhook_subscription(self):
+        """Handle deleting Strava webhook subscription"""
+        try:
+            path_parts = self.path.split('/')
+            if len(path_parts) < 4:
+                self._send_error_response(400, 'Invalid URL format - subscription ID required')
+                return
+            
+            # Extract subscription ID from URL
+            subscription_id = path_parts[4]  # /api/strava/webhook-subscription/{id}
+            
+            success = strava_service.delete_webhook_subscription(int(subscription_id))
+            self._send_json_response({'success': success})
+            
+        except ValueError:
+            self._send_error_response(400, 'Invalid subscription ID - must be a number')
+        except Exception as e:
+            self._send_error_response(500, f'Webhook subscription deletion failed: {str(e)}')
+    
+    def _handle_strava_webhook_status(self):
+        """Handle getting Strava webhook status"""
+        try:
+            status = strava_service.get_webhook_status()
+            self._send_json_response(status)
+            
+        except Exception as e:
+            self._send_error_response(500, f'Failed to get webhook status: {str(e)}')
 
 def find_available_port(start_port=3000):
     """Find an available port starting from the given port number"""

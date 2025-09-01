@@ -8,7 +8,7 @@
 export class WorkoutStorage {
   constructor() {
     this.dbName = 'WorkoutLibraryDB';
-    this.dbVersion = 1;
+    this.dbVersion = 2; // Incremented for new profile store
     this.db = null;
 
     // Store names
@@ -16,6 +16,8 @@ export class WorkoutStorage {
       workouts: 'workouts',
       collections: 'collections',
       tags: 'tags',
+      userProfiles: 'userProfiles',
+      ftpHistory: 'ftpHistory',
     };
   }
 
@@ -97,6 +99,30 @@ export class WorkoutStorage {
 
       tagStore.createIndex('usageCount', 'usageCount', { unique: false });
       tagStore.createIndex('color', 'color', { unique: false });
+    }
+
+    // User profiles store for profile management
+    if (!db.objectStoreNames.contains(this.stores.userProfiles)) {
+      const profileStore = db.createObjectStore(this.stores.userProfiles, {
+        keyPath: 'id',
+        autoIncrement: false,
+      });
+
+      profileStore.createIndex('email', 'email', { unique: true });
+      profileStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+      profileStore.createIndex('dateModified', 'dateModified', { unique: false });
+    }
+
+    // FTP history store for tracking FTP changes over time
+    if (!db.objectStoreNames.contains(this.stores.ftpHistory)) {
+      const ftpHistoryStore = db.createObjectStore(this.stores.ftpHistory, {
+        keyPath: 'id',
+        autoIncrement: false,
+      });
+
+      ftpHistoryStore.createIndex('profileId', 'profileId', { unique: false });
+      ftpHistoryStore.createIndex('date', 'date', { unique: false });
+      ftpHistoryStore.createIndex('ftpValue', 'ftpValue', { unique: false });
     }
 
     console.log('Database object stores created successfully');
@@ -799,6 +825,338 @@ export class WorkoutStorage {
         : 0;
 
     return stats;
+  }
+
+  // ===============================
+  // USER PROFILE MANAGEMENT METHODS
+  // ===============================
+
+  /**
+   * Generate a unique ID for a user profile
+   * @private
+   * @returns {string} Unique identifier
+   */
+  generateProfileId() {
+    return `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Generate a unique ID for FTP history entry
+   * @private
+   * @returns {string} Unique identifier
+   */
+  generateFTPHistoryId() {
+    return `ftp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Create or update user profile
+   * @param {Object} profileData - Profile data
+   * @returns {Promise<string>} Profile ID
+   */
+  async saveUserProfile(profileData) {
+    if (!this.db) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+
+    const now = new Date().toISOString();
+    const isUpdate = !!profileData.id;
+    
+    const profileRecord = {
+      id: profileData.id || this.generateProfileId(),
+      
+      // Personal information
+      name: profileData.name || '',
+      email: profileData.email || '',
+      weight: profileData.weight || null, // in kg
+      age: profileData.age || null,
+      
+      // Training data
+      ftp: profileData.ftp || 250,
+      units: profileData.units || 'metric', // metric or imperial
+      
+      // Profile photo
+      profilePhoto: profileData.profilePhoto || null, // base64 string or blob URL
+      
+      // Preferences
+      preferences: {
+        theme: profileData.preferences?.theme || 'light',
+        notifications: profileData.preferences?.notifications !== false,
+        dataPrivacy: profileData.preferences?.dataPrivacy || 'private',
+        displayOptions: {
+          showPowerInWatts: profileData.preferences?.displayOptions?.showPowerInWatts !== false,
+          chartType: profileData.preferences?.displayOptions?.chartType || 'line',
+          zoneModel: profileData.preferences?.displayOptions?.zoneModel || 'coggan',
+        },
+        ...profileData.preferences
+      },
+      
+      // System metadata
+      dateCreated: profileData.dateCreated || now,
+      dateModified: now,
+    };
+
+    return new Promise(async (resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.userProfiles], 'readwrite');
+      const store = transaction.objectStore(this.stores.userProfiles);
+      
+      const request = isUpdate ? store.put(profileRecord) : store.add(profileRecord);
+      
+      request.onsuccess = async () => {
+        console.log(`User profile ${isUpdate ? 'updated' : 'created'}: ${profileRecord.name} (${profileRecord.id})`);
+        
+        // If FTP changed, add to history
+        if (isUpdate && profileData.ftp !== undefined) {
+          try {
+            await this.addFTPHistoryEntry(profileRecord.id, profileData.ftp);
+          } catch (error) {
+            console.warn('Failed to add FTP history entry:', error);
+          }
+        }
+        
+        resolve(profileRecord.id);
+      };
+      
+      request.onerror = () => {
+        reject(new Error(`Failed to save user profile: ${request.error}`));
+      };
+    });
+  }
+
+  /**
+   * Get user profile by ID
+   * @param {string} profileId - Profile ID
+   * @returns {Promise<Object|null>} Profile record or null if not found
+   */
+  async getUserProfile(profileId) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.userProfiles], 'readonly');
+      const store = transaction.objectStore(this.stores.userProfiles);
+      const request = store.get(profileId);
+
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+
+      request.onerror = () => {
+        reject(new Error(`Failed to get user profile: ${request.error}`));
+      };
+    });
+  }
+
+  /**
+   * Get the primary user profile (first created)
+   * @returns {Promise<Object|null>} Primary profile or null if none exists
+   */
+  async getPrimaryUserProfile() {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.userProfiles], 'readonly');
+      const store = transaction.objectStore(this.stores.userProfiles);
+      const index = store.index('dateCreated');
+      const request = index.openCursor();
+
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          resolve(cursor.value); // Return the first (oldest) profile
+        } else {
+          resolve(null); // No profiles exist
+        }
+      };
+
+      request.onerror = () => {
+        reject(new Error(`Failed to get primary user profile: ${request.error}`));
+      };
+    });
+  }
+
+  /**
+   * Delete user profile
+   * @param {string} profileId - Profile ID
+   * @returns {Promise<void>}
+   */
+  async deleteUserProfile(profileId) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(
+        [this.stores.userProfiles, this.stores.ftpHistory], 
+        'readwrite'
+      );
+      
+      const profileStore = transaction.objectStore(this.stores.userProfiles);
+      const ftpHistoryStore = transaction.objectStore(this.stores.ftpHistory);
+      
+      // Delete profile
+      const deleteProfileRequest = profileStore.delete(profileId);
+      
+      // Delete associated FTP history
+      const ftpHistoryIndex = ftpHistoryStore.index('profileId');
+      const ftpHistoryCursor = ftpHistoryIndex.openCursor(IDBKeyRange.only(profileId));
+      
+      ftpHistoryCursor.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          cursor.delete();
+          cursor.continue();
+        }
+      };
+      
+      deleteProfileRequest.onsuccess = () => {
+        console.log(`User profile deleted: ${profileId}`);
+        resolve();
+      };
+
+      deleteProfileRequest.onerror = () => {
+        reject(new Error(`Failed to delete user profile: ${deleteProfileRequest.error}`));
+      };
+    });
+  }
+
+  // ===============================
+  // FTP HISTORY MANAGEMENT METHODS
+  // ===============================
+
+  /**
+   * Add FTP history entry
+   * @param {string} profileId - Profile ID
+   * @param {number} ftpValue - FTP value in watts
+   * @param {Date} date - Date of FTP test (optional, defaults to now)
+   * @param {string} source - Source of FTP data (test, estimate, manual)
+   * @returns {Promise<string>} FTP history entry ID
+   */
+  async addFTPHistoryEntry(profileId, ftpValue, date = null, source = 'manual') {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const ftpHistoryRecord = {
+      id: this.generateFTPHistoryId(),
+      profileId,
+      ftpValue: Math.round(ftpValue),
+      date: (date || new Date()).toISOString(),
+      source, // 'test', 'estimate', 'manual'
+      dateCreated: new Date().toISOString(),
+    };
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.ftpHistory], 'readwrite');
+      const store = transaction.objectStore(this.stores.ftpHistory);
+      const request = store.add(ftpHistoryRecord);
+
+      request.onsuccess = () => {
+        console.log(`FTP history entry added: ${ftpValue}W on ${ftpHistoryRecord.date}`);
+        resolve(ftpHistoryRecord.id);
+      };
+
+      request.onerror = () => {
+        reject(new Error(`Failed to add FTP history entry: ${request.error}`));
+      };
+    });
+  }
+
+  /**
+   * Get FTP history for a profile
+   * @param {string} profileId - Profile ID
+   * @param {number} limit - Maximum number of entries to return
+   * @returns {Promise<Array>} Array of FTP history entries
+   */
+  async getFTPHistory(profileId, limit = 50) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.ftpHistory], 'readonly');
+      const store = transaction.objectStore(this.stores.ftpHistory);
+      const index = store.index('profileId');
+      const request = index.getAll(profileId);
+
+      request.onsuccess = () => {
+        let results = request.result;
+        
+        // Sort by date descending and limit results
+        results.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (limit) {
+          results = results.slice(0, limit);
+        }
+        
+        resolve(results);
+      };
+
+      request.onerror = () => {
+        reject(new Error(`Failed to get FTP history: ${request.error}`));
+      };
+    });
+  }
+
+  /**
+   * Export user profile data including FTP history
+   * @param {string} profileId - Profile ID
+   * @returns {Promise<Object>} Profile data with FTP history
+   */
+  async exportUserProfile(profileId) {
+    const [profile, ftpHistory] = await Promise.all([
+      this.getUserProfile(profileId),
+      this.getFTPHistory(profileId, null) // Get all history
+    ]);
+
+    if (!profile) {
+      throw new Error('Profile not found');
+    }
+
+    return {
+      version: this.dbVersion,
+      exportDate: new Date().toISOString(),
+      profile,
+      ftpHistory,
+    };
+  }
+
+  /**
+   * Import user profile data
+   * @param {Object} profileData - Profile data to import
+   * @returns {Promise<string>} Imported profile ID
+   */
+  async importUserProfile(profileData) {
+    if (!profileData.profile) {
+      throw new Error('Invalid profile data: missing profile');
+    }
+
+    // Import the profile
+    const newProfileId = await this.saveUserProfile({
+      ...profileData.profile,
+      id: undefined // Generate new ID
+    });
+
+    // Import FTP history if available
+    if (profileData.ftpHistory && profileData.ftpHistory.length > 0) {
+      for (const ftpEntry of profileData.ftpHistory) {
+        try {
+          await this.addFTPHistoryEntry(
+            newProfileId,
+            ftpEntry.ftpValue,
+            new Date(ftpEntry.date),
+            ftpEntry.source || 'import'
+          );
+        } catch (error) {
+          console.warn(`Failed to import FTP history entry:`, error);
+        }
+      }
+    }
+
+    console.log(`User profile imported with ${profileData.ftpHistory?.length || 0} FTP history entries`);
+    return newProfileId;
   }
 }
 

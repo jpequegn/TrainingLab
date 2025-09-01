@@ -305,7 +305,7 @@ export class ErrorReportingService {
   getEnvironment() {
     if (typeof window === 'undefined') return 'server';
     
-    const hostname = window.location.hostname;
+    const {hostname} = window.location;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'development';
     } else if (hostname.includes('staging') || hostname.includes('test')) {

@@ -1530,3 +1530,477 @@ select:focus-visible {
     padding-right: 1rem !important;
   }
 }
+
+/* ================================================================= */
+/* PROFILE SYSTEM STYLES                                           */
+/* ================================================================= */
+
+/* Profile Page Container */
+#profilePageContainer {
+  @apply animate-fade-in;
+  min-height: 100vh;
+  background: hsl(var(--background));
+}
+
+/* Profile Header */
+.profile-header {
+  @apply flex items-center justify-between mb-8 p-6;
+  background: var(--gradient-primary);
+  color: hsl(var(--primary-foreground));
+  border-radius: 4px; /* Angular design */
+}
+
+.profile-header h1 {
+  @apply text-3xl font-bold;
+  margin: 0;
+}
+
+.profile-header .back-button {
+  @apply btn-modern btn-outline;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: hsl(var(--primary-foreground));
+}
+
+.profile-header .back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Profile Tabs */
+.profile-tabs {
+  @apply flex space-x-1 mb-6;
+  background: hsl(var(--muted));
+  padding: 4px;
+  border-radius: 4px; /* Angular design */
+}
+
+.profile-tab {
+  @apply flex-1 px-4 py-2 text-sm font-medium text-center transition-all duration-200;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  border: none;
+  border-radius: 2px; /* Angular design */
+  cursor: pointer;
+}
+
+.profile-tab:hover {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.profile-tab.active {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Tab Content */
+.profile-tab-content {
+  display: none;
+  animation: slideUp 0.2s ease-out;
+}
+
+.profile-tab-content.active {
+  display: block;
+}
+
+/* Personal Info Form */
+.personal-info-form {
+  @apply space-y-6;
+}
+
+.personal-info-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.personal-info-header h3 {
+  @apply text-2xl font-semibold text-foreground;
+  margin: 0;
+}
+
+.profile-photo-section {
+  @apply flex items-center space-x-6 p-4 rounded-md;
+  background: hsl(var(--muted) / 0.3);
+  border: 1px solid hsl(var(--border));
+}
+
+.profile-photo-container {
+  position: relative;
+}
+
+.profile-photo {
+  @apply w-20 h-20 rounded border-2;
+  border-color: hsl(var(--border));
+  object-fit: cover;
+}
+
+.profile-photo-placeholder {
+  @apply w-20 h-20 rounded border-2 border-dashed flex items-center justify-center;
+  border-color: hsl(var(--border));
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.profile-photo-controls {
+  @apply space-y-2;
+}
+
+.profile-photo-input {
+  display: none;
+}
+
+.form-section {
+  @apply space-y-4;
+}
+
+.form-section h4 {
+  @apply text-lg font-medium text-foreground mb-4;
+  margin: 0;
+}
+
+.form-group {
+  @apply space-y-2;
+}
+
+.form-group label {
+  @apply block text-sm font-medium text-foreground;
+}
+
+.form-group .help-text {
+  @apply text-xs text-muted-foreground;
+  margin-top: 4px;
+}
+
+.form-row {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+/* Power to Weight Display */
+.power-weight-display {
+  @apply inline-flex items-center px-3 py-1 rounded text-sm font-medium;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-radius: 2px; /* Angular design */
+}
+
+/* Training Zones Styles */
+.zone-item {
+  @apply transition-all duration-200;
+  border-radius: 4px; /* Angular design */
+}
+
+.zone-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.zone-bar {
+  @apply transition-all duration-200;
+  cursor: help;
+}
+
+.zone-bar:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+/* FTP History Styles */
+.ftp-history-container {
+  @apply space-y-6;
+}
+
+.ftp-chart-container {
+  @apply relative;
+  min-height: 300px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+  padding: 1rem;
+}
+
+.ftp-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-6;
+}
+
+.ftp-stat-card {
+  @apply text-center p-4 rounded;
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+  transition: all 0.2s ease;
+}
+
+.ftp-stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ftp-stat-value {
+  @apply text-lg font-bold text-foreground;
+  margin: 0;
+}
+
+.ftp-stat-label {
+  @apply text-sm text-muted-foreground;
+  margin-top: 4px;
+}
+
+.ftp-history-form {
+  @apply flex items-end space-x-4 p-4 rounded;
+  background: hsl(var(--muted) / 0.3);
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+}
+
+.ftp-history-list {
+  @apply space-y-2 mt-6;
+}
+
+.ftp-history-item {
+  @apply flex items-center justify-between p-3 rounded transition-all duration-200;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+}
+
+.ftp-history-item:hover {
+  background: hsl(var(--muted) / 0.3);
+  transform: translateX(2px);
+}
+
+.ftp-history-item .ftp-value {
+  @apply font-semibold text-primary;
+}
+
+.ftp-history-item .ftp-date {
+  @apply text-sm text-muted-foreground;
+}
+
+.ftp-history-item .ftp-change {
+  @apply text-xs px-2 py-1 rounded;
+  border-radius: 2px; /* Angular design */
+}
+
+.ftp-history-item .ftp-change.positive {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+}
+
+.ftp-history-item .ftp-change.negative {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+}
+
+/* User Preferences Styles */
+.preferences-section {
+  @apply space-y-6;
+}
+
+.preferences-group {
+  @apply space-y-4;
+}
+
+.preferences-group h4 {
+  @apply text-lg font-medium text-foreground border-b border-border pb-2;
+  margin: 0;
+}
+
+.preference-item {
+  @apply flex items-center justify-between p-3 rounded transition-all duration-200;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+}
+
+.preference-item:hover {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.preference-item label {
+  @apply flex-1 text-sm font-medium text-foreground;
+  margin: 0;
+}
+
+.preference-item .help-text {
+  @apply text-xs text-muted-foreground block mt-1;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  @apply relative inline-block w-12 h-6;
+}
+
+.toggle-switch input {
+  @apply opacity-0 w-0 h-0;
+}
+
+.toggle-slider {
+  @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 transition-all duration-200;
+  background-color: hsl(var(--muted));
+  border-radius: 12px;
+}
+
+.toggle-slider:before {
+  @apply absolute content-[''] h-4 w-4 left-1 bottom-1 transition-all duration-200;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: hsl(var(--primary));
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}
+
+/* Select Dropdown */
+.select-modern {
+  @apply input-modern pr-10 appearance-none cursor-pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
+/* Data Export/Import Section */
+.data-section {
+  @apply p-4 rounded border-2 border-dashed transition-all duration-200;
+  border-color: hsl(var(--border));
+  border-radius: 4px; /* Angular design */
+}
+
+.data-section:hover {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+}
+
+.export-buttons {
+  @apply flex flex-wrap gap-2;
+}
+
+.import-area {
+  @apply text-center py-6;
+}
+
+.import-area.drag-over {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+}
+
+/* Profile Navigation Button */
+#profileBtn {
+  @apply relative;
+}
+
+#profileBtn.active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+#profileBtn.active::after {
+  content: '';
+  @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary;
+  border-radius: 50%;
+  margin-bottom: -8px;
+}
+
+/* Responsive Profile Styles */
+@media (max-width: 768px) {
+  .profile-header {
+    @apply flex-col space-y-4 text-center;
+  }
+
+  .profile-header .back-button {
+    @apply self-start;
+  }
+
+  .profile-tabs {
+    @apply flex-col space-x-0 space-y-1;
+  }
+
+  .profile-tab {
+    @apply text-left px-4 py-3;
+  }
+
+  .profile-photo-section {
+    @apply flex-col space-x-0 space-y-4 text-center;
+  }
+
+  .form-row {
+    @apply grid-cols-1;
+  }
+
+  .ftp-stats-grid {
+    @apply grid-cols-2;
+  }
+
+  .ftp-history-form {
+    @apply flex-col space-x-0 space-y-4;
+  }
+
+  .ftp-history-item {
+    @apply flex-col space-y-2 text-center;
+  }
+
+  .preference-item {
+    @apply flex-col space-y-2;
+  }
+
+  .export-buttons {
+    @apply flex-col;
+  }
+}
+
+/* Dark Mode Support for Profile */
+@media (prefers-color-scheme: dark) {
+  .profile-photo-placeholder {
+    background: hsl(var(--muted));
+  }
+
+  .toggle-slider:before {
+    background-color: hsl(var(--background));
+  }
+}
+
+/* Profile Loading States */
+.profile-loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+.profile-loading::after {
+  content: '';
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  @apply w-8 h-8 border-2 border-primary border-t-transparent rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+/* Success/Error States */
+.profile-success {
+  @apply border-green-500 bg-green-50 dark:bg-green-900/20;
+}
+
+.profile-error {
+  @apply border-red-500 bg-red-50 dark:bg-red-900/20;
+}
+
+/* Animation Classes */
+@keyframes profileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.profile-slide-in {
+  animation: profileSlideIn 0.3s ease-out;
+}
