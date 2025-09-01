@@ -17,6 +17,7 @@ from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from mcp_manager import load_mcp_tools, terminate_mcp_processes, MCPManager
+from src.services.trainingpeaks_backend import TrainingPeaksBackendService
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Enhanced HTTP request handler with CORS support and comprehensive error handling"""
@@ -26,6 +27,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     agent_executor = None
     mcp_processes = []  # Store MCP server processes (legacy)
     mcp_manager = None  # Enhanced MCP manager
+    trainingpeaks_service = None  # TrainingPeaks backend service
     
     # Request routing configuration
     POST_ROUTES = {
@@ -33,7 +35,14 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         '/chat': '_handle_chat',
         '/mcp/start/': '_handle_mcp_start',
         '/mcp/stop/': '_handle_mcp_stop', 
-        '/mcp/restart/': '_handle_mcp_restart'
+        '/mcp/restart/': '_handle_mcp_restart',
+        '/api/trainingpeaks/auth/': '_handle_tp_auth',
+        '/api/trainingpeaks/callback': '_handle_tp_callback',
+        '/api/trainingpeaks/refresh-token/': '_handle_tp_refresh_token',
+        '/api/trainingpeaks/sync/': '_handle_tp_sync',
+        '/api/trainingpeaks/disconnect/': '_handle_tp_disconnect',
+        '/api/trainingpeaks/settings/': '_handle_tp_update_settings',
+        '/api/trainingpeaks/webhook/': '_handle_tp_webhook'
     }
     
     GET_ROUTES = {
@@ -42,7 +51,10 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         '/health': '_handle_health',
         '/health/ready': '_handle_readiness',
         '/health/live': '_handle_liveness',
-        '/metrics': '_handle_metrics'
+        '/metrics': '_handle_metrics',
+        '/api/trainingpeaks/token/': '_handle_tp_get_token',
+        '/api/trainingpeaks/status/': '_handle_tp_get_status',
+        '/api/trainingpeaks/settings/': '_handle_tp_get_settings'
     }
 
     @classmethod
@@ -79,7 +91,10 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             agent = create_tool_calling_agent(cls.llm, mcp_tools, prompt)
             cls.agent_executor = AgentExecutor(agent=agent, tools=mcp_tools, verbose=True)
             
-            print("[SUCCESS] LLM agent initialized successfully!")
+            print("🏔️ Initializing TrainingPeaks backend service...")
+            cls.trainingpeaks_service = TrainingPeaksBackendService()
+            
+            print("[SUCCESS] LLM agent and TrainingPeaks service initialized successfully!")
             
         except Exception as e:
             error_type = type(e).__name__
@@ -681,6 +696,194 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         # Generic error
         return f"❌ **Unexpected Error**\n\nAn unexpected error occurred during workout generation.\n\n**Troubleshooting Steps:**\n1. Try refreshing the page and submitting again\n2. Check the browser console for additional errors\n3. Verify all system requirements are met\n4. Try using local generation mode instead\n\n**Technical Details:** {error_type}: {str(error)}\n\n**Need Help?** Check the console logs or try a simpler workout description."
+
+    # TrainingPeaks API Handlers
+    
+    def _handle_tp_auth(self):
+        """Handle TrainingPeaks authentication request"""
+        try:
+            data = self._parse_json_request()
+            if not data:
+                return
+                
+            user_id = data.get('userId')
+            if not user_id:
+                self._send_error_response(400, 'userId is required')
+                return
+            
+            result = CORSHTTPRequestHandler.trainingpeaks_service.generate_auth_url(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error handling TrainingPeaks auth: {e}")
+            self._send_error_response(500, f'Failed to generate auth URL: {str(e)}')
+    
+    def _handle_tp_callback(self):
+        """Handle TrainingPeaks OAuth callback"""
+        try:
+            data = self._parse_json_request()
+            if not data:
+                return
+                
+            required_fields = ['code', 'state']
+            missing_fields = [field for field in required_fields if field not in data]
+            if missing_fields:
+                self._send_error_response(400, f'Missing required fields: {", ".join(missing_fields)}')
+                return
+            
+            result = CORSHTTPRequestHandler.trainingpeaks_service.exchange_code_for_tokens(
+                data['code'], data['state']
+            )
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error handling TrainingPeaks callback: {e}")
+            self._send_error_response(500, f'Failed to process callback: {str(e)}')
+    
+    def _handle_tp_refresh_token(self):
+        """Handle TrainingPeaks token refresh request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            result = CORSHTTPRequestHandler.trainingpeaks_service.refresh_access_token(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error refreshing TrainingPeaks token: {e}")
+            self._send_error_response(500, f'Failed to refresh token: {str(e)}')
+    
+    def _handle_tp_get_token(self):
+        """Handle get TrainingPeaks access token request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            token = CORSHTTPRequestHandler.trainingpeaks_service.get_access_token(user_id)
+            if token:
+                self._send_json_response({'accessToken': token})
+            else:
+                self._send_error_response(404, 'No access token found for user')
+                
+        except Exception as e:
+            print(f"❌ Error getting TrainingPeaks token: {e}")
+            self._send_error_response(500, f'Failed to get access token: {str(e)}')
+    
+    def _handle_tp_get_status(self):
+        """Handle get TrainingPeaks connection status request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            status = CORSHTTPRequestHandler.trainingpeaks_service.get_connection_status(user_id)
+            self._send_json_response(status)
+            
+        except Exception as e:
+            print(f"❌ Error getting TrainingPeaks status: {e}")
+            self._send_error_response(500, f'Failed to get connection status: {str(e)}')
+    
+    def _handle_tp_sync(self):
+        """Handle TrainingPeaks data synchronization request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            result = CORSHTTPRequestHandler.trainingpeaks_service.sync_user_data(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error syncing TrainingPeaks data: {e}")
+            self._send_error_response(500, f'Failed to sync data: {str(e)}')
+    
+    def _handle_tp_disconnect(self):
+        """Handle TrainingPeaks disconnection request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            result = CORSHTTPRequestHandler.trainingpeaks_service.disconnect_user(user_id)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error disconnecting TrainingPeaks: {e}")
+            self._send_error_response(500, f'Failed to disconnect: {str(e)}')
+    
+    def _handle_tp_get_settings(self):
+        """Handle get TrainingPeaks settings request"""
+        try:
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+            
+            settings = CORSHTTPRequestHandler.trainingpeaks_service.get_sync_settings(user_id)
+            self._send_json_response(settings)
+            
+        except Exception as e:
+            print(f"❌ Error getting TrainingPeaks settings: {e}")
+            self._send_error_response(500, f'Failed to get settings: {str(e)}')
+    
+    def _handle_tp_update_settings(self):
+        """Handle update TrainingPeaks settings request"""
+        try:
+            data = self._parse_json_request()
+            if not data:
+                return
+                
+            # Extract user_id from path
+            user_id = self.path.split('/')[-1] if self.path.endswith('/') else self.path.split('/')[-1]
+            if not user_id:
+                self._send_error_response(400, 'userId is required in path')
+                return
+                
+            settings = data.get('settings', {})
+            result = CORSHTTPRequestHandler.trainingpeaks_service.update_sync_settings(user_id, settings)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error updating TrainingPeaks settings: {e}")
+            self._send_error_response(500, f'Failed to update settings: {str(e)}')
+    
+    def _handle_tp_webhook(self):
+        """Handle TrainingPeaks webhook notifications"""
+        try:
+            data = self._parse_json_request()
+            if not data:
+                return
+            
+            # Extract event data
+            event_type = data.get('event_type', 'unknown')
+            user_id = data.get('user_id')
+            
+            if not user_id:
+                self._send_error_response(400, 'user_id is required')
+                return
+            
+            print(f"📩 Received TrainingPeaks webhook: {event_type} for user {user_id}")
+            
+            # Process webhook
+            result = CORSHTTPRequestHandler.trainingpeaks_service.handle_webhook(data)
+            self._send_json_response(result)
+            
+        except Exception as e:
+            print(f"❌ Error handling TrainingPeaks webhook: {e}")
+            self._send_error_response(500, f'Failed to process webhook: {str(e)}')
 
     def do_GET(self):
         """Handle GET requests with improved error handling and routing"""
