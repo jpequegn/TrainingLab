@@ -15,6 +15,8 @@ import { performanceOptimizer } from './performance/performance-optimizer.js';
 import { WorkoutEditor } from './ui/editor.js';
 import { createLogger } from './utils/logger.js';
 import { reportError } from './utils/error-reporting.js';
+import { ProfilePage } from './components/profile/ProfilePage.js';
+import { profileService } from './services/profile-service.js';
 
 // Create logger for main script
 const logger = createLogger('Main');
@@ -106,6 +108,9 @@ class ZwiftWorkoutVisualizer {
 
     // Set global reference for inline event handlers
     window.workoutEditor = this.editor;
+
+    // Initialize profile system
+    this.initializeProfileSystem();
 
     // Setup state management integration
     this.setupStateIntegration();
@@ -592,6 +597,112 @@ class ZwiftWorkoutVisualizer {
     document.addEventListener('component:destroy', event => {
       console.log('Component destroyed:', event.detail.component);
     });
+  }
+
+  async initializeProfileSystem() {
+    try {
+      // Initialize profile service
+      await profileService.initialize();
+      
+      // Initialize profile page component
+      const profileContainer = document.getElementById('profilePageContainer');
+      if (profileContainer) {
+        this.profilePage = new ProfilePage(profileContainer);
+      }
+      
+      // Setup profile navigation
+      this.setupProfileNavigation();
+      
+      console.log('Profile system initialized');
+    } catch (error) {
+      console.error('Failed to initialize profile system:', error);
+      this.ui.showToast('Failed to initialize profile system', 'error');
+    }
+  }
+
+  setupProfileNavigation() {
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        this.showProfilePage();
+      });
+    }
+
+    // Listen for profile edit requests
+    window.addEventListener('profile:editFTP', () => {
+      this.showProfilePage();
+      // Focus on the FTP field if needed
+      setTimeout(() => {
+        const ftpInput = document.querySelector('#profilePageContainer input[name="ftp"]');
+        if (ftpInput) {
+          ftpInput.focus();
+        }
+      }, 100);
+    });
+
+    // Listen for profile navigation requests
+    window.addEventListener('profile:show', () => {
+      this.showProfilePage();
+    });
+  }
+
+  showProfilePage() {
+    // Hide other views
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.display = 'none';
+    }
+
+    // Show profile page
+    const profileContainer = document.getElementById('profilePageContainer');
+    if (profileContainer) {
+      profileContainer.style.display = 'block';
+      
+      // Trigger profile page render if needed
+      if (this.profilePage) {
+        this.profilePage.show();
+      }
+    }
+
+    // Update navigation state
+    this.updateNavigationState('profile');
+  }
+
+  hideProfilePage() {
+    // Hide profile page
+    const profileContainer = document.getElementById('profilePageContainer');
+    if (profileContainer) {
+      profileContainer.style.display = 'none';
+    }
+
+    // Show main content
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.display = 'block';
+    }
+
+    // Update navigation state
+    this.updateNavigationState('home');
+  }
+
+  updateNavigationState(activeView) {
+    // Update navigation button states
+    const profileBtn = document.getElementById('profileBtn');
+    const homeBtn = document.querySelector('.nav-button:not(#profileBtn)');
+    
+    if (profileBtn) {
+      profileBtn.classList.toggle('active', activeView === 'profile');
+    }
+    if (homeBtn) {
+      homeBtn.classList.toggle('active', activeView === 'home');
+    }
+
+    // Update page title
+    if (activeView === 'profile') {
+      document.title = 'TrainingLab - Profile';
+    } else {
+      document.title = 'TrainingLab - Workout Visualizer';
+    }
   }
 
   initializePerformanceMonitoring() {
