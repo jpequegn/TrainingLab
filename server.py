@@ -1373,8 +1373,15 @@ def main():
     if hasattr(signal, 'SIGTERM'):
         signal.signal(signal.SIGTERM, signal_handler)  # Terminate signal
     
-    # Change to the directory containing the HTML files
-    os.chdir(Path(__file__).parent)
+    # Change to the public directory containing the HTML files
+    public_dir = Path(__file__).parent / 'public'
+    if public_dir.exists():
+        os.chdir(public_dir)
+        print(f"[INFO] Serving files from: {public_dir}")
+    else:
+        # Fallback to parent directory if public doesn't exist
+        os.chdir(Path(__file__).parent)
+        print(f"[INFO] Serving files from: {Path(__file__).parent}")
 
     # Initialize the LangChain agent
     CORSHTTPRequestHandler.initialize_agent()
