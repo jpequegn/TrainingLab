@@ -34,6 +34,7 @@ export class StateManager {
 
       // User Profile State
       userProfile: null,
+      userProfileModel: null, // UserProfileModel instance for dashboard
       ftpHistory: [],
       profileLoading: false,
       profileError: null,
@@ -382,7 +383,7 @@ export class StateManager {
       LOAD_USER_PROFILE: profile => {
         this.setState('userProfile', profile);
         this.setState('profileError', null);
-        
+
         // Update legacy preferences for backward compatibility
         if (profile) {
           this.setState('ftp', profile.ftp || 250);
@@ -400,7 +401,7 @@ export class StateManager {
             dateModified: new Date().toISOString(),
           };
           this.setState('userProfile', updatedProfile);
-          
+
           // Update legacy preferences for backward compatibility
           if (profileData.ftp !== undefined) {
             this.setState('ftp', profileData.ftp);
@@ -416,8 +417,13 @@ export class StateManager {
 
       CLEAR_USER_PROFILE: () => {
         this.setState('userProfile', null);
+        this.setState('userProfileModel', null);
         this.setState('ftpHistory', []);
         this.setState('profileError', null);
+      },
+
+      SET_USER_PROFILE_MODEL: model => {
+        this.setState('userProfileModel', model);
       },
 
       LOAD_FTP_HISTORY: ftpHistory => {

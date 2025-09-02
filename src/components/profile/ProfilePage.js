@@ -21,7 +21,8 @@ export class ProfilePage {
       userPreferences: null,
     };
     this.currentProfile = null;
-    
+    this.currentProfileModel = null; // UserProfileModel instance
+
     // Bind methods
     this.render = this.render.bind(this);
     this.handleTabChange = this.handleTabChange.bind(this);
@@ -31,6 +32,13 @@ export class ProfilePage {
     this.unsubscribeProfile = stateManager.subscribe(
       'userProfile',
       this.handleProfileUpdate.bind(this),
+      { immediate: true }
+    );
+
+    // Subscribe to UserProfileModel changes
+    this.unsubscribeProfileModel = stateManager.subscribe(
+      'userProfileModel',
+      this.handleProfileModelUpdate.bind(this),
       { immediate: true }
     );
 
@@ -44,6 +52,39 @@ export class ProfilePage {
   handleProfileUpdate(profile) {
     this.currentProfile = profile;
     this.render();
+  }
+
+  /**
+   * Handle UserProfileModel updates from state
+   */
+  handleProfileModelUpdate(profileModel) {
+    this.currentProfileModel = profileModel;
+    this.render();
+  }
+
+  /**
+   * Get the active profile data (prioritize model over basic profile)
+   */
+  getActiveProfileData() {
+    if (this.currentProfileModel) {
+      // Use UserProfileModel data which is richer
+      return {
+        id: this.currentProfileModel.id,
+        name: this.currentProfileModel.name,
+        email: this.currentProfileModel.email,
+        ftp: this.currentProfileModel.ftp,
+        weight: this.currentProfileModel.weight,
+        preferences: this.currentProfileModel.preferences,
+        profilePhoto: this.currentProfileModel.avatar,
+        ftpHistory: this.currentProfileModel.ftpHistory,
+        // Add dashboard-specific data
+        hrv: this.currentProfileModel.hrv,
+        recoveryStatus: this.currentProfileModel.recoveryStatus,
+        trainingLoad: this.currentProfileModel.trainingLoad,
+        dashboardMetrics: this.currentProfileModel.getDashboardMetrics(),
+      };
+    }
+    return this.currentProfile;
   }
 
   /**
@@ -65,12 +106,14 @@ export class ProfilePage {
   render() {
     if (!this.container) return;
 
+    const profileData = this.getActiveProfileData();
+
     this.container.innerHTML = `
       <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-        ${this.renderHeader()}
+        ${this.renderHeader(profileData)}
         
         <div class="container mx-auto px-4 py-8 max-w-6xl">
-          ${this.currentProfile ? this.renderTabbedInterface() : this.renderWelcome()}
+          ${profileData ? this.renderTabbedInterface() : this.renderWelcome()}
         </div>
       </div>
     `;
@@ -84,7 +127,7 @@ export class ProfilePage {
   /**
    * Render page header
    */
-  renderHeader() {
+  renderHeader(profileData = null) {
     return `
       <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-border sticky top-0 z-10">
         <div class="container mx-auto px-4 py-4 max-w-6xl">
@@ -110,31 +153,39 @@ export class ProfilePage {
               </div>
             </div>
 
-            ${this.currentProfile ? `
+            ${
+              profileData
+                ? `
               <div class="flex items-center space-x-4">
                 <div class="text-right">
                   <div class="font-semibold text-foreground">
-                    ${this.currentProfile.name || 'Profile'}
+                    ${profileData.name || 'Profile'}
                   </div>
                   <div class="text-nebula-small text-muted-foreground">
-                    FTP: ${this.currentProfile.ftp || 250}W
+                    FTP: ${profileData.ftp || 250}W
                   </div>
                 </div>
                 <div class="w-10 h-10 bg-muted rounded-full overflow-hidden flex items-center justify-center">
-                  ${this.currentProfile.profilePhoto ? `
+                  ${
+                    profileData.profilePhoto
+                      ? `
                     <img
-                      src="${this.currentProfile.profilePhoto}"
+                      src="${profileData.profilePhoto}"
                       alt="Profile"
                       class="w-full h-full object-cover"
                     />
-                  ` : `
+                  `
+                      : `
                     <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
-                  `}
+                  `
+                  }
                 </div>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
         </div>
       </header>
@@ -250,7 +301,9 @@ export class ProfilePage {
       <!-- Tab Navigation -->
       <div class="mb-8">
         <nav class="flex space-x-1 bg-muted/50 p-1 rounded-lg">
-          ${tabs.map(tab => `
+          ${tabs
+            .map(
+              tab => `
             <button
               data-tab="${tab.id}"
               class="tab-button flex items-center space-x-2 px-4 py-3 rounded-md text-nebula-small font-medium transition-colors ${
@@ -264,7 +317,9 @@ export class ProfilePage {
               </svg>
               <span>${tab.label}</span>
             </button>
-          `).join('')}
+          `
+            )
+            .join('')}
         </nav>
       </div>
 
@@ -295,7 +350,9 @@ export class ProfilePage {
   initializeComponents() {
     this.destroyComponents();
 
-    if (!this.currentProfile) {
+    const profileData = this.getActiveProfileData();
+
+    if (!profileData) {
       // Initialize welcome form
       const welcomeContainer = document.getElementById('welcomePersonalForm');
       if (welcomeContainer) {
@@ -315,7 +372,9 @@ export class ProfilePage {
     Object.entries(containers).forEach(([containerId, ComponentClass]) => {
       const container = document.getElementById(containerId);
       if (container) {
-        const componentKey = containerId.replace('Container', '').replace('Info', '');
+        const componentKey = containerId
+          .replace('Container', '')
+          .replace('Info', '');
         this.components[componentKey] = new ComponentClass(container);
       }
     });
@@ -333,7 +392,7 @@ export class ProfilePage {
         component.destroy();
       }
     });
-    
+
     this.components = {
       personalForm: null,
       trainingZones: null,
@@ -368,7 +427,7 @@ export class ProfilePage {
     const tabId = event.currentTarget.getAttribute('data-tab');
     if (tabId && tabId !== this.activeTab) {
       this.activeTab = tabId;
-      
+
       // Update tab buttons
       document.querySelectorAll('.tab-button').forEach(btn => {
         const isActive = btn.getAttribute('data-tab') === tabId;
@@ -395,7 +454,7 @@ export class ProfilePage {
     if (this.container) {
       this.container.style.display = 'none';
     }
-    
+
     // Show main app sections
     const sections = ['workoutSection', 'heroSection'];
     sections.forEach(id => {
@@ -416,10 +475,10 @@ export class ProfilePage {
     if (this.container) {
       this.container.style.display = 'block';
     }
-    
+
     // Initialize profile service
     this.initializeProfile();
-    
+
     // Hide main app sections
     const sections = ['workoutSection', 'heroSection'];
     sections.forEach(id => {
@@ -453,7 +512,7 @@ export class ProfilePage {
     });
 
     // Listen for tab change requests
-    window.addEventListener('profile:switchTab', (event) => {
+    window.addEventListener('profile:switchTab', event => {
       if (event.detail?.tab) {
         this.activeTab = event.detail.tab;
         this.render();
@@ -471,7 +530,7 @@ export class ProfilePage {
       ftp: this.components.ftpHistory,
       preferences: this.components.userPreferences,
     };
-    
+
     return componentMap[this.activeTab];
   }
 
@@ -497,9 +556,13 @@ export class ProfilePage {
    */
   destroy() {
     this.destroyComponents();
-    
+
     if (this.unsubscribeProfile) {
       this.unsubscribeProfile();
+    }
+
+    if (this.unsubscribeProfileModel) {
+      this.unsubscribeProfileModel();
     }
   }
 }
