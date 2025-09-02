@@ -98,6 +98,10 @@
         gap: 1rem;
       }
 
+      .profile-dropdown {
+        position: relative;
+      }
+
       .user-avatar {
         width: 40px;
         height: 40px;
@@ -112,6 +116,114 @@
         justify-content: center;
         color: white;
         font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .user-avatar:hover {
+        transform: scale(1.05);
+      }
+
+      .profile-chevron {
+        font-size: 0.75rem;
+        margin-left: 0.25rem;
+        transition: transform 0.2s ease;
+      }
+
+      .profile-dropdown.active .profile-chevron {
+        transform: rotate(180deg);
+      }
+
+      .profile-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        border: 1px solid var(--gray-200);
+        min-width: 280px;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: all 0.2s ease;
+      }
+
+      .profile-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+
+      .profile-menu-header {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .profile-menu-avatar {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(
+          45deg,
+          var(--primary-blue),
+          var(--accent-orange)
+        );
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.125rem;
+      }
+
+      .profile-menu-info {
+        flex: 1;
+      }
+
+      .profile-menu-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--gray-900);
+        margin-bottom: 0.125rem;
+      }
+
+      .profile-menu-email {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+      }
+
+      .profile-menu-divider {
+        height: 1px;
+        background: var(--gray-200);
+        margin: 0.5rem 0;
+      }
+
+      .profile-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: var(--gray-700);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+      }
+
+      .profile-menu-item:hover {
+        background: var(--gray-100);
+        color: var(--gray-900);
+      }
+
+      .profile-menu-item i {
+        width: 16px;
+        text-align: center;
+        color: var(--gray-600);
       }
 
       /* Metrics Bar */
@@ -564,8 +676,40 @@
             <span>TrainingLab</span>
           </div>
           <div class="user-info">
-            <span>Welcome back, Alex</span>
-            <div class="user-avatar">AR</div>
+            <span class="user-name">Welcome back, Alex</span>
+            <div class="profile-dropdown">
+              <button
+                class="user-avatar"
+                id="profileMenuBtn"
+                title="Profile Menu"
+              >
+                AR
+                <i class="fas fa-chevron-down profile-chevron"></i>
+              </button>
+              <div class="profile-menu" id="profileMenu">
+                <div class="profile-menu-header">
+                  <div class="profile-menu-avatar">AR</div>
+                  <div class="profile-menu-info">
+                    <div class="profile-menu-name">Alex Thompson</div>
+                    <div class="profile-menu-email">demo@traininglab.com</div>
+                  </div>
+                </div>
+                <div class="profile-menu-divider"></div>
+                <a href="#" class="profile-menu-item" id="manageProfileBtn">
+                  <i class="fas fa-user"></i>
+                  <span>Manage Profile</span>
+                </a>
+                <a href="#" class="profile-menu-item" id="preferencesBtn">
+                  <i class="fas fa-cog"></i>
+                  <span>Preferences</span>
+                </a>
+                <div class="profile-menu-divider"></div>
+                <a href="#" class="profile-menu-item" id="signOutBtn">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>Sign Out</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -939,14 +1083,63 @@
       </div>
     </div>
 
+    <!-- Profile Management Page -->
+    <div id="profilePage" style="display: none"></div>
+
     <!-- User Profile Model Integration -->
     <script type="module">
-      // Import the UserProfileModel
+      // Import the UserProfileModel and ProfilePage
       import { UserProfileModel } from '../src/models/UserProfileModel.js';
       import { ModelFactory } from '../src/models/ModelFactory.js';
+      import { ProfilePage } from '../src/components/profile/ProfilePage.js';
 
       // Global user profile instance
       let userProfile = null;
+      let profilePage = null;
+
+      // Initialize profile management system
+      function initializeProfilePage() {
+        const profileContainer = document.getElementById('profilePage');
+        if (profileContainer && !profilePage) {
+          profilePage = new ProfilePage(profileContainer);
+        }
+      }
+
+      // Show profile management page
+      function showProfilePage() {
+        const dashboardContent = document.querySelector('.main-content');
+        const metricsBar = document.querySelector('.metrics-bar');
+        const profileContainer = document.getElementById('profilePage');
+
+        if (dashboardContent) dashboardContent.style.display = 'none';
+        if (metricsBar) metricsBar.style.display = 'none';
+        if (profileContainer) profileContainer.style.display = 'block';
+
+        // Initialize profile page if not already done
+        if (!profilePage) {
+          initializeProfilePage();
+        }
+
+        // Show profile page
+        if (profilePage) {
+          profilePage.show();
+        }
+      }
+
+      // Hide profile management page
+      function hideProfilePage() {
+        const dashboardContent = document.querySelector('.main-content');
+        const metricsBar = document.querySelector('.metrics-bar');
+        const profileContainer = document.getElementById('profilePage');
+
+        if (dashboardContent) dashboardContent.style.display = 'block';
+        if (metricsBar) metricsBar.style.display = 'block';
+        if (profileContainer) profileContainer.style.display = 'none';
+
+        if (profilePage) {
+          profilePage.hide();
+        }
+      }
 
       // Initialize user profile and dashboard
       async function initializeDashboard() {
@@ -1059,7 +1252,44 @@
 
         const userNameElement = document.querySelector('.user-name');
         if (userNameElement) {
-          userNameElement.textContent = userProfile.name || 'Athlete';
+          userNameElement.textContent = `Welcome back, ${userProfile.name || 'Athlete'}`;
+        }
+
+        // Update profile menu info
+        const profileMenuName = document.querySelector('.profile-menu-name');
+        const profileMenuEmail = document.querySelector('.profile-menu-email');
+        const userAvatarButton = document.getElementById('profileMenuBtn');
+        const profileMenuAvatar = document.querySelector(
+          '.profile-menu-avatar'
+        );
+
+        if (profileMenuName) {
+          profileMenuName.textContent = userProfile.name || 'Athlete';
+        }
+
+        if (profileMenuEmail) {
+          profileMenuEmail.textContent = userProfile.email || 'No email set';
+        }
+
+        // Update avatar initials
+        const initials = (userProfile.name || 'AR')
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .substring(0, 2)
+          .toUpperCase();
+
+        if (userAvatarButton) {
+          const textNode = Array.from(userAvatarButton.childNodes).find(
+            node => node.nodeType === Node.TEXT_NODE
+          );
+          if (textNode) {
+            textNode.textContent = initials;
+          }
+        }
+
+        if (profileMenuAvatar) {
+          profileMenuAvatar.textContent = initials;
         }
 
         // Update welcome message or other user-specific content
@@ -1114,11 +1344,98 @@
         refreshDashboard: updateDashboardMetrics,
       };
 
+      // Expose profile page functions globally
+      window.showProfilePage = showProfilePage;
+      window.hideProfilePage = hideProfilePage;
+      window.profilePage = () => profilePage;
+
       // Initialize dashboard when DOM is loaded
       document.addEventListener('DOMContentLoaded', initializeDashboard);
     </script>
 
     <script>
+      // Profile dropdown functionality
+      document.addEventListener('DOMContentLoaded', function () {
+        // Profile dropdown menu
+        const profileMenuBtn = document.getElementById('profileMenuBtn');
+        const profileMenu = document.getElementById('profileMenu');
+        const profileDropdown = document.querySelector('.profile-dropdown');
+
+        if (profileMenuBtn && profileMenu) {
+          // Toggle dropdown menu
+          profileMenuBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isOpen = profileMenu.classList.contains('show');
+
+            if (isOpen) {
+              profileMenu.classList.remove('show');
+              profileDropdown.classList.remove('active');
+            } else {
+              profileMenu.classList.add('show');
+              profileDropdown.classList.add('active');
+            }
+          });
+
+          // Close dropdown when clicking outside
+          document.addEventListener('click', function (e) {
+            if (!profileDropdown.contains(e.target)) {
+              profileMenu.classList.remove('show');
+              profileDropdown.classList.remove('active');
+            }
+          });
+
+          // Handle profile menu actions
+          const manageProfileBtn = document.getElementById('manageProfileBtn');
+          const preferencesBtn = document.getElementById('preferencesBtn');
+          const signOutBtn = document.getElementById('signOutBtn');
+
+          if (manageProfileBtn) {
+            manageProfileBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              profileMenu.classList.remove('show');
+              profileDropdown.classList.remove('active');
+
+              // Show profile management page
+              if (window.showProfilePage) {
+                window.showProfilePage();
+              }
+            });
+          }
+
+          if (preferencesBtn) {
+            preferencesBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              profileMenu.classList.remove('show');
+              profileDropdown.classList.remove('active');
+
+              // Show profile management page with preferences tab
+              if (window.showProfilePage) {
+                window.showProfilePage();
+                // Switch to preferences tab after a short delay
+                setTimeout(() => {
+                  if (window.profilePage) {
+                    window.profilePage.switchToTab('preferences');
+                  }
+                }, 100);
+              }
+            });
+          }
+
+          if (signOutBtn) {
+            signOutBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              profileMenu.classList.remove('show');
+              profileDropdown.classList.remove('active');
+
+              // Handle sign out (for now just alert)
+              alert('Sign out functionality not implemented yet');
+            });
+          }
+        }
+      });
+
       // Tab functionality
       document.addEventListener('DOMContentLoaded', function () {
         const tabButtons = document.querySelectorAll('.tab-button');
