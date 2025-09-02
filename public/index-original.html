@@ -231,7 +231,7 @@
         <div class="flex items-center space-x-2">
           <!-- Profile Button -->
           <button
-            id="profileButton"
+            id="profileBtn"
             class="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
             style="border-radius: 2px"
             title="Profile & Settings"
@@ -323,7 +323,9 @@
           Transform your Zwift workout files into stunning interactive
           visualizations with advanced analytics and export capabilities.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div
+          class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center"
+        >
           <button id="uploadButton" class="btn-modern h-11 px-8">
             <svg
               class="w-4 h-4 mr-2"
@@ -355,6 +357,25 @@
               ></path>
             </svg>
             Try Sample
+          </button>
+          <button
+            id="ftpTestButton"
+            class="btn-modern btn-outline h-11 px-8 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white border-0"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              ></path>
+            </svg>
+            FTP Test
           </button>
         </div>
       </div>
@@ -687,7 +708,9 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
+        >
           <div class="card-modern p-6 text-center animate-on-scroll">
             <div
               class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-4"
@@ -712,6 +735,37 @@
             </h3>
             <p class="text-nebula-body text-muted-foreground">
               Visualize power profiles with hover details and segment breakdown
+            </p>
+          </div>
+
+          <div
+            class="card-modern p-6 text-center animate-on-scroll cursor-pointer hover:shadow-lg transition-all duration-200"
+            onclick="document.getElementById('ftpTestButton').click()"
+          >
+            <div
+              class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center mx-auto mb-4"
+              style="border-radius: 4px"
+            >
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-nebula-h3 font-semibold text-foreground mb-2">
+              FTP Testing
+            </h3>
+            <p class="text-nebula-body text-muted-foreground">
+              Advanced FTP test calculators including Critical Power and FRC
+              protocols
             </p>
           </div>
 
@@ -865,6 +919,26 @@
           .getElementById('uploadButton')
           .addEventListener('click', () => {
             document.getElementById('fileInput').click();
+          });
+
+        // FTP Test button - navigate to profile page and FTP Testing tab
+        document
+          .getElementById('ftpTestButton')
+          .addEventListener('click', () => {
+            // Show profile page
+            if (window.visualizer && window.visualizer.showProfilePage) {
+              window.visualizer.showProfilePage();
+            }
+
+            // Navigate to FTP Testing tab after a short delay
+            setTimeout(() => {
+              if (window.visualizer && window.visualizer.profilePage) {
+                window.visualizer.profilePage.switchToTab('ftptest');
+              }
+            }, 100);
+
+            // Dispatch custom event for profile navigation
+            window.dispatchEvent(new CustomEvent('profile:showFTPTest'));
           });
 
         // Add smooth scrolling animations
