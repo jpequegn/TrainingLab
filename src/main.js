@@ -40,7 +40,7 @@ window.addEventListener('error', event => {
   // Send to error reporting service
   reportError(event.error || new Error(errorData.message), {
     type: 'unhandled_error',
-    ...errorData
+    ...errorData,
   });
 
   // Show user-friendly error message
@@ -62,12 +62,16 @@ window.addEventListener('unhandledrejection', event => {
     url: window.location.href,
   };
 
-  logger.error('Unhandled Promise Rejection', new Error(errorData.reason), errorData);
+  logger.error(
+    'Unhandled Promise Rejection',
+    new Error(errorData.reason),
+    errorData
+  );
 
   // Send to error reporting service
   reportError(new Error(errorData.reason), {
     type: 'unhandled_rejection',
-    ...errorData
+    ...errorData,
   });
 
   // Show user-friendly error message
@@ -90,9 +94,7 @@ window.eval = function () {
 
 // Security: Remove any potential XSS vectors
 if (window.setTimeout.toString().indexOf('[native code]') === -1) {
-  logger.warn(
-    'setTimeout appears to be overridden - potential security risk'
-  );
+  logger.warn('setTimeout appears to be overridden - potential security risk');
 }
 
 class ZwiftWorkoutVisualizer {
@@ -150,9 +152,7 @@ class ZwiftWorkoutVisualizer {
         (window.location.hostname === 'localhost' ||
           window.location.hostname === '127.0.0.1')
       ) {
-        logger.debug(
-          `State change: ${path}`, { newValue, source }
-        );
+        logger.debug(`State change: ${path}`, { newValue, source });
       }
 
       return true; // Allow the change
@@ -603,16 +603,16 @@ class ZwiftWorkoutVisualizer {
     try {
       // Initialize profile service
       await profileService.initialize();
-      
+
       // Initialize profile page component
       const profileContainer = document.getElementById('profilePageContainer');
       if (profileContainer) {
         this.profilePage = new ProfilePage(profileContainer);
       }
-      
+
       // Setup profile navigation
       this.setupProfileNavigation();
-      
+
       console.log('Profile system initialized');
     } catch (error) {
       console.error('Failed to initialize profile system:', error);
@@ -633,7 +633,9 @@ class ZwiftWorkoutVisualizer {
       this.showProfilePage();
       // Focus on the FTP field if needed
       setTimeout(() => {
-        const ftpInput = document.querySelector('#profilePageContainer input[name="ftp"]');
+        const ftpInput = document.querySelector(
+          '#profilePageContainer input[name="ftp"]'
+        );
         if (ftpInput) {
           ftpInput.focus();
         }
@@ -643,6 +645,17 @@ class ZwiftWorkoutVisualizer {
     // Listen for profile navigation requests
     window.addEventListener('profile:show', () => {
       this.showProfilePage();
+    });
+
+    // Listen for FTP Test navigation requests
+    window.addEventListener('profile:showFTPTest', () => {
+      this.showProfilePage();
+      // Navigate to FTP Testing tab after profile page is shown
+      setTimeout(() => {
+        if (this.profilePage) {
+          this.profilePage.switchToTab('ftptest');
+        }
+      }, 200);
     });
   }
 
@@ -657,7 +670,7 @@ class ZwiftWorkoutVisualizer {
     const profileContainer = document.getElementById('profilePageContainer');
     if (profileContainer) {
       profileContainer.style.display = 'block';
-      
+
       // Trigger profile page render if needed
       if (this.profilePage) {
         this.profilePage.show();
@@ -689,7 +702,7 @@ class ZwiftWorkoutVisualizer {
     // Update navigation button states
     const profileBtn = document.getElementById('profileBtn');
     const homeBtn = document.querySelector('.nav-button:not(#profileBtn)');
-    
+
     if (profileBtn) {
       profileBtn.classList.toggle('active', activeView === 'profile');
     }

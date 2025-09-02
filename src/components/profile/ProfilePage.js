@@ -6,6 +6,7 @@
 import { PersonalInfoForm } from './PersonalInfoForm.js';
 import { TrainingZones } from './TrainingZones.js';
 import { FTPHistory } from './FTPHistory.js';
+import { FTPTestCalculator } from './FTPTestCalculator.js';
 import { UserPreferences } from './UserPreferences.js';
 import { profileService } from '../../services/profile-service.js';
 import { stateManager } from '../../services/state-manager.js';
@@ -18,6 +19,7 @@ export class ProfilePage {
       personalForm: null,
       trainingZones: null,
       ftpHistory: null,
+      ftpTestCalculator: null,
       userPreferences: null,
     };
     this.currentProfile = null;
@@ -291,6 +293,11 @@ export class ProfilePage {
         icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>`,
       },
       {
+        id: 'ftptest',
+        label: 'FTP Testing',
+        icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>`,
+      },
+      {
         id: 'preferences',
         label: 'Preferences',
         icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>`,
@@ -299,14 +306,14 @@ export class ProfilePage {
 
     return `
       <!-- Tab Navigation -->
-      <div class="mb-8">
-        <nav class="flex space-x-1 bg-muted/50 p-1 rounded-lg">
+      <div class="mb-8 overflow-x-auto">
+        <nav class="flex space-x-1 bg-muted/50 p-1 rounded-lg min-w-max sm:min-w-0">
           ${tabs
             .map(
               tab => `
             <button
               data-tab="${tab.id}"
-              class="tab-button flex items-center space-x-2 px-4 py-3 rounded-md text-nebula-small font-medium transition-colors ${
+              class="tab-button flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-md text-nebula-small font-medium transition-colors whitespace-nowrap ${
                 this.activeTab === tab.id
                   ? 'bg-white dark:bg-slate-800 text-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-slate-800/50'
@@ -335,6 +342,10 @@ export class ProfilePage {
 
         <div id="tab-ftp" class="tab-panel ${this.activeTab === 'ftp' ? 'active' : 'hidden'}">
           <div id="ftpHistoryContainer"></div>
+        </div>
+        
+        <div id="tab-ftptest" class="tab-panel ${this.activeTab === 'ftptest' ? 'active' : 'hidden'}">
+          <div id="ftpTestCalculatorContainer"></div>
         </div>
 
         <div id="tab-preferences" class="tab-panel ${this.activeTab === 'preferences' ? 'active' : 'hidden'}">
@@ -366,6 +377,7 @@ export class ProfilePage {
       personalInfoContainer: PersonalInfoForm,
       trainingZonesContainer: TrainingZones,
       ftpHistoryContainer: FTPHistory,
+      ftpTestCalculatorContainer: FTPTestCalculator,
       userPreferencesContainer: UserPreferences,
     };
 
@@ -374,7 +386,8 @@ export class ProfilePage {
       if (container) {
         const componentKey = containerId
           .replace('Container', '')
-          .replace('Info', '');
+          .replace('Info', '')
+          .replace('Test', '');
         this.components[componentKey] = new ComponentClass(container);
       }
     });
@@ -397,6 +410,7 @@ export class ProfilePage {
       personalForm: null,
       trainingZones: null,
       ftpHistory: null,
+      ftpTestCalculator: null,
       userPreferences: null,
     };
   }
@@ -538,7 +552,9 @@ export class ProfilePage {
    * Switch to specific tab
    */
   switchToTab(tabId) {
-    if (['personal', 'zones', 'ftp', 'preferences'].includes(tabId)) {
+    if (
+      ['personal', 'zones', 'ftp', 'ftptest', 'preferences'].includes(tabId)
+    ) {
       this.activeTab = tabId;
       this.render();
     }
