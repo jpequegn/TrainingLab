@@ -939,6 +939,185 @@
       </div>
     </div>
 
+    <!-- User Profile Model Integration -->
+    <script type="module">
+      // Import the UserProfileModel
+      import { UserProfileModel } from '../src/models/UserProfileModel.js';
+      import { ModelFactory } from '../src/models/ModelFactory.js';
+
+      // Global user profile instance
+      let userProfile = null;
+
+      // Initialize user profile and dashboard
+      async function initializeDashboard() {
+        try {
+          // Try to load existing profile from localStorage
+          const savedProfile = localStorage.getItem('traininglab_profile');
+
+          if (savedProfile) {
+            userProfile = UserProfileModel.fromJSON(JSON.parse(savedProfile));
+          } else {
+            // Create demo profile for first-time users
+            userProfile = ModelFactory.createDemoProfile();
+            saveProfile();
+          }
+
+          // Update dashboard with profile data
+          updateDashboardMetrics();
+          updateUserInfo();
+
+          console.log('Dashboard initialized with profile:', userProfile.name);
+        } catch (error) {
+          console.error('Error initializing dashboard:', error);
+          // Fallback to demo profile
+          userProfile = ModelFactory.createDemoProfile();
+          updateDashboardMetrics();
+          updateUserInfo();
+        }
+      }
+
+      // Update dashboard metrics with real data
+      function updateDashboardMetrics() {
+        if (!userProfile) return;
+
+        const metrics = userProfile.getDashboardMetrics();
+
+        // Update FTP metric
+        updateMetricCard(0, {
+          value: `${metrics.ftp.value}W`,
+          change: metrics.ftp.changeText,
+          changeType: metrics.ftp.changeType,
+        });
+
+        // Update Weight metric
+        updateMetricCard(1, {
+          value: `${metrics.weight.value}${metrics.weight.unit}`,
+          change: metrics.weight.changeText,
+          changeType: metrics.weight.changeType,
+        });
+
+        // Update TSS metric
+        updateMetricCard(2, {
+          value: metrics.tss.value.toString(),
+          change: metrics.tss.changeText,
+          changeType: metrics.tss.changeType,
+        });
+
+        // Update HRV metric
+        updateMetricCard(3, {
+          value: `${metrics.hrv.value}ms`,
+          change: metrics.hrv.changeText,
+          changeType: metrics.hrv.changeType,
+        });
+
+        // Update Training Load metric
+        updateMetricCard(4, {
+          value: metrics.trainingLoad.value,
+          change: metrics.trainingLoad.changeText,
+          changeType: metrics.trainingLoad.changeType,
+        });
+
+        // Update Recovery Status metric
+        updateMetricCard(5, {
+          value: `${metrics.recovery.value}%`,
+          change: metrics.recovery.changeText,
+          changeType: metrics.recovery.changeType,
+        });
+      }
+
+      // Update a specific metric card
+      function updateMetricCard(index, data) {
+        const metricCards = document.querySelectorAll('.metric-card');
+        if (index >= metricCards.length) return;
+
+        const card = metricCards[index];
+        const valueElement = card.querySelector('.metric-value');
+        const changeElement = card.querySelector('.metric-change');
+
+        if (valueElement) valueElement.textContent = data.value;
+        if (changeElement) {
+          changeElement.textContent = data.change;
+          changeElement.className = `metric-change ${data.changeType}`;
+
+          // Update icon based on change type
+          const icon = changeElement.querySelector('i');
+          if (icon) {
+            icon.className = `fas fa-${
+              data.changeType === 'positive'
+                ? 'arrow-up'
+                : data.changeType === 'negative'
+                  ? 'arrow-down'
+                  : 'minus'
+            }`;
+          }
+        }
+      }
+
+      // Update user information in header
+      function updateUserInfo() {
+        if (!userProfile) return;
+
+        const userNameElement = document.querySelector('.user-name');
+        if (userNameElement) {
+          userNameElement.textContent = userProfile.name || 'Athlete';
+        }
+
+        // Update welcome message or other user-specific content
+        const welcomeElement = document.querySelector('.welcome-message');
+        if (welcomeElement) {
+          welcomeElement.textContent = `Welcome back, ${userProfile.name}!`;
+        }
+      }
+
+      // Save profile to localStorage
+      function saveProfile() {
+        if (userProfile) {
+          localStorage.setItem(
+            'traininglab_profile',
+            JSON.stringify(userProfile.toJSON())
+          );
+        }
+      }
+
+      // Update user metrics from form
+      function updateUserMetrics(formData) {
+        if (!userProfile) return;
+
+        if (formData.weight) {
+          userProfile.updateWeight(parseFloat(formData.weight));
+        }
+
+        if (formData.ftp) {
+          userProfile.updateFTP(
+            parseInt(formData.ftp),
+            'manual',
+            'TrainingLab'
+          );
+        }
+
+        if (formData.hrv) {
+          userProfile.updateHRV(parseInt(formData.hrv));
+        }
+
+        // Save updated profile
+        saveProfile();
+
+        // Refresh dashboard
+        updateDashboardMetrics();
+      }
+
+      // Export functions for global access
+      window.TrainingLab = {
+        userProfile: () => userProfile,
+        updateMetrics: updateUserMetrics,
+        saveProfile: saveProfile,
+        refreshDashboard: updateDashboardMetrics,
+      };
+
+      // Initialize dashboard when DOM is loaded
+      document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+
     <script>
       // Tab functionality
       document.addEventListener('DOMContentLoaded', function () {
@@ -959,20 +1138,27 @@
           });
         });
 
-        // Form submission handler
+        // Enhanced form submission handler with profile integration
         const metricsForm = document.getElementById('metrics-form');
         if (metricsForm) {
           metricsForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             // Get form data
-            const weight = document.getElementById('weight').value;
-            const ftp = document.getElementById('ftp').value;
-            const hrv = document.getElementById('hrv').value;
-            const restingHr = document.getElementById('resting-hr').value;
+            const formData = {
+              weight: document.getElementById('weight').value,
+              ftp: document.getElementById('ftp').value,
+              hrv: document.getElementById('hrv').value,
+              restingHr: document.getElementById('resting-hr').value,
+            };
 
-            // Show success message (in real app, this would update the database)
-            alert('Metrics updated successfully!');
+            // Update user profile
+            if (window.TrainingLab && window.TrainingLab.updateMetrics) {
+              window.TrainingLab.updateMetrics(formData);
+              alert('Metrics updated successfully!');
+            } else {
+              alert('Profile system not initialized. Please refresh the page.');
+            }
 
             // Clear form
             this.reset();
@@ -988,10 +1174,12 @@
           });
         });
 
-        // Simulate real-time data updates
+        // Enhanced real-time data updates
         function updateMetrics() {
-          // In real app, this would fetch latest data from API
-          console.log('Updating metrics...');
+          if (window.TrainingLab && window.TrainingLab.refreshDashboard) {
+            window.TrainingLab.refreshDashboard();
+            console.log('Metrics updated from profile data');
+          }
         }
 
         // Update metrics every 5 minutes
