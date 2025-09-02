@@ -6,11 +6,13 @@
 import { workoutStorage } from './storage.js';
 import { stateManager } from './state-manager.js';
 import { powerZoneManager } from '../core/power-zones.js';
+import { UserProfileModel } from '../models/UserProfileModel.js';
 
 export class ProfileService {
   constructor() {
     this.currentProfileId = null;
     this.initialized = false;
+    this.currentUserModel = null; // UserProfileModel instance
   }
 
   /**
@@ -21,12 +23,12 @@ export class ProfileService {
     try {
       // Initialize storage
       await workoutStorage.initialize();
-      
+
       // Load saved profile ID from preferences
       const preferences = JSON.parse(
         localStorage.getItem('workout-visualizer-preferences') || '{}'
       );
-      
+
       if (preferences.profileId) {
         await this.loadProfile(preferences.profileId);
       } else {
@@ -36,7 +38,7 @@ export class ProfileService {
           await this.loadProfile(primaryProfile.id);
         }
       }
-      
+
       this.initialized = true;
       console.log('Profile service initialized');
     } catch (error) {
@@ -58,12 +60,27 @@ export class ProfileService {
     try {
       stateManager.dispatch('SET_PROFILE_LOADING', true);
 
-      // Validate required fields
-      this.validateProfileData(profileData);
+      // Create UserProfileModel instance for validation and data enhancement
+      const userModel = new UserProfileModel(profileData);
+      const validation = userModel.validate();
+
+      if (!validation.isValid) {
+        throw new Error(
+          `Profile validation failed: ${validation.errors.join(', ')}`
+        );
+      }
+
+      // Use model's enhanced data for storage
+      const enhancedProfileData = userModel.toJSON();
 
       // Save to storage
-      const profileId = await workoutStorage.saveUserProfile(profileData);
-      
+      const profileId =
+        await workoutStorage.saveUserProfile(enhancedProfileData);
+
+      // Store the model instance
+      this.currentUserModel = userModel;
+      this.currentUserModel.id = profileId;
+
       // Update power zones if FTP provided
       if (profileData.ftp) {
         powerZoneManager.setFTP(profileData.ftp);
@@ -71,7 +88,7 @@ export class ProfileService {
 
       // Load the new profile
       await this.loadProfile(profileId);
-      
+
       // Add initial FTP history entry if FTP provided
       if (profileData.ftp) {
         await this.addFTPEntry(profileData.ftp, new Date(), 'profile_creation');
@@ -79,7 +96,7 @@ export class ProfileService {
 
       stateManager.dispatch('SET_PROFILE_LOADING', false);
       console.log('Profile created successfully:', profileId);
-      
+
       return profileId;
     } catch (error) {
       stateManager.dispatch('SET_PROFILE_LOADING', false);
@@ -109,23 +126,53 @@ export class ProfileService {
       // Load FTP history
       const ftpHistory = await workoutStorage.getFTPHistory(profileId);
 
-      // Update state
+      // Create UserProfileModel instance with enhanced data
+      const modelData = {
+        ...profile,
+        ftpHistory: ftpHistory,
+        // Add dashboard-specific data if not present
+        hrv: profile.hrv || {
+          score: 45,
+          trend: 'stable',
+          lastUpdate: new Date(),
+        },
+        recoveryStatus: profile.recoveryStatus || {
+          status: 'ready',
+          score: 85,
+          factors: [],
+        },
+        trainingLoad: profile.trainingLoad || {
+          acute: 120,
+          chronic: 110,
+          ratio: 1.09,
+        },
+        recentTSS: profile.recentTSS || { today: 0, week: 485, average: 69 },
+      };
+
+      this.currentUserModel = new UserProfileModel(modelData);
+
+      // Update state with both original and model data
       stateManager.dispatch('LOAD_USER_PROFILE', profile);
       stateManager.dispatch('LOAD_FTP_HISTORY', ftpHistory);
+
+      // Also store the model instance in state for dashboard access
+      stateManager.dispatch('SET_USER_PROFILE_MODEL', this.currentUserModel);
 
       // Update power zone manager
       if (profile.ftp) {
         powerZoneManager.setFTP(profile.ftp);
       }
-      
+
       // Update zone model if specified
       if (profile.preferences?.displayOptions?.zoneModel) {
-        powerZoneManager.setZoneModel(profile.preferences.displayOptions.zoneModel);
+        powerZoneManager.setZoneModel(
+          profile.preferences.displayOptions.zoneModel
+        );
       }
 
       this.currentProfileId = profileId;
       stateManager.dispatch('SET_PROFILE_LOADING', false);
-      
+
       console.log('Profile loaded successfully:', profile.name);
     } catch (error) {
       stateManager.dispatch('SET_PROFILE_LOADING', false);
@@ -150,7 +197,7 @@ export class ProfileService {
       }
 
       stateManager.dispatch('SET_PROFILE_LOADING', true);
-      
+
       const currentProfile = stateManager.getState('userProfile');
       const updatedProfile = {
         ...currentProfile,
@@ -162,25 +209,59 @@ export class ProfileService {
       this.validateProfileData(updatedProfile);
 
       // Check if FTP changed
-      const ftpChanged = updates.ftp !== undefined && updates.ftp !== currentProfile.ftp;
+      const ftpChanged =
+        updates.ftp !== undefined && updates.ftp !== currentProfile.ftp;
 
-      // Save to storage
-      await workoutStorage.saveUserProfile(updatedProfile);
+      // Update UserProfileModel if it exists
+      if (this.currentUserModel) {
+        // Update model properties
+        Object.assign(this.currentUserModel, updates);
 
-      // Update state
-      stateManager.dispatch('UPDATE_USER_PROFILE', updates);
+        // Use model's updateFTP method if FTP changed
+        if (ftpChanged) {
+          this.currentUserModel.updateFTP(
+            updates.ftp,
+            'manual_update',
+            'TrainingLab'
+          );
+        }
+
+        // Update weight using model method if weight changed
+        if (
+          updates.weight !== undefined &&
+          updates.weight !== currentProfile.weight
+        ) {
+          this.currentUserModel.updateWeight(updates.weight);
+        }
+
+        // Update model's lastActive
+        this.currentUserModel.lastActive = new Date();
+
+        // Save model data to storage
+        await workoutStorage.saveUserProfile(this.currentUserModel.toJSON());
+
+        // Update state with model data
+        stateManager.dispatch('UPDATE_USER_PROFILE', updates);
+        stateManager.dispatch('SET_USER_PROFILE_MODEL', this.currentUserModel);
+      } else {
+        // Fallback to original behavior
+        await workoutStorage.saveUserProfile(updatedProfile);
+        stateManager.dispatch('UPDATE_USER_PROFILE', updates);
+      }
 
       // Update power zone manager if FTP or zone model changed
       if (updates.ftp !== undefined) {
         powerZoneManager.setFTP(updates.ftp);
       }
-      
+
       if (updates.preferences?.displayOptions?.zoneModel) {
-        powerZoneManager.setZoneModel(updates.preferences.displayOptions.zoneModel);
+        powerZoneManager.setZoneModel(
+          updates.preferences.displayOptions.zoneModel
+        );
       }
 
-      // Add FTP history entry if FTP changed
-      if (ftpChanged) {
+      // Add FTP history entry if FTP changed (only if not using model)
+      if (ftpChanged && !this.currentUserModel) {
         await this.addFTPEntry(updates.ftp, new Date(), 'manual_update');
       }
 
@@ -228,7 +309,7 @@ export class ProfileService {
       };
 
       stateManager.dispatch('ADD_FTP_HISTORY_ENTRY', newEntry);
-      
+
       console.log('FTP history entry added:', ftpValue);
     } catch (error) {
       console.error('Failed to add FTP history entry:', error);
@@ -242,6 +323,24 @@ export class ProfileService {
    */
   getCurrentProfile() {
     return stateManager.getState('userProfile');
+  }
+
+  /**
+   * Get current UserProfileModel instance
+   * @returns {UserProfileModel|null} Current model instance or null
+   */
+  getCurrentProfileModel() {
+    return this.currentUserModel;
+  }
+
+  /**
+   * Get dashboard metrics from UserProfileModel
+   * @returns {Object|null} Dashboard metrics or null
+   */
+  getDashboardMetrics() {
+    return this.currentUserModel
+      ? this.currentUserModel.getDashboardMetrics()
+      : null;
   }
 
   /**
@@ -269,7 +368,7 @@ export class ProfileService {
 
     const zones = powerZoneManager.getZones();
     const zonesInWatts = powerZoneManager.getZonesInWatts();
-    
+
     return {
       zones,
       zonesInWatts,
@@ -332,15 +431,15 @@ export class ProfileService {
       }
 
       stateManager.dispatch('SET_PROFILE_LOADING', true);
-      
+
       await workoutStorage.deleteUserProfile(this.currentProfileId);
-      
+
       // Clear state
       stateManager.dispatch('CLEAR_USER_PROFILE');
-      
+
       this.currentProfileId = null;
       stateManager.dispatch('SET_PROFILE_LOADING', false);
-      
+
       console.log('Profile deleted successfully');
     } catch (error) {
       stateManager.dispatch('SET_PROFILE_LOADING', false);
@@ -377,12 +476,12 @@ export class ProfileService {
 
       // Convert to base64
       const base64 = await this.fileToBase64(file);
-      
+
       // Update profile
       await this.updateProfile({
         profilePhoto: base64,
       });
-      
+
       console.log('Profile photo updated');
     } catch (error) {
       console.error('Failed to update profile photo:', error);
@@ -405,7 +504,10 @@ export class ProfileService {
       throw new Error('FTP must be between 50 and 600 watts');
     }
 
-    if (profileData.weight && (profileData.weight < 30 || profileData.weight > 200)) {
+    if (
+      profileData.weight &&
+      (profileData.weight < 30 || profileData.weight > 200)
+    ) {
       throw new Error('Weight must be between 30 and 200 kg');
     }
 
