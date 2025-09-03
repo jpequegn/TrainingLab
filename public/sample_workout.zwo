@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+    <author>Sample Author</author>
+    <name>Sample Interval Workout</name>
+    <description>A sample workout with warmup, intervals, and cooldown</description>
+    <sportType>bike</sportType>
+    <tags>
+        <tag name="INTERVALS"/>
+        <tag name="THRESHOLD"/>
+    </tags>
+    <workout>
+        <Warmup Duration="600" PowerLow="0.5" PowerHigh="0.7">
+            <textevent timeoffset="0" message="Welcome! Let's start with an easy warmup"/>
+            <textevent timeoffset="300" message="Halfway through warmup, feeling good?"/>
+        </Warmup>
+        <SteadyState Duration="300" Power="0.6">
+            <textevent timeoffset="0" message="Steady endurance pace"/>
+        </SteadyState>
+        <IntervalsT Repeat="4" OnDuration="240" OffDuration="120" PowerOnHigh="1.05" PowerOnLow="1.05" PowerOffHigh="0.5" PowerOffLow="0.5">
+            <textevent timeoffset="0" message="Time for intervals! 4 minutes at threshold"/>
+            <textevent timeoffset="120" message="Halfway through this interval"/>
+        </IntervalsT>
+        <SteadyState Duration="300" Power="0.6">
+            <textevent timeoffset="0" message="Recovery between sets"/>
+        </SteadyState>
+        <IntervalsT Repeat="3" OnDuration="180" OffDuration="90" PowerOnHigh="1.1" PowerOnLow="1.1" PowerOffHigh="0.5" PowerOffLow="0.5">
+            <textevent timeoffset="0" message="Second set: 3 minutes above threshold"/>
+        </IntervalsT>
+        <Cooldown Duration="600" PowerHigh="0.6" PowerLow="0.4">
+            <textevent timeoffset="0" message="Great work! Time to cool down"/>
+            <textevent timeoffset="300" message="Keep spinning easy"/>
+        </Cooldown>
+    </workout>
+</workout_file>
