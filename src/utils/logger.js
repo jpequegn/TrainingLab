@@ -3,25 +3,26 @@
  * Provides structured logging with environment-aware output
  */
 
-import { ErrorLogger } from '../error-logger.js';
+import { ErrorLogger } from '../error/error-logger.js';
 
 export class Logger {
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development' || 
-                        window.location.hostname === 'localhost' ||
-                        window.location.hostname === '127.0.0.1';
-    
+    this.isDevelopment =
+      process.env.NODE_ENV === 'development' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
     this.errorLogger = new ErrorLogger({
       enableConsoleLogging: this.isDevelopment,
       enableRemoteLogging: !this.isDevelopment,
-      logLevel: this.isDevelopment ? 'debug' : 'warn'
+      logLevel: this.isDevelopment ? 'debug' : 'warn',
     });
 
     this.logLevels = {
       debug: 0,
       info: 1,
       warn: 2,
-      error: 3
+      error: 3,
     };
 
     this.currentLogLevel = this.isDevelopment ? 0 : 2; // debug in dev, warn+ in prod
@@ -71,7 +72,7 @@ export class Logger {
       if (this.isDevelopment) {
         console.error('🚨 [ERROR]', message, error, context);
       }
-      
+
       const errorObj = error instanceof Error ? error : new Error(message);
       this.errorLogger.logError(errorObj, { message, ...context });
     }
@@ -81,14 +82,15 @@ export class Logger {
    * Performance logging
    */
   performance(operation, duration, context = {}) {
-    if (this.isDevelopment && duration > 100) { // Log slow operations
+    if (this.isDevelopment && duration > 100) {
+      // Log slow operations
       console.log('⏱️ [PERF]', `${operation}: ${duration}ms`, context);
     }
-    
+
     this.errorLogger.logInfo(`Performance: ${operation}`, {
       duration,
       slow: duration > 100,
-      ...context
+      ...context,
     });
   }
 
@@ -108,7 +110,7 @@ export class Logger {
       url,
       duration,
       status,
-      ...context
+      ...context,
     };
 
     if (status >= 400) {
@@ -139,13 +141,23 @@ export class Logger {
    */
   createModuleLogger(moduleName) {
     return {
-      debug: (message, context) => this.debug(`[${moduleName}] ${message}`, context),
-      info: (message, context) => this.info(`[${moduleName}] ${message}`, context),
-      warn: (message, context) => this.warn(`[${moduleName}] ${message}`, context),
-      error: (message, error, context) => this.error(`[${moduleName}] ${message}`, error, context),
-      performance: (operation, duration, context) => this.performance(`[${moduleName}] ${operation}`, duration, context),
-      userAction: (action, context) => this.userAction(`[${moduleName}] ${action}`, context),
-      apiCall: (method, url, duration, status, context) => this.apiCall(method, url, duration, status, { module: moduleName, ...context })
+      debug: (message, context) =>
+        this.debug(`[${moduleName}] ${message}`, context),
+      info: (message, context) =>
+        this.info(`[${moduleName}] ${message}`, context),
+      warn: (message, context) =>
+        this.warn(`[${moduleName}] ${message}`, context),
+      error: (message, error, context) =>
+        this.error(`[${moduleName}] ${message}`, error, context),
+      performance: (operation, duration, context) =>
+        this.performance(`[${moduleName}] ${operation}`, duration, context),
+      userAction: (action, context) =>
+        this.userAction(`[${moduleName}] ${action}`, context),
+      apiCall: (method, url, duration, status, context) =>
+        this.apiCall(method, url, duration, status, {
+          module: moduleName,
+          ...context,
+        }),
     };
   }
 }
@@ -154,10 +166,11 @@ export class Logger {
 export const logger = new Logger();
 
 // Export module-specific loggers for common modules
-export const createLogger = (moduleName) => logger.createModuleLogger(moduleName);
+export const createLogger = moduleName => logger.createModuleLogger(moduleName);
 
 // Convenience exports
 export const debugLog = (message, context) => logger.debug(message, context);
 export const infoLog = (message, context) => logger.info(message, context);
 export const warnLog = (message, context) => logger.warn(message, context);
-export const errorLog = (message, error, context) => logger.error(message, error, context);
+export const errorLog = (message, error, context) =>
+  logger.error(message, error, context);
