@@ -1,0 +1,617 @@
+/**
+ * Visualizer Page Styles for TrainingLab
+ * Workout analysis and visualization interface
+ */
+
+/* ==========================================================================
+   Visualizer Variables
+   ========================================================================== */
+
+:root {
+  /* Upload area colors */
+  --upload-bg: #f8fafc;
+  --upload-border: #e2e8f0;
+  --upload-border-dashed: #cbd5e0;
+  --upload-hover-bg: #edf2f7;
+  --upload-drag-bg: rgba(49, 130, 206, 0.1);
+  --upload-drag-border: #3182ce;
+  --upload-icon-color: #9ca3af;
+  --upload-text-color: #4a5568;
+
+  /* Controls colors */
+  --control-bg: #ffffff;
+  --control-border: #e2e8f0;
+  --control-label: #374151;
+  --control-input-bg: #ffffff;
+  --control-input-border: #d1d5db;
+  --control-input-focus: #3182ce;
+
+  /* Slider colors */
+  --slider-track: #e2e8f0;
+  --slider-thumb: #3182ce;
+  --slider-thumb-hover: #2c5aa0;
+
+  /* Chart colors */
+  --chart-bg: #ffffff;
+  --chart-border: #e5e5e5;
+  --chart-grid: #f3f4f6;
+
+  /* Segment colors */
+  --segment-bg: #ffffff;
+  --segment-border: #e2e8f0;
+  --segment-hover-bg: #f7fafc;
+  --segment-selected-bg: rgba(49, 130, 206, 0.1);
+  --segment-selected-border: #3182ce;
+
+  /* Export section */
+  --export-bg: #f8fafc;
+  --export-border: #e2e8f0;
+
+  /* Toast notifications */
+  --toast-success-bg: #10b981;
+  --toast-error-bg: #ef4444;
+  --toast-text: #ffffff;
+}
+
+/* ==========================================================================
+   Visualizer Layout
+   ========================================================================== */
+
+.visualizer-page {
+  background: var(--page-bg);
+}
+
+.visualizer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ==========================================================================
+   Upload Section
+   ========================================================================== */
+
+.upload-section {
+  margin-bottom: 2rem;
+}
+
+.upload-area {
+  background: var(--upload-bg);
+  border: 2px dashed var(--upload-border-dashed);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-top: 1.5rem;
+}
+
+.upload-area:hover {
+  background: var(--upload-hover-bg);
+  border-color: var(--control-input-focus);
+}
+
+.upload-area.drag-over {
+  background: var(--upload-drag-bg);
+  border-color: var(--upload-drag-border);
+  border-style: solid;
+}
+
+.upload-content {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: var(--upload-icon-color);
+  margin-bottom: 1rem;
+}
+
+.upload-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--page-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.upload-content p {
+  color: var(--upload-text-color);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.upload-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   Form Controls
+   ========================================================================== */
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--control-input-border);
+  border-radius: 6px;
+  background: var(--control-input-bg);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--control-input-focus);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.form-input:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Controls Section
+   ========================================================================== */
+
+.controls-section {
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  align-items: end;
+  margin-bottom: 2rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--control-label);
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--slider-track);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: var(--slider-thumb-hover);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: var(--slider-thumb-hover);
+}
+
+.slider-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--control-label);
+  min-width: 50px;
+  text-align: center;
+}
+
+.control-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Export Section */
+.export-section {
+  background: var(--export-bg);
+  border: 1px solid var(--export-border);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.export-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--page-text);
+  margin: 0 0 1rem 0;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Visualization Section
+   ========================================================================== */
+
+.visualization-section {
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.workout-info {
+  margin-bottom: 2rem;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+.chart-container canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.workout-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: var(--chart-grid);
+  border-radius: 6px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--page-text);
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* ==========================================================================
+   Details Section
+   ========================================================================== */
+
+.details-section {
+  background: var(--segment-bg);
+  border: 1px solid var(--segment-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.details-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--page-text);
+  margin: 0 0 1.5rem 0;
+}
+
+.segment-details {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.segment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--segment-bg);
+  border: 1px solid var(--segment-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.segment-item:hover {
+  background: var(--segment-hover-bg);
+}
+
+.segment-item.selected {
+  background: var(--segment-selected-bg);
+  border-color: var(--segment-selected-border);
+}
+
+.segment-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.segment-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--control-input-focus);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.segment-metrics {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.segment-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.metric-value {
+  font-weight: 600;
+  color: var(--page-text);
+}
+
+.metric-label {
+  font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   Toast Notifications
+   ========================================================================== */
+
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: var(--toast-success-bg);
+  color: var(--toast-text);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .upload-area {
+    padding: 2rem 1rem;
+  }
+
+  .upload-icon {
+    font-size: 2.5rem;
+  }
+
+  .controls-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .control-actions {
+    grid-column: 1;
+    justify-content: center;
+  }
+
+  .export-buttons {
+    justify-content: center;
+  }
+
+  .segment-metrics {
+    gap: 1rem;
+  }
+
+  .segment-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .segment-info {
+    width: 100%;
+  }
+
+  .segment-metrics {
+    width: 100%;
+    justify-content: space-around;
+  }
+}
+
+@media (min-width: 768px) {
+  .controls-grid {
+    grid-template-columns: 200px 1fr auto;
+  }
+
+  .workout-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .visualizer-content {
+    gap: 2.5rem;
+  }
+
+  .chart-container canvas {
+    max-width: 1000px;
+  }
+}
+
+/* ==========================================================================
+   Dark Theme Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --upload-bg: #1f2937;
+    --upload-border: #374151;
+    --upload-border-dashed: #4b5563;
+    --upload-hover-bg: #374151;
+    --upload-icon-color: #6b7280;
+    --upload-text-color: #d1d5db;
+
+    --control-bg: #1f2937;
+    --control-border: #374151;
+    --control-label: #f9fafb;
+    --control-input-bg: #374151;
+    --control-input-border: #4b5563;
+
+    --slider-track: #4b5563;
+
+    --chart-bg: #1f2937;
+    --chart-border: #374151;
+    --chart-grid: #374151;
+
+    --segment-bg: #1f2937;
+    --segment-border: #374151;
+    --segment-hover-bg: #374151;
+
+    --export-bg: #111827;
+    --export-border: #374151;
+  }
+}
+
+.dark-theme {
+  --upload-bg: #1f2937;
+  --upload-border: #374151;
+  --upload-border-dashed: #4b5563;
+  --upload-hover-bg: #374151;
+  --upload-icon-color: #6b7280;
+  --upload-text-color: #d1d5db;
+
+  --control-bg: #1f2937;
+  --control-border: #374151;
+  --control-label: #f9fafb;
+  --control-input-bg: #374151;
+  --control-input-border: #4b5563;
+
+  --slider-track: #4b5563;
+
+  --chart-bg: #1f2937;
+  --chart-border: #374151;
+  --chart-grid: #374151;
+
+  --segment-bg: #1f2937;
+  --segment-border: #374151;
+  --segment-hover-bg: #374151;
+
+  --export-bg: #111827;
+  --export-border: #374151;
+}
+
+/* ==========================================================================
+   Accessibility Enhancements
+   ========================================================================== */
+
+/* Focus management */
+.upload-area:focus,
+.segment-item:focus,
+.form-input:focus {
+  outline: 2px solid var(--control-input-focus);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .upload-area,
+  .segment-item,
+  .slider::-webkit-slider-thumb,
+  .slider::-moz-range-thumb,
+  .success-toast {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .upload-area {
+    border-width: 3px;
+  }
+
+  .segment-item.selected {
+    border-width: 3px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .upload-area,
+  .controls-section,
+  .export-section,
+  .success-toast {
+    display: none;
+  }
+
+  .visualization-section {
+    border: none;
+    background: none;
+  }
+}

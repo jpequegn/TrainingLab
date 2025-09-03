@@ -1,0 +1,495 @@
+/**
+ * Base Page Styles for TrainingLab
+ * Common styling for all pages including loading and error states
+ */
+
+/* ==========================================================================
+   Page Variables
+   ========================================================================== */
+
+:root {
+  /* Page spacing */
+  --page-padding: 1rem;
+  --page-max-width: 1200px;
+  --page-header-height: auto;
+  --page-content-gap: 2rem;
+
+  /* Page colors */
+  --page-bg: #ffffff;
+  --page-text: #333333;
+  --page-border: #e5e5e5;
+  --page-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* Loading colors */
+  --loading-bg: rgba(255, 255, 255, 0.95);
+  --loading-spinner: #0066cc;
+  --loading-text: #666666;
+
+  /* Error colors */
+  --error-bg: #fff5f5;
+  --error-border: #feb2b2;
+  --error-text: #c53030;
+  --error-icon: #e53e3e;
+  --error-retry-bg: #0066cc;
+  --error-retry-text: #ffffff;
+
+  /* Animations */
+  --page-transition: all 0.3s ease;
+  --spinner-duration: 1s;
+}
+
+/* ==========================================================================
+   Page Container
+   ========================================================================== */
+
+.page-container {
+  min-height: calc(100vh - var(--nav-height, 60px));
+  margin-top: var(--nav-height, 60px);
+  background: var(--page-bg);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page-content {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--page-padding);
+  min-height: inherit;
+}
+
+.page-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-content-gap);
+}
+
+/* ==========================================================================
+   Page Header
+   ========================================================================== */
+
+.page-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--page-border);
+  margin-bottom: var(--page-content-gap);
+}
+
+.page-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-title-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--page-text);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #666666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.page-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.page-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-loading-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--loading-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.loading-spinner {
+  margin-bottom: 1rem;
+}
+
+.spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 102, 204, 0.2);
+  border-top: 3px solid var(--loading-spinner);
+  border-radius: 50%;
+  animation: spin var(--spinner-duration) linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  color: var(--loading-text);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Error States
+   ========================================================================== */
+
+.page-error-message {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: var(--page-content-gap);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.error-icon {
+  flex-shrink: 0;
+  color: var(--error-icon);
+  font-size: 2rem;
+  margin-top: 0.25rem;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  color: var(--error-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.error-text {
+  color: var(--error-text);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.error-retry-btn {
+  background: var(--error-retry-bg);
+  color: var(--error-retry-text);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--page-transition);
+}
+
+.error-retry-btn:hover,
+.error-retry-btn:focus {
+  background: #0052a3;
+  transform: translateY(-1px);
+}
+
+.error-retry-btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Common Button Styles
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--page-transition);
+  user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: #0066cc;
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: #0052a3;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #0066cc;
+  border-color: #0066cc;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+  background: #0066cc;
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--page-text);
+  border-color: var(--page-border);
+}
+
+.btn-outline:hover,
+.btn-outline:focus {
+  background: var(--page-text);
+  color: var(--page-bg);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Page States
+   ========================================================================== */
+
+/* Empty state */
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  color: #666666;
+}
+
+.page-empty .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.page-empty .empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--page-text);
+}
+
+.page-empty .empty-description {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+/* Success state */
+.page-success {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #22543d;
+  margin-bottom: var(--page-content-gap);
+}
+
+.page-success .success-icon {
+  color: #38a169;
+  margin-right: 0.5rem;
+}
+
+/* Warning state */
+.page-warning {
+  background: #fffbf0;
+  border: 1px solid #fbd38d;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #744210;
+  margin-bottom: var(--page-content-gap);
+}
+
+.page-warning .warning-icon {
+  color: #ed8936;
+  margin-right: 0.5rem;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .page-content {
+    padding: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+  }
+
+  .page-header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-actions {
+    justify-content: flex-start;
+  }
+
+  .page-error-message {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .error-icon {
+    align-self: center;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-content {
+    padding: 2rem;
+  }
+
+  .page-title {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .page-max-width {
+    --page-max-width: 1400px;
+  }
+}
+
+/* ==========================================================================
+   Dark Theme Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-bg: #1a1a1a;
+    --page-text: #ffffff;
+    --page-border: #333333;
+    --loading-bg: rgba(26, 26, 26, 0.95);
+    --loading-text: #cccccc;
+    --error-bg: #2d1b1b;
+    --error-border: #744d4d;
+    --error-text: #ff8a80;
+    --error-icon: #ff5252;
+  }
+}
+
+.dark-theme {
+  --page-bg: #1a1a1a;
+  --page-text: #ffffff;
+  --page-border: #333333;
+  --loading-bg: rgba(26, 26, 26, 0.95);
+  --loading-text: #cccccc;
+  --error-bg: #2d1b1b;
+  --error-border: #744d4d;
+  --error-text: #ff8a80;
+  --error-icon: #ff5252;
+}
+
+/* ==========================================================================
+   Accessibility Enhancements
+   ========================================================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring {
+    animation: none;
+  }
+
+  .btn,
+  .error-retry-btn {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .page-error-message {
+    border-width: 2px;
+  }
+
+  .btn {
+    border-width: 2px;
+  }
+}
+
+/* Focus management */
+.page-container:focus-within .page-loading-indicator {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .page-loading-indicator,
+  .page-error-message {
+    display: none;
+  }
+
+  .page-container {
+    margin-top: 0;
+    min-height: auto;
+  }
+}

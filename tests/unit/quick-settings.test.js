@@ -9,15 +9,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 vi.mock('../../src/services/state-manager.js', () => ({
   stateManager: {
     subscribe: vi.fn(() => vi.fn()), // Returns unsubscribe function
-    dispatch: vi.fn()
-  }
+    dispatch: vi.fn(),
+  },
 }));
 
 vi.mock('../../src/services/profile-service.js', () => ({
   profileService: {
     getPreferences: vi.fn(),
-    updatePreferences: vi.fn()
-  }
+    updatePreferences: vi.fn(),
+  },
 }));
 
 // Import after mocks are set up
@@ -60,7 +60,7 @@ describe('QuickSettings', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Create container element
     container = document.createElement('div');
     container.id = 'quickSettingsContainer';
@@ -70,7 +70,7 @@ describe('QuickSettings', () => {
     profileService.getPreferences.mockResolvedValue({
       theme: 'light',
       units: 'metric',
-      powerDisplay: 'ftp-percentage'
+      powerDisplay: 'ftp-percentage',
     });
     profileService.updatePreferences.mockResolvedValue();
 
@@ -111,11 +111,13 @@ describe('QuickSettings', () => {
 
     it('should render all three setting controls', () => {
       quickSettings = new QuickSettings(container);
-      
+
       const themeSelect = container.querySelector('#quickThemeSelect');
       const unitsSelect = container.querySelector('#quickUnitsSelect');
-      const powerDisplaySelect = container.querySelector('#quickPowerDisplaySelect');
-      
+      const powerDisplaySelect = container.querySelector(
+        '#quickPowerDisplaySelect'
+      );
+
       expect(themeSelect).not.toBeNull();
       expect(unitsSelect).not.toBeNull();
       expect(powerDisplaySelect).not.toBeNull();
@@ -145,17 +147,19 @@ describe('QuickSettings', () => {
 
     it('should handle theme change', async () => {
       const themeSelect = container.querySelector('#quickThemeSelect');
-      
+
       // Change theme to dark
       themeSelect.value = 'dark';
       const event = new Event('change');
       themeSelect.dispatchEvent(event);
 
       // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        setTimeout(() => resolve(), 0);
+      });
 
       expect(profileService.updatePreferences).toHaveBeenCalledWith({
-        theme: 'dark'
+        theme: 'dark',
       });
       expect(stateManager.dispatch).toHaveBeenCalledWith('SET_THEME', 'dark');
     });
@@ -185,21 +189,23 @@ describe('QuickSettings', () => {
 
     it('should handle units change', async () => {
       const unitsSelect = container.querySelector('#quickUnitsSelect');
-      
+
       unitsSelect.value = 'imperial';
       const event = new Event('change');
       unitsSelect.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        setTimeout(() => resolve(), 0);
+      });
 
       expect(profileService.updatePreferences).toHaveBeenCalledWith({
-        units: 'imperial'
+        units: 'imperial',
       });
-      
+
       expect(window.dispatchEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'preferences:unitsChanged',
-          detail: { units: 'imperial' }
+          detail: { units: 'imperial' },
         })
       );
     });
@@ -211,22 +217,30 @@ describe('QuickSettings', () => {
     });
 
     it('should have correct power display options', () => {
-      const powerDisplaySelect = container.querySelector('#quickPowerDisplaySelect');
-      const options = Array.from(powerDisplaySelect.options).map(opt => opt.value);
+      const powerDisplaySelect = container.querySelector(
+        '#quickPowerDisplaySelect'
+      );
+      const options = Array.from(powerDisplaySelect.options).map(
+        opt => opt.value
+      );
       expect(options).toEqual(['ftp-percentage', 'watts', 'both']);
     });
 
     it('should handle power display change', async () => {
-      const powerDisplaySelect = container.querySelector('#quickPowerDisplaySelect');
-      
+      const powerDisplaySelect = container.querySelector(
+        '#quickPowerDisplaySelect'
+      );
+
       powerDisplaySelect.value = 'watts';
       const event = new Event('change');
       powerDisplaySelect.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        setTimeout(() => resolve(), 0);
+      });
 
       expect(profileService.updatePreferences).toHaveBeenCalledWith({
-        powerDisplay: 'watts'
+        powerDisplay: 'watts',
       });
     });
   });
@@ -290,7 +304,7 @@ describe('QuickSettings', () => {
   describe('All Settings Button', () => {
     beforeEach(() => {
       quickSettings = new QuickSettings(container);
-      
+
       // Mock the preferences button
       const mockPreferencesBtn = document.createElement('button');
       mockPreferencesBtn.id = 'preferencesBtn';
@@ -315,26 +329,32 @@ describe('QuickSettings', () => {
 
     it('should handle profile service errors gracefully', async () => {
       // Make profile service fail
-      profileService.updatePreferences.mockRejectedValue(new Error('Network error'));
+      profileService.updatePreferences.mockRejectedValue(
+        new Error('Network error')
+      );
 
       const themeSelect = container.querySelector('#quickThemeSelect');
       themeSelect.value = 'dark';
       const event = new Event('change');
-      
+
       // Should not throw error
       expect(() => themeSelect.dispatchEvent(event)).not.toThrow();
-      
-      await new Promise(resolve => setTimeout(resolve, 0));
+
+      await new Promise(resolve => {
+        setTimeout(() => resolve(), 0);
+      });
 
       // Should fallback to localStorage
       expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     });
 
     it('should use default values when preferences loading fails', async () => {
-      profileService.getPreferences.mockRejectedValue(new Error('Failed to load'));
-      
+      profileService.getPreferences.mockRejectedValue(
+        new Error('Failed to load')
+      );
+
       const newQuickSettings = new QuickSettings(container);
-      
+
       // Should use defaults
       expect(newQuickSettings.currentTheme).toBe('light');
       expect(newQuickSettings.currentUnits).toBe('metric');
