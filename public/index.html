@@ -677,6 +677,8 @@
           </div>
           <div class="user-info">
             <span class="user-name">Welcome back, Alex</span>
+            <!-- Quick Settings -->
+            <div id="quickSettingsContainer"></div>
             <div class="profile-dropdown">
               <button
                 class="user-avatar"
@@ -1088,20 +1090,34 @@
 
     <!-- User Profile Model Integration -->
     <script type="module">
-      // Import the UserProfileModel and ProfilePage
+      // Import the UserProfileModel, ProfilePage, and QuickSettings
       import { UserProfileModel } from '../src/models/UserProfileModel.js';
       import { ModelFactory } from '../src/models/ModelFactory.js';
       import { ProfilePage } from '../src/components/profile/ProfilePage.js';
+      import { QuickSettings } from '../src/components/QuickSettings.js';
 
       // Global user profile instance
       let userProfile = null;
       let profilePage = null;
+      let quickSettings = null;
 
       // Initialize profile management system
       function initializeProfilePage() {
         const profileContainer = document.getElementById('profilePage');
         if (profileContainer && !profilePage) {
           profilePage = new ProfilePage(profileContainer);
+        }
+      }
+
+      // Initialize quick settings
+      function initializeQuickSettings() {
+        const quickSettingsContainer = document.getElementById(
+          'quickSettingsContainer'
+        );
+        if (quickSettingsContainer && !quickSettings) {
+          quickSettings = new QuickSettings(quickSettingsContainer);
+          // Make it globally accessible for debugging
+          window.quickSettings = quickSettings;
         }
       }
 
@@ -1159,6 +1175,9 @@
           updateDashboardMetrics();
           updateUserInfo();
 
+          // Initialize quick settings
+          initializeQuickSettings();
+
           console.log('Dashboard initialized with profile:', userProfile.name);
         } catch (error) {
           console.error('Error initializing dashboard:', error);
@@ -1166,6 +1185,9 @@
           userProfile = ModelFactory.createDemoProfile();
           updateDashboardMetrics();
           updateUserInfo();
+
+          // Initialize quick settings even if profile loading fails
+          initializeQuickSettings();
         }
       }
 
