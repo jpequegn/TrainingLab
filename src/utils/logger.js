@@ -8,9 +8,9 @@ import { ErrorLogger } from '../error/error-logger.js';
 export class Logger {
   constructor() {
     this.isDevelopment =
-      process.env.NODE_ENV === 'development' ||
       window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '';
 
     this.errorLogger = new ErrorLogger({
       enableConsoleLogging: this.isDevelopment,
