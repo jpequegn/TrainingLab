@@ -8,6 +8,13 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="../styles/styles.css" />
+    <!-- Navigation System Styles -->
+    <link rel="stylesheet" href="../src/components/navigation/Navigation.css" />
+    <link rel="stylesheet" href="../src/pages/BasePage.css" />
+    <link rel="stylesheet" href="../src/pages/DashboardPage.css" />
+    <link rel="stylesheet" href="../src/pages/VisualizerPage.css" />
     <style>
       :root {
         /* Cycling-appropriate color scheme */
@@ -667,445 +674,106 @@
     </style>
   </head>
   <body>
-    <!-- Header -->
-    <header class="header">
-      <div class="container">
-        <div class="header-content">
-          <div class="logo">
-            <i class="fas fa-bicycle"></i>
-            <span>TrainingLab</span>
-          </div>
-          <div class="user-info">
-            <span class="user-name">Welcome back, Alex</span>
-            <!-- Quick Settings -->
-            <div id="quickSettingsContainer"></div>
-            <div class="profile-dropdown">
-              <button
-                class="user-avatar"
-                id="profileMenuBtn"
-                title="Profile Menu"
-              >
-                AR
-                <i class="fas fa-chevron-down profile-chevron"></i>
-              </button>
-              <div class="profile-menu" id="profileMenu">
-                <div class="profile-menu-header">
-                  <div class="profile-menu-avatar">AR</div>
-                  <div class="profile-menu-info">
-                    <div class="profile-menu-name">Alex Thompson</div>
-                    <div class="profile-menu-email">demo@traininglab.com</div>
-                  </div>
-                </div>
-                <div class="profile-menu-divider"></div>
-                <a href="#" class="profile-menu-item" id="manageProfileBtn">
-                  <i class="fas fa-user"></i>
-                  <span>Manage Profile</span>
-                </a>
-                <a href="#" class="profile-menu-item" id="preferencesBtn">
-                  <i class="fas fa-cog"></i>
-                  <span>Preferences</span>
-                </a>
-                <div class="profile-menu-divider"></div>
-                <a href="#" class="profile-menu-item" id="signOutBtn">
-                  <i class="fas fa-sign-out-alt"></i>
-                  <span>Sign Out</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+    <!-- Navigation -->
+    <div id="navigation-container"></div>
 
-    <!-- Metrics Bar -->
-    <div class="metrics-bar">
-      <div class="container">
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--accent-orange)">
-                <i class="fas fa-bolt"></i>
-              </div>
-              <div class="metric-title">Current FTP</div>
-            </div>
-            <div class="metric-value">285W</div>
-            <div class="metric-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +5W from last test
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--primary-blue)">
-                <i class="fas fa-weight"></i>
-              </div>
-              <div class="metric-title">Weight</div>
-            </div>
-            <div class="metric-value">72.5kg</div>
-            <div class="metric-change negative">
-              <i class="fas fa-arrow-down"></i>
-              -0.3kg this week
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--zone4)">
-                <i class="fas fa-chart-line"></i>
-              </div>
-              <div class="metric-title">Recent TSS</div>
-            </div>
-            <div class="metric-value">89</div>
-            <div class="metric-change neutral">
-              <i class="fas fa-minus"></i>
-              Yesterday's session
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--success-green)">
-                <i class="fas fa-heartbeat"></i>
-              </div>
-              <div class="metric-title">HRV Score</div>
-            </div>
-            <div class="metric-value">45</div>
-            <div class="metric-change positive">
-              <i class="fas fa-arrow-up"></i>
-              +3 from yesterday
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--zone5)">
-                <i class="fas fa-dumbbell"></i>
-              </div>
-              <div class="metric-title">Training Load</div>
-            </div>
-            <div class="metric-value">342</div>
-            <div class="metric-change positive">
-              <i class="fas fa-arrow-up"></i>
-              7-day average
-            </div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-icon" style="background: var(--zone3)">
-                <i class="fas fa-battery-three-quarters"></i>
-              </div>
-              <div class="metric-title">Recovery Status</div>
-            </div>
-            <div class="metric-value">Good</div>
-            <div class="metric-change positive">
-              <i class="fas fa-check"></i>
-              Ready to train
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Main Application Content -->
+    <div id="app-content" class="app-content">
+      <!-- Pages will be rendered here by the router -->
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <div class="container">
-        <!-- Tabs -->
-        <div class="tabs">
-          <button class="tab-button active" data-tab="athlete">
-            <i class="fas fa-user"></i>
-            Athlete
-          </button>
-          <button class="tab-button" data-tab="training">
-            <i class="fas fa-bicycle"></i>
-            Training
-          </button>
-          <button class="tab-button" data-tab="performance">
-            <i class="fas fa-chart-bar"></i>
-            Performance
-          </button>
-        </div>
+    <!-- Screen reader announcements -->
+    <div
+      id="sr-announcements"
+      aria-live="polite"
+      aria-atomic="true"
+      class="sr-only"
+    ></div>
 
-        <!-- Athlete Tab Content -->
-        <div class="tab-content active" id="athlete-tab">
-          <div class="athlete-grid">
-            <div class="metrics-form">
-              <h3 class="form-title">Update Metrics</h3>
-              <form id="metrics-form">
-                <div class="form-group">
-                  <label class="form-label" for="weight">Weight (kg)</label>
-                  <input
-                    type="number"
-                    id="weight"
-                    class="form-input"
-                    step="0.1"
-                    placeholder="72.5"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="ftp">FTP (watts)</label>
-                  <input
-                    type="number"
-                    id="ftp"
-                    class="form-input"
-                    placeholder="285"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="hrv">HRV Score</label>
-                  <input
-                    type="number"
-                    id="hrv"
-                    class="form-input"
-                    placeholder="45"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="resting-hr"
-                    >Resting HR (bpm)</label
-                  >
-                  <input
-                    type="number"
-                    id="resting-hr"
-                    class="form-input"
-                    placeholder="52"
-                  />
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-save"></i>
-                  Update Metrics
-                </button>
-              </form>
-            </div>
+    <!-- Quick Settings Container (moved here for global access) -->
+    <div id="quickSettingsContainer" style="display: none"></div>
 
-            <div class="charts-container">
-              <div class="chart-card">
-                <h3 class="chart-title">Weight Trend (30 days)</h3>
-                <div class="chart-placeholder">
-                  Weight tracking chart will be rendered here
-                </div>
-              </div>
-
-              <div class="chart-card">
-                <h3 class="chart-title">FTP Progress</h3>
-                <div class="chart-placeholder">
-                  FTP progression chart will be rendered here
-                </div>
-              </div>
-
-              <div class="chart-card">
-                <h3 class="chart-title">HRV & Recovery Trends</h3>
-                <div class="chart-placeholder">
-                  HRV and recovery status chart will be rendered here
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Training Tab Content -->
-        <div class="tab-content" id="training-tab">
-          <div class="training-controls">
-            <div class="filter-group">
-              <label>Date Range:</label>
-              <select class="filter-select">
-                <option>Last 30 days</option>
-                <option selected>Last 90 days</option>
-                <option>Last 6 months</option>
-                <option>This year</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label>Workout Type:</label>
-              <select class="filter-select">
-                <option>All Types</option>
-                <option>Endurance</option>
-                <option>Threshold</option>
-                <option>VO2 Max</option>
-                <option>Recovery</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label>Intensity:</label>
-              <select class="filter-select">
-                <option>All Intensities</option>
-                <option>Easy (Zone 1-2)</option>
-                <option>Moderate (Zone 3-4)</option>
-                <option>Hard (Zone 5+)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="sessions-container">
-            <div class="sessions-header">
-              Recent Training Sessions (90 days)
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 15, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-threshold">Threshold</span>
-                Sweet Spot Intervals
-              </div>
-              <div>75min</div>
-              <div>89 TSS</div>
-              <div>0.83 IF</div>
-              <div>245W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-synced"></div>
-                <span>Synced</span>
-              </div>
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 13, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-endurance">Endurance</span>
-                Easy Recovery Ride
-              </div>
-              <div>60min</div>
-              <div>42 TSS</div>
-              <div>0.55 IF</div>
-              <div>165W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-synced"></div>
-                <span>Synced</span>
-              </div>
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 11, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-vo2max">VO2 Max</span>
-                5x5min @ VO2 Max
-              </div>
-              <div>90min</div>
-              <div>112 TSS</div>
-              <div>0.91 IF</div>
-              <div>268W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-pending"></div>
-                <span>Pending</span>
-              </div>
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 9, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-endurance">Endurance</span>
-                Zone 2 Base Building
-              </div>
-              <div>120min</div>
-              <div>85 TSS</div>
-              <div>0.62 IF</div>
-              <div>185W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-synced"></div>
-                <span>Synced</span>
-              </div>
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 7, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-threshold">Threshold</span>
-                FTP Test (20min)
-              </div>
-              <div>60min</div>
-              <div>78 TSS</div>
-              <div>0.95 IF</div>
-              <div>285W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-synced"></div>
-                <span>Synced</span>
-              </div>
-            </div>
-
-            <div class="session-item">
-              <div class="session-date">Dec 5, 2024</div>
-              <div class="session-type">
-                <span class="type-badge type-recovery">Recovery</span>
-                Active Recovery Spin
-              </div>
-              <div>45min</div>
-              <div>28 TSS</div>
-              <div>0.48 IF</div>
-              <div>145W NP</div>
-              <div class="integration-status">
-                <div class="status-indicator status-synced"></div>
-                <span>Synced</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Performance Tab Content -->
-        <div class="tab-content" id="performance-tab">
-          <div class="performance-grid">
-            <div class="chart-card">
-              <h3 class="chart-title">Peak Power Tracking</h3>
-              <div class="chart-placeholder">
-                Peak power chart (5s, 1min, 5min, 20min, 60min) will be rendered
-                here
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">TSS Trends</h3>
-              <div class="chart-placeholder">
-                Training Stress Score trend chart will be rendered here
-              </div>
-            </div>
-
-            <div class="chart-card power-curve">
-              <h3 class="chart-title">Power Duration Curve</h3>
-              <div class="chart-placeholder">
-                Power duration curve showing current vs. historical best will be
-                rendered here
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">Training Load vs Performance</h3>
-              <div class="chart-placeholder">
-                Correlation chart between training load and performance metrics
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <h3 class="chart-title">Performance Management Chart</h3>
-              <div class="chart-placeholder">
-                CTL (Chronic Training Load), ATL (Acute Training Load), TSB
-                (Training Stress Balance) chart
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Profile Management Page -->
-    <div id="profilePage" style="display: none"></div>
-
-    <!-- User Profile Model Integration -->
+    <!-- TrainingLab Navigation System -->
     <script type="module">
-      // Import the UserProfileModel, ProfilePage, and QuickSettings
-      import { UserProfileModel } from '../src/models/UserProfileModel.js';
-      import { ModelFactory } from '../src/models/ModelFactory.js';
-      import { ProfilePage } from '../src/components/profile/ProfilePage.js';
+      // Import the new navigation system
+      import { Router } from '../src/router/router.js';
+      import { routes } from '../src/router/routes.js';
+      import { routeGuardManager } from '../src/router/route-guards.js';
+      import { Navigation } from '../src/components/navigation/Navigation.js';
       import { QuickSettings } from '../src/components/QuickSettings.js';
 
-      // Global user profile instance
-      let userProfile = null;
-      let profilePage = null;
+      // Import all pages
+      import { DashboardPage } from '../src/pages/DashboardPage.js';
+      import { VisualizerPage } from '../src/pages/VisualizerPage.js';
+      import { ProfilePage } from '../src/pages/ProfilePage.js';
+      import { LibraryPage } from '../src/pages/LibraryPage.js';
+      import { HistoryPage } from '../src/pages/HistoryPage.js';
+
+      // Global instances
+      let router = null;
+      let navigation = null;
       let quickSettings = null;
 
-      // Initialize profile management system
-      function initializeProfilePage() {
-        const profileContainer = document.getElementById('profilePage');
-        if (profileContainer && !profilePage) {
-          profilePage = new ProfilePage(profileContainer);
+      // Initialize the application
+      async function initializeApplication() {
+        try {
+          console.log('Initializing TrainingLab...');
+
+          // Set up route components
+          setupRouteComponents();
+
+          // Initialize router
+          router = new Router(routes);
+          window.router = router; // Make globally accessible
+
+          // Initialize navigation
+          const navigationContainer = document.getElementById(
+            'navigation-container'
+          );
+          navigation = new Navigation(navigationContainer, router);
+
+          // Initialize quick settings
+          initializeQuickSettings();
+
+          // Setup route guards integration
+          setupRouteGuards();
+
+          // Start routing
+          router.handleRouteChange();
+
+          console.log('TrainingLab initialized successfully');
+        } catch (error) {
+          console.error('Error initializing TrainingLab:', error);
+          showErrorMessage(
+            'Failed to initialize application. Please refresh the page.'
+          );
+        }
+      }
+
+      // Set up route components
+      function setupRouteComponents() {
+        // Map page classes to routes
+        const pageClasses = {
+          '/': DashboardPage,
+          '/visualizer': VisualizerPage,
+          '/profile': ProfilePage,
+          '/library': LibraryPage,
+          '/history': HistoryPage,
+        };
+
+        // Update routes with component classes
+        Object.keys(pageClasses).forEach(path => {
+          if (routes[path]) {
+            routes[path].component = pageClasses[path];
+          }
+        });
+
+        // Handle redirects
+        if (routes['/dashboard']) {
+          routes['/dashboard'].redirect = '/';
+        }
+        if (routes['/settings']) {
+          routes['/settings'].redirect = '/profile';
         }
       }
 
@@ -1114,431 +782,157 @@
         const quickSettingsContainer = document.getElementById(
           'quickSettingsContainer'
         );
-        if (quickSettingsContainer && !quickSettings) {
+        if (quickSettingsContainer) {
           quickSettings = new QuickSettings(quickSettingsContainer);
-          // Make it globally accessible for debugging
-          window.quickSettings = quickSettings;
+          window.quickSettings = quickSettings; // Make globally accessible
         }
       }
 
-      // Show profile management page
-      function showProfilePage() {
-        const dashboardContent = document.querySelector('.main-content');
-        const metricsBar = document.querySelector('.metrics-bar');
-        const profileContainer = document.getElementById('profilePage');
+      // Setup route guards integration
+      function setupRouteGuards() {
+        if (router && routeGuardManager) {
+          // Set up route guard integration
+          router.setBeforeRouteChange(async (route, fromRoute) => {
+            const guardResult = await routeGuardManager.canActivate(
+              route,
+              fromRoute
+            );
 
-        if (dashboardContent) dashboardContent.style.display = 'none';
-        if (metricsBar) metricsBar.style.display = 'none';
-        if (profileContainer) profileContainer.style.display = 'block';
+            if (guardResult.result === 'redirect') {
+              router.navigate(guardResult.redirectTo);
+              return false;
+            }
 
-        // Initialize profile page if not already done
-        if (!profilePage) {
-          initializeProfilePage();
-        }
+            return guardResult.result === 'allow';
+          });
 
-        // Show profile page
-        if (profilePage) {
-          profilePage.show();
-        }
-      }
-
-      // Hide profile management page
-      function hideProfilePage() {
-        const dashboardContent = document.querySelector('.main-content');
-        const metricsBar = document.querySelector('.metrics-bar');
-        const profileContainer = document.getElementById('profilePage');
-
-        if (dashboardContent) dashboardContent.style.display = 'block';
-        if (metricsBar) metricsBar.style.display = 'block';
-        if (profileContainer) profileContainer.style.display = 'none';
-
-        if (profilePage) {
-          profilePage.hide();
+          router.setAfterRouteChange(async (route, fromRoute) => {
+            // Handle any post-route change logic
+            updatePageTitle(route);
+            announcePageChange(route);
+          });
         }
       }
 
-      // Initialize user profile and dashboard
-      async function initializeDashboard() {
-        try {
-          // Try to load existing profile from localStorage
-          const savedProfile = localStorage.getItem('traininglab_profile');
-
-          if (savedProfile) {
-            userProfile = UserProfileModel.fromJSON(JSON.parse(savedProfile));
-          } else {
-            // Create demo profile for first-time users
-            userProfile = ModelFactory.createDemoProfile();
-            saveProfile();
-          }
-
-          // Update dashboard with profile data
-          updateDashboardMetrics();
-          updateUserInfo();
-
-          // Initialize quick settings
-          initializeQuickSettings();
-
-          console.log('Dashboard initialized with profile:', userProfile.name);
-        } catch (error) {
-          console.error('Error initializing dashboard:', error);
-          // Fallback to demo profile
-          userProfile = ModelFactory.createDemoProfile();
-          updateDashboardMetrics();
-          updateUserInfo();
-
-          // Initialize quick settings even if profile loading fails
-          initializeQuickSettings();
+      // Update page title
+      function updatePageTitle(route) {
+        if (route && route.title) {
+          document.title = `${route.title} - TrainingLab`;
         }
       }
 
-      // Update dashboard metrics with real data
-      function updateDashboardMetrics() {
-        if (!userProfile) return;
-
-        const metrics = userProfile.getDashboardMetrics();
-
-        // Update FTP metric
-        updateMetricCard(0, {
-          value: `${metrics.ftp.value}W`,
-          change: metrics.ftp.changeText,
-          changeType: metrics.ftp.changeType,
-        });
-
-        // Update Weight metric
-        updateMetricCard(1, {
-          value: `${metrics.weight.value}${metrics.weight.unit}`,
-          change: metrics.weight.changeText,
-          changeType: metrics.weight.changeType,
-        });
-
-        // Update TSS metric
-        updateMetricCard(2, {
-          value: metrics.tss.value.toString(),
-          change: metrics.tss.changeText,
-          changeType: metrics.tss.changeType,
-        });
-
-        // Update HRV metric
-        updateMetricCard(3, {
-          value: `${metrics.hrv.value}ms`,
-          change: metrics.hrv.changeText,
-          changeType: metrics.hrv.changeType,
-        });
-
-        // Update Training Load metric
-        updateMetricCard(4, {
-          value: metrics.trainingLoad.value,
-          change: metrics.trainingLoad.changeText,
-          changeType: metrics.trainingLoad.changeType,
-        });
-
-        // Update Recovery Status metric
-        updateMetricCard(5, {
-          value: `${metrics.recovery.value}%`,
-          change: metrics.recovery.changeText,
-          changeType: metrics.recovery.changeType,
-        });
-      }
-
-      // Update a specific metric card
-      function updateMetricCard(index, data) {
-        const metricCards = document.querySelectorAll('.metric-card');
-        if (index >= metricCards.length) return;
-
-        const card = metricCards[index];
-        const valueElement = card.querySelector('.metric-value');
-        const changeElement = card.querySelector('.metric-change');
-
-        if (valueElement) valueElement.textContent = data.value;
-        if (changeElement) {
-          changeElement.textContent = data.change;
-          changeElement.className = `metric-change ${data.changeType}`;
-
-          // Update icon based on change type
-          const icon = changeElement.querySelector('i');
-          if (icon) {
-            icon.className = `fas fa-${
-              data.changeType === 'positive'
-                ? 'arrow-up'
-                : data.changeType === 'negative'
-                  ? 'arrow-down'
-                  : 'minus'
-            }`;
-          }
+      // Announce page changes for screen readers
+      function announcePageChange(route) {
+        const announcements = document.getElementById('sr-announcements');
+        if (announcements && route) {
+          announcements.textContent = `Navigated to ${route.title || 'page'}`;
         }
       }
 
-      // Update user information in header
-      function updateUserInfo() {
-        if (!userProfile) return;
-
-        const userNameElement = document.querySelector('.user-name');
-        if (userNameElement) {
-          userNameElement.textContent = `Welcome back, ${userProfile.name || 'Athlete'}`;
-        }
-
-        // Update profile menu info
-        const profileMenuName = document.querySelector('.profile-menu-name');
-        const profileMenuEmail = document.querySelector('.profile-menu-email');
-        const userAvatarButton = document.getElementById('profileMenuBtn');
-        const profileMenuAvatar = document.querySelector(
-          '.profile-menu-avatar'
-        );
-
-        if (profileMenuName) {
-          profileMenuName.textContent = userProfile.name || 'Athlete';
-        }
-
-        if (profileMenuEmail) {
-          profileMenuEmail.textContent = userProfile.email || 'No email set';
-        }
-
-        // Update avatar initials
-        const initials = (userProfile.name || 'AR')
-          .split(' ')
-          .map(n => n[0])
-          .join('')
-          .substring(0, 2)
-          .toUpperCase();
-
-        if (userAvatarButton) {
-          const textNode = Array.from(userAvatarButton.childNodes).find(
-            node => node.nodeType === Node.TEXT_NODE
-          );
-          if (textNode) {
-            textNode.textContent = initials;
-          }
-        }
-
-        if (profileMenuAvatar) {
-          profileMenuAvatar.textContent = initials;
-        }
-
-        // Update welcome message or other user-specific content
-        const welcomeElement = document.querySelector('.welcome-message');
-        if (welcomeElement) {
-          welcomeElement.textContent = `Welcome back, ${userProfile.name}!`;
+      // Show error message
+      function showErrorMessage(message) {
+        const appContent = document.getElementById('app-content');
+        if (appContent) {
+          appContent.innerHTML = `
+            <div class="error-container" style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 50vh;
+              text-align: center;
+              padding: 2rem;
+            ">
+              <i class="fas fa-exclamation-triangle" style="
+                font-size: 4rem;
+                color: #ef4444;
+                margin-bottom: 1rem;
+              "></i>
+              <h2 style="color: #374151; margin-bottom: 0.5rem;">Application Error</h2>
+              <p style="color: #6b7280; margin-bottom: 2rem;">${message}</p>
+              <button onclick="location.reload()" style="
+                background: #3182ce;
+                color: white;
+                border: none;
+                padding: 0.75rem 1.5rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+              ">
+                Reload Application
+              </button>
+            </div>
+          `;
         }
       }
 
-      // Save profile to localStorage
-      function saveProfile() {
-        if (userProfile) {
-          localStorage.setItem(
-            'traininglab_profile',
-            JSON.stringify(userProfile.toJSON())
-          );
-        }
-      }
-
-      // Update user metrics from form
-      function updateUserMetrics(formData) {
-        if (!userProfile) return;
-
-        if (formData.weight) {
-          userProfile.updateWeight(parseFloat(formData.weight));
-        }
-
-        if (formData.ftp) {
-          userProfile.updateFTP(
-            parseInt(formData.ftp),
-            'manual',
-            'TrainingLab'
-          );
-        }
-
-        if (formData.hrv) {
-          userProfile.updateHRV(parseInt(formData.hrv));
-        }
-
-        // Save updated profile
-        saveProfile();
-
-        // Refresh dashboard
-        updateDashboardMetrics();
-      }
-
-      // Export functions for global access
+      // Export for global access
       window.TrainingLab = {
-        userProfile: () => userProfile,
-        updateMetrics: updateUserMetrics,
-        saveProfile: saveProfile,
-        refreshDashboard: updateDashboardMetrics,
+        router: () => router,
+        navigation: () => navigation,
+        quickSettings: () => quickSettings,
       };
 
-      // Expose profile page functions globally
-      window.showProfilePage = showProfilePage;
-      window.hideProfilePage = hideProfilePage;
-      window.profilePage = () => profilePage;
-
-      // Initialize dashboard when DOM is loaded
-      document.addEventListener('DOMContentLoaded', initializeDashboard);
-    </script>
-
-    <script>
-      // Profile dropdown functionality
-      document.addEventListener('DOMContentLoaded', function () {
-        // Profile dropdown menu
-        const profileMenuBtn = document.getElementById('profileMenuBtn');
-        const profileMenu = document.getElementById('profileMenu');
-        const profileDropdown = document.querySelector('.profile-dropdown');
-
-        if (profileMenuBtn && profileMenu) {
-          // Toggle dropdown menu
-          profileMenuBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const isOpen = profileMenu.classList.contains('show');
-
-            if (isOpen) {
-              profileMenu.classList.remove('show');
-              profileDropdown.classList.remove('active');
-            } else {
-              profileMenu.classList.add('show');
-              profileDropdown.classList.add('active');
-            }
-          });
-
-          // Close dropdown when clicking outside
-          document.addEventListener('click', function (e) {
-            if (!profileDropdown.contains(e.target)) {
-              profileMenu.classList.remove('show');
-              profileDropdown.classList.remove('active');
-            }
-          });
-
-          // Handle profile menu actions
-          const manageProfileBtn = document.getElementById('manageProfileBtn');
-          const preferencesBtn = document.getElementById('preferencesBtn');
-          const signOutBtn = document.getElementById('signOutBtn');
-
-          if (manageProfileBtn) {
-            manageProfileBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              profileMenu.classList.remove('show');
-              profileDropdown.classList.remove('active');
-
-              // Show profile management page
-              if (window.showProfilePage) {
-                window.showProfilePage();
-              }
-            });
-          }
-
-          if (preferencesBtn) {
-            preferencesBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              profileMenu.classList.remove('show');
-              profileDropdown.classList.remove('active');
-
-              // Show profile management page with preferences tab
-              if (window.showProfilePage) {
-                window.showProfilePage();
-                // Switch to preferences tab after a short delay
-                setTimeout(() => {
-                  if (window.profilePage) {
-                    window.profilePage.switchToTab('preferences');
-                  }
-                }, 100);
-              }
-            });
-          }
-
-          if (signOutBtn) {
-            signOutBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              profileMenu.classList.remove('show');
-              profileDropdown.classList.remove('active');
-
-              // Handle sign out (for now just alert)
-              alert('Sign out functionality not implemented yet');
-            });
-          }
-        }
-      });
-
-      // Tab functionality
-      document.addEventListener('DOMContentLoaded', function () {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabButtons.forEach(button => {
-          button.addEventListener('click', function () {
-            const targetTab = this.getAttribute('data-tab');
-
-            // Remove active class from all buttons and contents
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-
-            // Add active class to clicked button and corresponding content
-            this.classList.add('active');
-            document.getElementById(targetTab + '-tab').classList.add('active');
-          });
-        });
-
-        // Enhanced form submission handler with profile integration
-        const metricsForm = document.getElementById('metrics-form');
-        if (metricsForm) {
-          metricsForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            // Get form data
-            const formData = {
-              weight: document.getElementById('weight').value,
-              ftp: document.getElementById('ftp').value,
-              hrv: document.getElementById('hrv').value,
-              restingHr: document.getElementById('resting-hr').value,
-            };
-
-            // Update user profile
-            if (window.TrainingLab && window.TrainingLab.updateMetrics) {
-              window.TrainingLab.updateMetrics(formData);
-              alert('Metrics updated successfully!');
-            } else {
-              alert('Profile system not initialized. Please refresh the page.');
-            }
-
-            // Clear form
-            this.reset();
-          });
-        }
-
-        // Filter change handlers
-        const filterSelects = document.querySelectorAll('.filter-select');
-        filterSelects.forEach(select => {
-          select.addEventListener('change', function () {
-            // In real app, this would filter the training sessions
-            console.log('Filter changed:', this.value);
-          });
-        });
-
-        // Enhanced real-time data updates
-        function updateMetrics() {
-          if (window.TrainingLab && window.TrainingLab.refreshDashboard) {
-            window.TrainingLab.refreshDashboard();
-            console.log('Metrics updated from profile data');
-          }
-        }
-
-        // Update metrics every 5 minutes
-        setInterval(updateMetrics, 300000);
-      });
-
-      // Responsive navigation helper
-      function handleResize() {
-        const metricsBar = document.querySelector('.metrics-bar');
-        const header = document.querySelector('.header');
-
-        if (window.innerWidth <= 768) {
-          metricsBar.style.top = header.offsetHeight + 'px';
-        } else {
-          metricsBar.style.top = '73px';
-        }
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApplication);
+      } else {
+        initializeApplication();
       }
 
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('load', handleResize);
+      // Handle unhandled promise rejections
+      window.addEventListener('unhandledrejection', event => {
+        console.error('Unhandled promise rejection:', event.reason);
+        // Don't prevent default - let other handlers deal with it
+      });
     </script>
+
+    <!-- Additional Styles for App Structure -->
+    <style>
+      .app-content {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Loading state styles */
+      .app-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e5e7eb;
+        border-top: 3px solid #3182ce;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </body>
 </html>

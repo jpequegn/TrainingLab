@@ -1,0 +1,492 @@
+/**
+ * Navigation Component Styles for TrainingLab
+ * Mobile-first responsive navigation with modern design
+ */
+
+/* ==========================================================================
+   Navigation Variables
+   ========================================================================== */
+
+:root {
+  /* Navigation colors */
+  --nav-bg: #ffffff;
+  --nav-border: #e5e5e5;
+  --nav-text: #333333;
+  --nav-text-hover: #0066cc;
+  --nav-active: #0066cc;
+  --nav-active-bg: rgba(0, 102, 204, 0.1);
+
+  /* Brand colors */
+  --brand-color: #0066cc;
+  --brand-hover: #0052a3;
+
+  /* Mobile menu */
+  --mobile-overlay: rgba(0, 0, 0, 0.5);
+  --hamburger-line: #333333;
+
+  /* Shadows */
+  --nav-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --nav-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+
+  /* Transitions */
+  --nav-transition: all 0.3s ease;
+  --mobile-transition: transform 0.3s ease;
+
+  /* Spacing */
+  --nav-height: 60px;
+  --nav-padding: 1rem;
+  --nav-gap: 1rem;
+}
+
+/* ==========================================================================
+   Main Navigation Container
+   ========================================================================== */
+
+.main-navigation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+  height: var(--nav-height);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--nav-padding);
+  height: 100%;
+}
+
+/* Loading state */
+.nav-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.nav-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--nav-active),
+    transparent
+  );
+  animation: navLoading 1.5s infinite;
+}
+
+@keyframes navLoading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ==========================================================================
+   Brand/Logo
+   ========================================================================== */
+
+.nav-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--brand-color);
+  font-weight: 700;
+  font-size: 1.25rem;
+  transition: var(--nav-transition);
+}
+
+.brand-link:hover,
+.brand-link:focus {
+  color: var(--brand-hover);
+  transform: scale(1.05);
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+}
+
+.brand-text {
+  display: none;
+}
+
+/* ==========================================================================
+   Mobile Menu Toggle
+   ========================================================================== */
+
+.mobile-menu-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  z-index: 1001;
+  transition: var(--nav-transition);
+}
+
+.mobile-menu-toggle:hover,
+.mobile-menu-toggle:focus {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background: var(--hamburger-line);
+  transition: var(--nav-transition);
+  margin: 2px 0;
+}
+
+/* Hamburger animation when open */
+.mobile-menu-toggle--open .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.mobile-menu-toggle--open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-toggle--open .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* ==========================================================================
+   Navigation Menu
+   ========================================================================== */
+
+.nav-menu {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--nav-bg);
+  transform: translateX(-100%);
+  transition: var(--mobile-transition);
+  overflow-y: auto;
+  padding: 1rem 0;
+  border-top: 1px solid var(--nav-border);
+}
+
+.nav-menu--open {
+  transform: translateX(0);
+  box-shadow: var(--nav-shadow-hover);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  margin: 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem var(--nav-padding);
+  color: var(--nav-text);
+  text-decoration: none;
+  transition: var(--nav-transition);
+  border-left: 3px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: var(--nav-text-hover);
+  background: rgba(0, 102, 204, 0.05);
+  border-left-color: var(--nav-active);
+}
+
+.nav-link--active {
+  color: var(--nav-active);
+  background: var(--nav-active-bg);
+  border-left-color: var(--nav-active);
+  font-weight: 600;
+}
+
+.nav-link--highlight {
+  animation: navHighlight 2s ease;
+}
+
+@keyframes navHighlight {
+  0%,
+  100% {
+    background: transparent;
+  }
+  50% {
+    background: rgba(0, 102, 204, 0.2);
+  }
+}
+
+.nav-link i {
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-text {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Navigation Actions
+   ========================================================================== */
+
+.nav-actions {
+  padding: 1rem var(--nav-padding);
+  border-top: 1px solid var(--nav-border);
+  margin-top: 1rem;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: none;
+  border: 1px solid var(--nav-border);
+  border-radius: 4px;
+  color: var(--nav-text);
+  cursor: pointer;
+  transition: var(--nav-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-btn:hover,
+.action-btn:focus {
+  background: var(--nav-active-bg);
+  border-color: var(--nav-active);
+  color: var(--nav-active);
+}
+
+/* ==========================================================================
+   Mobile Overlay
+   ========================================================================== */
+
+.nav-menu--open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--mobile-overlay);
+  z-index: -1;
+}
+
+/* ==========================================================================
+   Tablet Styles (768px and up)
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  .brand-text {
+    display: block;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+  }
+
+  .nav-menu {
+    position: static;
+    transform: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    gap: var(--nav-gap);
+    padding: 0;
+    border: none;
+    overflow: visible;
+  }
+
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-link {
+    padding: 0.5rem 1rem;
+    border-left: none;
+    border-radius: 4px;
+    border-bottom: 2px solid transparent;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    background: var(--nav-active-bg);
+    border-bottom-color: var(--nav-active);
+  }
+
+  .nav-link--active {
+    background: var(--nav-active-bg);
+    border-bottom-color: var(--nav-active);
+  }
+
+  .nav-actions {
+    padding: 0;
+    border: none;
+    margin: 0;
+  }
+
+  .action-btn {
+    width: auto;
+    padding: 0.5rem;
+    border-radius: 50%;
+    min-width: 40px;
+    height: 40px;
+  }
+}
+
+/* ==========================================================================
+   Desktop Styles (1024px and up)
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+  .nav-container {
+    padding: 0 2rem;
+  }
+
+  .nav-list {
+    gap: 1rem;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .nav-text {
+    font-size: 0.95rem;
+  }
+}
+
+/* ==========================================================================
+   Large Screen Styles (1440px and up)
+   ========================================================================== */
+
+@media (min-width: 1440px) {
+  .nav-container {
+    max-width: 1400px;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* ==========================================================================
+   Dark Theme Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --nav-bg: #1a1a1a;
+    --nav-border: #333333;
+    --nav-text: #ffffff;
+    --nav-text-hover: #66b3ff;
+    --nav-active: #66b3ff;
+    --nav-active-bg: rgba(102, 179, 255, 0.1);
+    --hamburger-line: #ffffff;
+    --mobile-overlay: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Dark theme class for manual control */
+.dark-theme {
+  --nav-bg: #1a1a1a;
+  --nav-border: #333333;
+  --nav-text: #ffffff;
+  --nav-text-hover: #66b3ff;
+  --nav-active: #66b3ff;
+  --nav-active-bg: rgba(102, 179, 255, 0.1);
+  --hamburger-line: #ffffff;
+  --mobile-overlay: rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+   Accessibility Enhancements
+   ========================================================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .main-navigation,
+  .nav-menu,
+  .nav-link,
+  .mobile-menu-toggle,
+  .hamburger-line,
+  .brand-link,
+  .action-btn {
+    transition: none;
+  }
+
+  .nav-loading::after {
+    animation: none;
+  }
+
+  .nav-link--highlight {
+    animation: none;
+    background: var(--nav-active-bg);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .main-navigation {
+    border-bottom-width: 2px;
+  }
+
+  .nav-link {
+    border-width: 2px;
+  }
+
+  .nav-link--active {
+    border-left-width: 4px;
+  }
+}
+
+/* Focus visible enhancement */
+.nav-link:focus-visible,
+.brand-link:focus-visible,
+.mobile-menu-toggle:focus-visible,
+.action-btn:focus-visible {
+  outline: 2px solid var(--nav-active);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .main-navigation {
+    display: none;
+  }
+}
