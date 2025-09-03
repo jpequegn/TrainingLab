@@ -109,8 +109,18 @@ function parseIntervals(segment, startTime) {
   const repeat = parseInt(segment.getAttribute('Repeat')) || 1;
   const onDuration = parseInt(segment.getAttribute('OnDuration')) || 60;
   const offDuration = parseInt(segment.getAttribute('OffDuration')) || 60;
-  const powerOn = parseFloat(segment.getAttribute('PowerOn')) || 1.0;
-  const powerOff = parseFloat(segment.getAttribute('PowerOff')) || 0.5;
+
+  // Support both PowerOn/PowerOff and PowerOnHigh/PowerOffHigh formats
+  const powerOn =
+    parseFloat(segment.getAttribute('PowerOn')) ||
+    parseFloat(segment.getAttribute('PowerOnHigh')) ||
+    parseFloat(segment.getAttribute('PowerOnLow')) ||
+    1.0;
+  const powerOff =
+    parseFloat(segment.getAttribute('PowerOff')) ||
+    parseFloat(segment.getAttribute('PowerOffHigh')) ||
+    parseFloat(segment.getAttribute('PowerOffLow')) ||
+    0.5;
 
   const intervals = [];
   let currentTime = startTime;

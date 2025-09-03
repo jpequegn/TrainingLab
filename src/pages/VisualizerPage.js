@@ -34,7 +34,6 @@ export class VisualizerPage extends BasePage {
 
     // Bind methods
     this.handleFileUpload = this.handleFileUpload.bind(this);
-    this.loadSampleWorkout = this.loadSampleWorkout.bind(this);
     this.setSelectedSegmentIndex = this.setSelectedSegmentIndex.bind(this);
   }
 
@@ -93,10 +92,6 @@ export class VisualizerPage extends BasePage {
               <i class="fas fa-upload"></i>
               Upload Workout
             </button>
-            <button class="btn btn-secondary" id="loadSampleBtn">
-              <i class="fas fa-download"></i>
-              Load Sample
-            </button>
           `
         )}
         
@@ -108,10 +103,10 @@ export class VisualizerPage extends BasePage {
             <h3>Drop your workout file here</h3>
             <p>Supported formats: .zwo (Zwift Workout)</p>
             <div class="upload-buttons">
-              <input type="file" id="fileInput" accept=".zwo" style="display: none;">
-              <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
+              <label for="fileInput" class="btn btn-outline" id="chooseFileBtn">
                 Choose File
-              </button>
+              </label>
+              <input type="file" id="fileInput" accept=".zwo" style="display: none;">
             </div>
           </div>
         </div>
@@ -173,10 +168,19 @@ export class VisualizerPage extends BasePage {
     return `
       <section class="visualization-section" id="visualizationSection" style="display: none;">
         <div class="workout-info" id="workoutInfo">
-          <!-- Workout information will be populated here -->
+          <h3 id="workoutName">Loading...</h3>
+          <p id="workoutDescription">...</p>
+          <div class="workout-meta">
+            <span>Author: <span id="workoutAuthor">...</span></span>
+            <span>Sport: <span id="workoutSport">...</span></span>
+          </div>
         </div>
         
         <div class="chart-container">
+          <div class="chart-header">
+            <span id="chartDuration">0:00</span>
+            <span id="chartTSS">0 TSS</span>
+          </div>
           <canvas id="workoutChart" width="800" height="400"></canvas>
         </div>
         
@@ -193,7 +197,9 @@ export class VisualizerPage extends BasePage {
         <div class="segments-container">
           <h3>Workout Segments</h3>
           <div id="segmentDetails" class="segment-details">
-            <!-- Segment details will be populated here -->
+            <div id="segmentList">
+              <!-- Segment details will be populated here -->
+            </div>
           </div>
         </div>
       </section>
@@ -211,22 +217,50 @@ export class VisualizerPage extends BasePage {
 
   setupFileUpload() {
     const uploadBtn = this.container.querySelector('#uploadBtn');
-    const loadSampleBtn = this.container.querySelector('#loadSampleBtn');
     const fileInput = this.container.querySelector('#fileInput');
 
+    console.log('Setting up file upload. File input found:', !!fileInput);
+
+    // Function to trigger file input
+    const triggerFileInput = e => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      // Use setTimeout to ensure the click happens after the event propagation
+      setTimeout(() => {
+        if (fileInput) {
+          fileInput.click();
+        }
+      }, 0);
+    };
+
     if (uploadBtn) {
-      this.addEventListener(uploadBtn, 'click', () => {
-        fileInput.click();
-      });
+      this.addEventListener(uploadBtn, 'click', triggerFileInput);
     }
 
     if (fileInput) {
-      this.addEventListener(fileInput, 'change', this.handleFileUpload);
+      console.log('Adding change listener to file input');
+
+      // Try both approaches - direct event listener and using addEventListener
+      fileInput.addEventListener('change', event => {
+        console.log('File input change event fired (direct listener)');
+        console.log('Files selected:', event.target.files);
+        this.handleFileUpload(event);
+      });
+
+      // Also try with this.addEventListener in case it's needed for cleanup
+      this.addEventListener(fileInput, 'change', event => {
+        console.log(
+          'File input change event fired (via this.addEventListener)'
+        );
+        this.handleFileUpload(event);
+      });
+    } else {
+      console.error('File input element not found!');
     }
 
-    if (loadSampleBtn) {
-      this.addEventListener(loadSampleBtn, 'click', this.loadSampleWorkout);
-    }
+    // The "Choose File" button is now a label, so it will work automatically
   }
 
   setupControls() {
@@ -309,24 +343,40 @@ export class VisualizerPage extends BasePage {
   }
 
   async handleFileUpload(event) {
+    console.log('handleFileUpload called with event:', event);
     const file = event.target.files[0];
-    if (!file) return;
+    console.log('File selected:', file);
 
+    if (!file) {
+      console.log('No file in event, returning');
+      return;
+    }
+
+    console.log('Processing file:', file.name);
     await this.processFile(file);
   }
 
   async processFile(file) {
+    console.log('processFile started for:', file.name);
+
     if (!file.name.toLowerCase().endsWith('.zwo')) {
+      console.log('Invalid file extension');
       this.showError('Please select a valid Zwift workout file (.zwo)');
       return;
     }
 
     try {
+      console.log('Setting loading state...');
       this.setLoadingState(true, 'Reading workout file...');
 
+      console.log('Reading file as text...');
       const text = await this.readFileAsText(file);
+      console.log('File read complete, text length:', text.length);
+
+      console.log('Starting parse and visualize...');
       await this.parseAndVisualize(text, file.name);
     } catch (error) {
+      console.error('Error in processFile:', error);
       logger.error('Error processing file:', error);
       this.showError(
         'Error reading the workout file. Please check the file format and try again.'
@@ -344,15 +394,18 @@ export class VisualizerPage extends BasePage {
   }
 
   async parseAndVisualize(xmlText, filename = 'workout.zwo') {
+    console.log('parseAndVisualize started');
     try {
       this.setLoadingState(true, 'Parsing workout structure...');
       await delay(200);
 
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      console.log('XML parsed');
 
       const parseError = xmlDoc.querySelector('parsererror');
       if (parseError) {
+        console.error('Parse error found:', parseError);
         throw new Error(
           'Invalid XML format: The file appears to be corrupted or not a valid Zwift workout file'
         );
@@ -361,18 +414,25 @@ export class VisualizerPage extends BasePage {
       this.setLoadingState(true, 'Processing workout segments...');
       await delay(300);
 
+      console.log('Calling parseWorkoutXML...');
       const workoutData = parseWorkoutXML(xmlDoc);
+      console.log('Workout data:', workoutData);
+
       this.workout = new Workout(workoutData);
+      console.log('Workout instance created');
 
       this.setLoadingState(true, 'Rendering visualization...');
       await delay(400);
 
+      console.log('Displaying workout...');
       await this.displayWorkout();
+      console.log('Showing workout controls...');
       this.showWorkoutControls(true);
 
       this.setLoadingState(false);
       this.showSuccess(`Successfully loaded: ${filename}`);
     } catch (error) {
+      console.error('Error in parseAndVisualize:', error);
       logger.error('Error parsing workout:', error);
       this.setLoadingState(false);
 
@@ -385,35 +445,6 @@ export class VisualizerPage extends BasePage {
           'The workout structure is invalid or contains unsupported segments.';
       } else {
         errorMessage += "Please ensure it's a valid Zwift workout file (.zwo).";
-      }
-
-      this.showError(errorMessage);
-    }
-  }
-
-  async loadSampleWorkout() {
-    try {
-      this.setLoadingState(true, 'Loading sample workout...');
-
-      const response = await fetch('sample_workout.zwo');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const text = await response.text();
-      await this.parseAndVisualize(text, 'sample_workout.zwo');
-    } catch (error) {
-      logger.error('Error loading sample workout:', error);
-      this.setLoadingState(false);
-
-      let errorMessage = 'Error loading sample workout: ';
-      if (error.message.includes('HTTP error')) {
-        errorMessage +=
-          'Could not fetch the sample workout file. Please check if the file exists.';
-      } else if (error.message.includes('fetch')) {
-        errorMessage += 'Network error. Please check your connection.';
-      } else {
-        errorMessage += error.message || 'Unknown error occurred.';
       }
 
       this.showError(errorMessage);
