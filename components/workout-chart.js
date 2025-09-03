@@ -6,6 +6,16 @@
 import { BaseComponent } from './base-component.js';
 import { moduleLoader } from '../module-loader.js';
 
+// Chart configuration constants
+const CHART_CONFIG = {
+  DEFAULT_DURATION: 60,
+  DEFAULT_CADENCE: 90,
+  MAX_POWER_DISPLAY: 150,
+  MIN_CADENCE: 60,
+  MAX_CADENCE: 120,
+  ANIMATION_DURATION: 750
+};
+
 export class WorkoutChart extends BaseComponent {
   getDefaultOptions() {
     return {
@@ -205,7 +215,7 @@ export class WorkoutChart extends BaseComponent {
             color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
           },
           min: 0,
-          max: 150,
+          max: CHART_CONFIG.MAX_POWER_DISPLAY,
         },
         y1: {
           type: 'linear',
@@ -222,12 +232,12 @@ export class WorkoutChart extends BaseComponent {
           grid: {
             drawOnChartArea: false,
           },
-          min: 60,
-          max: 120,
+          min: CHART_CONFIG.MIN_CADENCE,
+          max: CHART_CONFIG.MAX_CADENCE,
         },
       },
       animation: {
-        duration: 750,
+        duration: CHART_CONFIG.ANIMATION_DURATION,
         easing: 'easeInOutQuart',
       },
       onClick: this.handleChartClick.bind(this),
@@ -274,7 +284,8 @@ export class WorkoutChart extends BaseComponent {
 
     try {
       // Load chart utilities for data preparation
-      const chartUtils = await moduleLoader.loadModule('chart-engine');
+      // TODO: Implement chart utilities when needed
+      // const chartUtils = await moduleLoader.loadModule('chart-engine');
 
       // Prepare chart data
       const chartData = this.prepareChartData(workoutData);
@@ -303,9 +314,9 @@ export class WorkoutChart extends BaseComponent {
     let cumulativeTime = 0;
 
     segments.forEach(segment => {
-      const duration = segment.duration || 60;
+      const duration = segment.duration || CHART_CONFIG.DEFAULT_DURATION;
       const power = segment.power || 0;
-      const cadence = segment.cadence || 90;
+      const cadence = segment.cadence || CHART_CONFIG.DEFAULT_CADENCE;
 
       // Add start point
       labels.push(this.formatTime(cumulativeTime));
@@ -497,7 +508,7 @@ export class WorkoutChart extends BaseComponent {
   }
 
   formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
+    const minutes = Math.floor(seconds / CHART_CONFIG.DEFAULT_DURATION);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }

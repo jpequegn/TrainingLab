@@ -394,6 +394,35 @@ export class UI {
     this.displayZoneAnalytics(metrics);
   }
 
+  /**
+   * Get trend indicator icon
+   * @param {string} trend - Trend direction
+   * @returns {string} Unicode arrow symbol
+   */
+  getTrendIcon(trend) {
+    switch (trend) {
+      case 'up': return '↗';
+      case 'down': return '↘';
+      default: return '→';
+    }
+  }
+
+  /**
+   * Generate trend HTML for metric cards
+   * @param {string} change - Change value
+   * @param {string} trend - Trend direction
+   * @param {Object} trendColors - Color classes
+   * @returns {string} HTML string
+   */
+  generateTrendHTML(change, trend, trendColors) {
+    if (!change) return '';
+    
+    const trendIcon = this.getTrendIcon(trend);
+    return `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
+      ${trendIcon} ${change}
+    </p>`;
+  }
+
   createMetricCard({ title, value, icon, change, trend }) {
     const trendColors = {
       up: 'text-green-600 dark:text-green-400',
@@ -407,13 +436,7 @@ export class UI {
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-muted-foreground">${title}</p>
                         <p class="text-2xl font-bold tracking-tight">${value}</p>
-                        ${
-                          change
-                            ? `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
-                            ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} ${change}
-                        </p>`
-                            : ''
-                        }
+                        ${this.generateTrendHTML(change, trend, trendColors)}
                     </div>
                     <div class="rounded-full bg-primary/10 p-3 text-primary">
                         ${icon}

@@ -15,6 +15,16 @@ export class ModernUI {
     this.setupGlassEffects();
   }
 
+  // Helper function to get trend arrow without nested ternary
+  getTrendArrow(trend) {
+    const arrows = {
+      up: '↗',
+      down: '↘',
+      neutral: '→'
+    };
+    return arrows[trend] || '→';
+  }
+
   // Animation observer for scroll-triggered animations
   setupAnimationObserver() {
     const observer = new IntersectionObserver(
@@ -265,7 +275,7 @@ export class ModernUI {
                         ${
                           change
                             ? `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
-                            ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} ${change}
+                            ${this.getTrendArrow(trend)} ${change}
                         </p>`
                             : ''
                         }

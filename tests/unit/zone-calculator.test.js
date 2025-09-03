@@ -25,8 +25,29 @@ vi.mock('../../src/core/power-zones.js', () => ({
 
 import { ZoneCalculator } from '../../src/services/zone-calculator.js';
 
+// Test constants
+const TEST_CONSTANTS = {
+  FTP: 250,
+  ZONE_COUNT: 7,
+  DURATION_5_MIN: 300,
+  DURATION_10_MIN: 600,
+  DURATION_3_MIN: 180,
+  DURATION_15_MIN: 900,
+  DURATION_30_MIN: 1800,
+  DURATION_1_HOUR: 3600,
+  POWER_150: 150,
+  POWER_200: 200,
+  POWER_250: 250,
+  POWER_300: 300,
+  POWER_350: 350,
+  POWER_100: 100,
+  NEGATIVE_POWER: -50,
+  NEGATIVE_DURATION: -100,
+  TSS_100: 100
+};
+
 describe('ZoneCalculator', () => {
-  const testFTP = 250;
+  const testFTP = TEST_CONSTANTS.FTP;
 
   describe('Zone Calculations', () => {
     it('should calculate Coggan 7-zone model correctly', () => {
@@ -36,7 +57,7 @@ describe('ZoneCalculator', () => {
       expect(zones.ftp).toBe(testFTP);
       expect(zones.model).toBe('coggan');
       expect(zones.zones).toBeDefined();
-      expect(Object.keys(zones.zones)).toHaveLength(7);
+      expect(Object.keys(zones.zones)).toHaveLength(TEST_CONSTANTS.ZONE_COUNT);
       
       // Check specific zones
       expect(zones.zones.zone1.min).toBe(0);
@@ -69,7 +90,7 @@ describe('ZoneCalculator', () => {
     it('should calculate statistics correctly', () => {
       const zones = ZoneCalculator.calculateZones(testFTP, 'coggan');
       
-      expect(Object.keys(zones.zones)).toHaveLength(7);
+      expect(Object.keys(zones.zones)).toHaveLength(TEST_CONSTANTS.ZONE_COUNT);
       expect(zones.zones.zone1.minWatts).toBe(0);
       expect(zones.zones.zone7.maxWatts).toBe(Math.round(testFTP * 3.0));
     });
@@ -168,23 +189,23 @@ describe('ZoneCalculator', () => {
     const {zones} = ZoneCalculator.calculateZones(testFTP, 'coggan');
     
     const sampleSegments = [
-      { power: 150, duration: 300 }, // Zone 2, 5 minutes
-      { power: 250, duration: 600 }, // Zone 4, 10 minutes
-      { power: 350, duration: 180 }, // Zone 6, 3 minutes
-      { power: 100, duration: 900 }, // Zone 1, 15 minutes
+      { power: TEST_CONSTANTS.POWER_150, duration: TEST_CONSTANTS.DURATION_5_MIN }, // Zone 2, 5 minutes
+      { power: TEST_CONSTANTS.POWER_250, duration: TEST_CONSTANTS.DURATION_10_MIN }, // Zone 4, 10 minutes
+      { power: TEST_CONSTANTS.POWER_350, duration: TEST_CONSTANTS.DURATION_3_MIN }, // Zone 6, 3 minutes
+      { power: TEST_CONSTANTS.POWER_100, duration: TEST_CONSTANTS.DURATION_15_MIN }, // Zone 1, 15 minutes
     ];
 
     it('should calculate time in zones correctly', () => {
       const timeInZones = ZoneCalculator.calculateTimeInZones(sampleSegments, testFTP, zones);
       
       expect(timeInZones).toBeDefined();
-      expect(timeInZones.totalTime).toBe(1980); // 33 minutes total
+      expect(timeInZones.totalTime).toBe(TEST_CONSTANTS.DURATION_5_MIN + TEST_CONSTANTS.DURATION_10_MIN + TEST_CONSTANTS.DURATION_3_MIN + TEST_CONSTANTS.DURATION_15_MIN); // 33 minutes total
       
       // Check specific zone times
-      expect(timeInZones.zoneTime.zone1).toBe(900); // 15 minutes
-      expect(timeInZones.zoneTime.zone2).toBe(300); // 5 minutes
-      expect(timeInZones.zoneTime.zone4).toBe(600); // 10 minutes
-      expect(timeInZones.zoneTime.zone6).toBe(180); // 3 minutes
+      expect(timeInZones.zoneTime.zone1).toBe(TEST_CONSTANTS.DURATION_15_MIN); // 15 minutes
+      expect(timeInZones.zoneTime.zone2).toBe(TEST_CONSTANTS.DURATION_5_MIN); // 5 minutes
+      expect(timeInZones.zoneTime.zone4).toBe(TEST_CONSTANTS.DURATION_10_MIN); // 10 minutes
+      expect(timeInZones.zoneTime.zone6).toBe(TEST_CONSTANTS.DURATION_3_MIN); // 3 minutes
     });
 
     it('should calculate time percentages correctly', () => {
@@ -214,10 +235,10 @@ describe('ZoneCalculator', () => {
 
     it('should handle invalid segments', () => {
       const invalidSegments = [
-        { power: -50, duration: 300 }, // Invalid power
-        { power: 250, duration: -100 }, // Invalid duration
-        { duration: 300 }, // Missing power
-        { power: 250 }, // Missing duration
+        { power: TEST_CONSTANTS.NEGATIVE_POWER, duration: TEST_CONSTANTS.DURATION_5_MIN }, // Invalid power
+        { power: TEST_CONSTANTS.POWER_250, duration: TEST_CONSTANTS.NEGATIVE_DURATION }, // Invalid duration
+        { duration: TEST_CONSTANTS.DURATION_5_MIN }, // Missing power
+        { power: TEST_CONSTANTS.POWER_250 }, // Missing duration
       ];
       
       const timeInZones = ZoneCalculator.calculateTimeInZones(invalidSegments, testFTP, zones);
@@ -272,7 +293,7 @@ describe('ZoneCalculator', () => {
       const zones = ZoneCalculator.calculateZones(testFTP, 'invalid-model');
       
       expect(zones.model).toBe('coggan');
-      expect(Object.keys(zones.zones)).toHaveLength(7);
+      expect(Object.keys(zones.zones)).toHaveLength(TEST_CONSTANTS.ZONE_COUNT);
     });
 
     it('should provide model information', () => {
@@ -302,12 +323,12 @@ describe('ZoneCalculator', () => {
     });
 
     it('should validate FTP values', () => {
-      expect(ZoneCalculator.isValidFTP(250)).toBe(true);
-      expect(ZoneCalculator.isValidFTP(100)).toBe(true);
+      expect(ZoneCalculator.isValidFTP(TEST_CONSTANTS.FTP)).toBe(true);
+      expect(ZoneCalculator.isValidFTP(TEST_CONSTANTS.POWER_100)).toBe(true);
       expect(ZoneCalculator.isValidFTP(500)).toBe(true);
       
       expect(ZoneCalculator.isValidFTP(0)).toBe(false);
-      expect(ZoneCalculator.isValidFTP(-50)).toBe(false);
+      expect(ZoneCalculator.isValidFTP(TEST_CONSTANTS.NEGATIVE_POWER)).toBe(false);
       expect(ZoneCalculator.isValidFTP(1000)).toBe(false);
       expect(ZoneCalculator.isValidFTP(null)).toBe(false);
       expect(ZoneCalculator.isValidFTP(undefined)).toBe(false);
@@ -316,8 +337,8 @@ describe('ZoneCalculator', () => {
 
     it('should calculate TSS correctly', () => {
       const segments = [
-        { power: 250, duration: 3600 }, // 1 hour at FTP = 100 TSS
-        { power: 200, duration: 1800 }, // 30 minutes at 80% FTP
+        { power: TEST_CONSTANTS.POWER_250, duration: TEST_CONSTANTS.DURATION_1_HOUR }, // 1 hour at FTP = 100 TSS
+        { power: TEST_CONSTANTS.POWER_200, duration: TEST_CONSTANTS.DURATION_30_MIN }, // 30 minutes at 80% FTP
       ];
       
       const tss = ZoneCalculator.calculateTSS(segments, testFTP);
@@ -330,8 +351,8 @@ describe('ZoneCalculator', () => {
 
     it('should calculate normalized power correctly', () => {
       const segments = [
-        { power: 200, duration: 1800 },
-        { power: 300, duration: 1800 },
+        { power: TEST_CONSTANTS.POWER_200, duration: TEST_CONSTANTS.DURATION_30_MIN },
+        { power: TEST_CONSTANTS.POWER_300, duration: TEST_CONSTANTS.DURATION_30_MIN },
       ];
       
       const np = ZoneCalculator.calculateNormalizedPower(segments);
@@ -343,7 +364,7 @@ describe('ZoneCalculator', () => {
     });
 
     it('should calculate intensity factor correctly', () => {
-      const segments = [{ power: 250, duration: 3600 }];
+      const segments = [{ power: TEST_CONSTANTS.POWER_250, duration: TEST_CONSTANTS.DURATION_1_HOUR }];
       
       const ifactor = ZoneCalculator.calculateIntensityFactor(segments, testFTP);
       

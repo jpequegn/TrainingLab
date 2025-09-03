@@ -256,7 +256,7 @@ class ZwiftWorkoutVisualizer {
 
       await this.parseAndVisualize(text, file.name);
     } catch (error) {
-      console.error('Error reading file:', error);
+      logger.error('Error reading file:', error);
       stateManager.dispatch('SET_LOADING', { isLoading: false });
       stateManager.dispatch('ADD_ERROR', {
         type: 'FILE_PROCESSING_ERROR',
@@ -270,7 +270,7 @@ class ZwiftWorkoutVisualizer {
 
   async loadSampleWorkout() {
     try {
-      console.log('Starting sample workout load...');
+      logger.info('Starting sample workout load...');
 
       // Show loading state
       loadingManager.showLoading('Loading sample workout...');
@@ -285,12 +285,12 @@ class ZwiftWorkoutVisualizer {
       loadingManager.updateProgress(1, 'Processing sample workout...');
 
       const text = await response.text();
-      console.log('Sample workout file loaded, text length:', text.length);
+      logger.info('Sample workout file loaded', { textLength: text.length });
 
       await this.parseAndVisualize(text, 'sample_workout.zwo');
-      console.log('Sample workout visualization completed');
+      logger.info('Sample workout visualization completed');
     } catch (error) {
-      console.error('Error loading sample workout:', error);
+      logger.error('Error loading sample workout:', error);
       loadingManager.hideLoading();
 
       // Show detailed error message
@@ -307,7 +307,7 @@ class ZwiftWorkoutVisualizer {
       this.ui.showToast(errorMessage, 'error');
 
       // Also show in console for debugging
-      console.error('Sample workout load failed with:', {
+      logger.error('Sample workout load failed with:', {
         error: error.message,
         stack: error.stack,
         currentURL: window.location.href,
@@ -354,7 +354,7 @@ class ZwiftWorkoutVisualizer {
       loadingManager.hideLoading();
       this.ui.showToast(`Successfully loaded: ${filename}`, 'success');
     } catch (error) {
-      console.error('Error parsing workout:', error);
+      logger.error('Error parsing workout:', error);
       loadingManager.hideLoading();
 
       let errorMessage = 'Error parsing the workout file. ';
@@ -482,7 +482,7 @@ class ZwiftWorkoutVisualizer {
       const deployedPath = await deployWorkout(workoutName, zwoContent);
       this.ui.showToast(`Workout successfully deployed to: ${deployedPath}`);
     } catch (error) {
-      console.error('Error deploying workout:', error);
+      logger.error('Error deploying workout:', error);
       this.ui.showToast('Failed to deploy workout. Please try again.');
     }
   }
@@ -555,7 +555,7 @@ class ZwiftWorkoutVisualizer {
       this.ui.updateUndoButton(this.workout.undoStack.length);
       this.displayWorkout();
     } catch (error) {
-      console.error('Error creating workout from data:', error);
+      logger.error('Error creating workout from data:', error);
       this.ui.showToast('Error creating workout from generated data');
     }
   }
@@ -591,11 +591,11 @@ class ZwiftWorkoutVisualizer {
     });
 
     document.addEventListener('chart:initialized', () => {
-      console.log('Chart component initialized');
+      logger.info('Chart component initialized');
     });
 
     document.addEventListener('component:destroy', event => {
-      console.log('Component destroyed:', event.detail.component);
+      logger.info('Component destroyed', { component: event.detail.component });
     });
   }
 
@@ -613,9 +613,9 @@ class ZwiftWorkoutVisualizer {
       // Setup profile navigation
       this.setupProfileNavigation();
 
-      console.log('Profile system initialized');
+      logger.info('Profile system initialized');
     } catch (error) {
-      console.error('Failed to initialize profile system:', error);
+      logger.error('Failed to initialize profile system:', error);
       this.ui.showToast('Failed to initialize profile system', 'error');
     }
   }
@@ -720,15 +720,15 @@ class ZwiftWorkoutVisualizer {
 
   initializePerformanceMonitoring() {
     // Performance monitoring is automatically initialized by the performance optimizer
-    console.log('Performance monitoring initialized');
+    logger.info('Performance monitoring initialized');
 
     // Setup performance reporting
     setInterval(() => {
       const summary = performanceOptimizer.getSummary();
       if (summary.score < 70) {
-        console.warn('Performance score is low:', summary.score);
-        console.warn('Issues:', summary.issues);
-        console.warn('Recommendations:', summary.recommendations);
+        logger.warn('Performance score is low', { score: summary.score });
+        logger.warn('Performance issues detected', { issues: summary.issues });
+        logger.warn('Performance recommendations', { recommendations: summary.recommendations });
       }
     }, 60000); // Check every minute
   }
