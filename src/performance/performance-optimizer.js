@@ -479,8 +479,7 @@ export class PerformanceOptimizer {
         const trend = this.calculateTrend(values);
 
         trends[metric] = {
-          direction:
-            trend > 0.1 ? 'worsening' : trend < -0.1 ? 'improving' : 'stable',
+          direction: this.getTrendDirection(trend),
           change: trend,
           current: values[values.length - 1],
         };
@@ -512,6 +511,23 @@ export class PerformanceOptimizer {
     const last = values[values.length - 1];
 
     return (last - first) / first;
+  }
+
+  /**
+   * Get trend direction based on numeric trend value
+   * @param {number} trend - Numeric trend value
+   * @returns {string} Direction: 'improving', 'worsening', or 'stable'
+   */
+  getTrendDirection(trend) {
+    const TREND_THRESHOLD = 0.1;
+    
+    if (trend > TREND_THRESHOLD) {
+      return 'worsening';
+    } else if (trend < -TREND_THRESHOLD) {
+      return 'improving';
+    } else {
+      return 'stable';
+    }
   }
 
   /**

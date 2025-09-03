@@ -353,6 +353,35 @@ export class ModernUIUpgrade {
   }
 
   // Method to create modern metric cards
+  /**
+   * Generate trend indicator HTML
+   * @param {string} change - Change value text
+   * @param {string} trend - Trend direction (up, down, neutral)
+   * @param {Object} trendColors - CSS classes for trend colors
+   * @returns {string} HTML string for trend indicator
+   */
+  generateTrendHTML(change, trend, trendColors) {
+    if (!change) return '';
+
+    const trendIcon = this.getTrendIcon(trend);
+    return `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
+      ${trendIcon} ${change}
+    </p>`;
+  }
+
+  /**
+   * Get trend indicator icon
+   * @param {string} trend - Trend direction
+   * @returns {string} Unicode arrow symbol
+   */
+  getTrendIcon(trend) {
+    switch (trend) {
+      case 'up': return '↗';
+      case 'down': return '↘';
+      default: return '→';
+    }
+  }
+
   createMetricCard(title, value, change, icon, trend = 'neutral') {
     const trendColors = {
       up: 'text-green-600 dark:text-green-400',
@@ -368,13 +397,7 @@ export class ModernUIUpgrade {
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-muted-foreground">${title}</p>
                     <p class="text-2xl font-bold tracking-tight">${value}</p>
-                    ${
-                      change
-                        ? `<p class="text-xs ${trendColors[trend]} flex items-center gap-1">
-                        ${trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} ${change}
-                    </p>`
-                        : ''
-                    }
+                    ${this.generateTrendHTML(change, trend, trendColors)}
                 </div>
                 <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary text-lg">
                     ${icon}

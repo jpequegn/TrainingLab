@@ -3,8 +3,10 @@
  * Manages TrainingPeaks account connection, sync settings, and workout/activity management
  */
 
-import { trainingPeaksAuth } from '../services/trainingpeaks-auth.js';
-import { trainingPeaksAPI } from '../services/trainingpeaks-api.js';
+// TODO: Implement TrainingPeaks authentication service
+// import { trainingPeaksAuth } from '../services/trainingpeaks-auth.js';
+// TODO: Implement TrainingPeaks API service
+// import { trainingPeaksAPI } from '../services/trainingpeaks-api.js';
 import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('TrainingPeaksIntegration');
@@ -13,13 +15,14 @@ const logger = createLogger('TrainingPeaksIntegration');
 const NOTIFICATION_TIMEOUT_MS = 5000;
 const POPUP_CHECK_INTERVAL_MS = 1000;
 const POST_CONNECTION_DELAY_MS = 1000;
-const SYNC_PROGRESS_UPDATE_INTERVAL_MS = 1000;
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_HOUR = 60;
-const SECONDS_PER_MINUTE = 60;
-const DAYS_PER_WEEK = 7;
-const HTTP_STATUS_OK = 200;
-const HTTP_STATUS_UNAUTHORIZED = 401;
+// TODO: Add these constants when implementing sync functionality
+// const SYNC_PROGRESS_UPDATE_INTERVAL_MS = 1000;
+// const HOURS_PER_DAY = 24;
+// const MINUTES_PER_HOUR = 60;
+// const SECONDS_PER_MINUTE = 60;
+// const DAYS_PER_WEEK = 7;
+// const HTTP_STATUS_OK = 200;
+// const HTTP_STATUS_UNAUTHORIZED = 401;
 
 export class TrainingPeaksIntegration {
   constructor(container, userId) {

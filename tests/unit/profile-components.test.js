@@ -230,7 +230,9 @@ describe('Profile Components', () => {
       nameInput.dispatchEvent(new Event('input'));
 
       // Wait for auto-save timeout
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => {
+        setTimeout(resolve, 600);
+      });
 
       // Should have called save function
       expect(personalInfoForm.hasUnsavedChanges).toBe(false);
@@ -503,7 +505,9 @@ describe('Profile Components', () => {
       darkModeToggle.dispatchEvent(new Event('change'));
 
       // Wait for auto-save
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => {
+        setTimeout(resolve, 600);
+      });
 
       expect(userPreferences.hasUnsavedChanges).toBe(false);
     });

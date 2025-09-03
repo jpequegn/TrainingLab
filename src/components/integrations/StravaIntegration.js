@@ -102,112 +102,170 @@ export class StravaIntegration {
    * @returns {string} HTML string
    */
   generateConnectedHTML() {
+    return `
+      <div class="strava-integration connected">
+        ${this.generateStravaHeaderHTML(true)}
+        ${this.generateProfileSectionHTML()}
+        ${this.generateSyncStatusHTML()}
+        ${this.generateSyncControlsHTML()}
+        ${this.generateSyncSettingsHTML()}
+        ${this.generateDisconnectSectionHTML()}
+      </div>
+    `;
+  }
+
+  /**
+   * Generate Strava header HTML
+   * @param {boolean} isConnected - Connection status
+   * @returns {string} HTML string
+   */
+  generateStravaHeaderHTML(isConnected) {
+    const statusClass = isConnected ? 'connected' : 'disconnected';
+    const statusText = isConnected ? 'Connected' : 'Not Connected';
+    
+    return `
+      <div class="strava-header">
+        <div class="strava-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#FC4C02">
+            <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.064L15.387 17.944z"/>
+            <path d="M8.613 6.056L13.499 16.94h2.089L10.538 0H8.448L3.613 11.056h3.064L8.613 6.056z"/>
+          </svg>
+          <span>Strava</span>
+        </div>
+        <div class="connection-status ${statusClass}">
+          <span class="status-indicator"></span>
+          ${statusText}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate profile section HTML
+   * @returns {string} HTML string
+   */
+  generateProfileSectionHTML() {
     const profile = this.connectionStatus?.profile || {};
     const stats = this.connectionStatus?.stats || {};
+
+    const avatarHTML = profile.profile_medium
+      ? `<img src="${profile.profile_medium}" alt="${profile.firstname} ${profile.lastname}" />`
+      : '<div class="avatar-placeholder"></div>';
+
+    const locationHTML = `${profile.city || ''}${profile.city && profile.state ? ', ' : ''}${profile.state || ''}`;
+
+    const statsHTML = stats.recent_ride_totals
+      ? `<div class="profile-stats">
+          <span>${Math.round((stats.recent_ride_totals.distance || 0) / 1000)}km recent</span>
+          <span>${stats.all_ride_totals ? Math.round(stats.all_ride_totals.count || 0) : 0} total rides</span>
+        </div>`
+      : '';
+
+    return `
+      <div class="strava-profile">
+        <div class="profile-info">
+          <div class="profile-avatar">${avatarHTML}</div>
+          <div class="profile-details">
+            <h3>${profile.firstname || ''} ${profile.lastname || ''}</h3>
+            <p class="profile-location">${locationHTML}</p>
+            ${statsHTML}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate sync status HTML
+   * @returns {string} HTML string
+   */
+  generateSyncStatusHTML() {
     const lastSync = this.connectionStatus?.lastSync;
     const totalActivities = this.connectionStatus?.totalActivities || 0;
 
     return `
-      <div class="strava-integration connected">
-        <div class="strava-header">
-          <div class="strava-logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FC4C02">
-              <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.064L15.387 17.944z"/>
-              <path d="M8.613 6.056L13.499 16.94h2.089L10.538 0H8.448L3.613 11.056h3.064L8.613 6.056z"/>
-            </svg>
-            <span>Strava</span>
+      <div class="sync-status">
+        <div class="sync-info">
+          <div class="sync-stat">
+            <span class="stat-value">${totalActivities}</span>
+            <span class="stat-label">Activities Synced</span>
           </div>
-          <div class="connection-status connected">
-            <span class="status-indicator"></span>
-            Connected
+          <div class="sync-stat">
+            <span class="stat-value">${lastSync ? this.formatLastSync(lastSync) : 'Never'}</span>
+            <span class="stat-label">Last Sync</span>
           </div>
         </div>
+        ${this.syncInProgress ? this.generateSyncProgressHTML() : ''}
+        ${this.importProgress ? this.generateImportProgressHTML() : ''}
+      </div>
+    `;
+  }
 
-        <div class="strava-profile">
-          <div class="profile-info">
-            <div class="profile-avatar">
-              ${
-                profile.profile_medium
-                  ? `<img src="${profile.profile_medium}" alt="${profile.firstname} ${profile.lastname}" />`
-                  : '<div class="avatar-placeholder"></div>'
-              }
-            </div>
-            <div class="profile-details">
-              <h3>${profile.firstname || ''} ${profile.lastname || ''}</h3>
-              <p class="profile-location">${profile.city || ''}${profile.city && profile.state ? ', ' : ''}${profile.state || ''}</p>
-              ${
-                stats.recent_ride_totals
-                  ? `<div class="profile-stats">
-                  <span>${Math.round((stats.recent_ride_totals.distance || 0) / 1000)}km recent</span>
-                  <span>${stats.all_ride_totals ? Math.round(stats.all_ride_totals.count || 0) : 0} total rides</span>
-                </div>`
-                  : ''
-              }
-            </div>
-          </div>
-        </div>
+  /**
+   * Generate sync controls HTML
+   * @returns {string} HTML string
+   */
+  generateSyncControlsHTML() {
+    return `
+      <div class="sync-controls">
+        <button type="button" class="btn btn-primary sync-now" ${this.syncInProgress ? 'disabled' : ''}>
+          ${this.syncInProgress ? 'Syncing...' : 'Sync Now'}
+        </button>
+        <button type="button" class="btn btn-secondary import-historical" ${this.syncInProgress || this.importProgress ? 'disabled' : ''}>
+          Import Historical Activities
+        </button>
+      </div>
+    `;
+  }
 
-        <div class="sync-status">
-          <div class="sync-info">
-            <div class="sync-stat">
-              <span class="stat-value">${totalActivities}</span>
-              <span class="stat-label">Activities Synced</span>
-            </div>
-            <div class="sync-stat">
-              <span class="stat-value">${lastSync ? this.formatLastSync(lastSync) : 'Never'}</span>
-              <span class="stat-label">Last Sync</span>
-            </div>
-          </div>
-          
-          ${this.syncInProgress ? this.generateSyncProgressHTML() : ''}
-          ${this.importProgress ? this.generateImportProgressHTML() : ''}
-        </div>
+  /**
+   * Generate sync settings HTML
+   * @returns {string} HTML string
+   */
+  generateSyncSettingsHTML() {
+    const settings = this.connectionStatus?.settings || {};
 
-        <div class="sync-controls">
-          <button type="button" class="btn btn-primary sync-now" ${this.syncInProgress ? 'disabled' : ''}>
-            ${this.syncInProgress ? 'Syncing...' : 'Sync Now'}
-          </button>
-          
-          <button type="button" class="btn btn-secondary import-historical" ${this.syncInProgress || this.importProgress ? 'disabled' : ''}>
-            Import Historical Activities
-          </button>
+    return `
+      <div class="sync-settings">
+        <h4>Sync Settings</h4>
+        <div class="setting-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="autoSync" ${settings.autoSync ? 'checked' : ''}>
+            <span class="checkmark"></span>
+            Automatically sync new activities
+          </label>
         </div>
+        <div class="setting-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="excludePrivate" ${settings.excludePrivate ? 'checked' : ''}>
+            <span class="checkmark"></span>
+            Exclude private activities
+          </label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="excludeCommute" ${settings.excludeCommute ? 'checked' : ''}>
+            <span class="checkmark"></span>
+            Exclude commute activities
+          </label>
+        </div>
+      </div>
+    `;
+  }
 
-        <div class="sync-settings">
-          <h4>Sync Settings</h4>
-          <div class="setting-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="autoSync" ${this.connectionStatus?.settings?.autoSync ? 'checked' : ''}>
-              <span class="checkmark"></span>
-              Automatically sync new activities
-            </label>
-          </div>
-          
-          <div class="setting-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="excludePrivate" ${this.connectionStatus?.settings?.excludePrivate ? 'checked' : ''}>
-              <span class="checkmark"></span>
-              Exclude private activities
-            </label>
-          </div>
-          
-          <div class="setting-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="excludeCommute" ${this.connectionStatus?.settings?.excludeCommute ? 'checked' : ''}>
-              <span class="checkmark"></span>
-              Exclude commute activities
-            </label>
-          </div>
-        </div>
-
-        <div class="disconnect-section">
-          <button type="button" class="btn btn-danger btn-small disconnect">
-            Disconnect Strava Account
-          </button>
-          <p class="disconnect-note">
-            Disconnecting will stop syncing new activities but won't delete already imported data.
-          </p>
-        </div>
+  /**
+   * Generate disconnect section HTML
+   * @returns {string} HTML string
+   */
+  generateDisconnectSectionHTML() {
+    return `
+      <div class="disconnect-section">
+        <button type="button" class="btn btn-danger btn-small disconnect">
+          Disconnect Strava Account
+        </button>
+        <p class="disconnect-note">
+          Disconnecting will stop syncing new activities but won't delete already imported data.
+        </p>
       </div>
     `;
   }
@@ -219,19 +277,7 @@ export class StravaIntegration {
   generateDisconnectedHTML() {
     return `
       <div class="strava-integration disconnected">
-        <div class="strava-header">
-          <div class="strava-logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FC4C02">
-              <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.064L15.387 17.944z"/>
-              <path d="M8.613 6.056L13.499 16.94h2.089L10.538 0H8.448L3.613 11.056h3.064L8.613 6.056z"/>
-            </svg>
-            <span>Strava</span>
-          </div>
-          <div class="connection-status disconnected">
-            <span class="status-indicator"></span>
-            Not Connected
-          </div>
-        </div>
+        ${this.generateStravaHeaderHTML(false)}
 
         <div class="connection-benefits">
           <h3>Connect your Strava account to:</h3>

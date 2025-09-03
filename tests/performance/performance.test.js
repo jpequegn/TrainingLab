@@ -2,6 +2,26 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { sampleWorkouts } from '../fixtures/sample-workouts.js';
 import { createMockWorkout } from '../utils/test-helpers.js';
 
+// Performance test constants
+const PERFORMANCE_THRESHOLDS = {
+  SMALL_PARSE_TIME: 50,     // ms
+  LARGE_PARSE_TIME: 500,    // ms
+  CHART_RENDER_TIME: 100,   // ms
+  DATA_REDUCTION_TIME: 50,  // ms
+  TSS_CALC_TIME: 10,        // ms
+  POWER_GEN_TIME: 50,       // ms
+  SEARCH_TIME: 100,         // ms
+  FILTER_TIME: 50,          // ms
+  FILE_PROCESS_TIME: 1000,  // ms
+  CONCURRENT_UPLOAD_TIME: 2000, // ms
+  MAX_MEMORY_INCREASE: 10 * 1024 * 1024, // 10MB
+  MAX_LARGE_DATASET_MEMORY: 100 * 1024 * 1024, // 100MB
+  RANDOM_DELAY_MAX: 100,    // ms
+  TWO_HOURS_SECONDS: 7200,  // 2 hours in seconds
+  ONE_HOUR_SECONDS: 3600,   // 1 hour in seconds
+  MB_SIZE: 1024 * 1024      // 1MB in bytes
+};
+
 describe('Performance Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -21,13 +41,13 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const parseTime = endTime - startTime;
 
-      expect(parseTime).toBeLessThan(50); // Should parse in under 50ms
+      expect(parseTime).toBeLessThan(PERFORMANCE_THRESHOLDS.SMALL_PARSE_TIME); // Should parse in under 50ms
       expect(parseWorkoutXML).toHaveBeenCalled();
     });
 
     it('should handle large workouts efficiently', async () => {
       // Create a large workout (simulating 2 hour workout with 1-second intervals)
-      const largeWorkout = createLargeWorkoutXML(7200); // 2 hours = 7200 seconds
+      const largeWorkout = createLargeWorkoutXML(PERFORMANCE_THRESHOLDS.TWO_HOURS_SECONDS); // 2 hours = 7200 seconds
 
       const startTime = performance.now();
 
@@ -37,7 +57,7 @@ describe('Performance Tests', () => {
       // Mock parsing a large workout
       const parseWorkoutXML = vi.fn().mockReturnValue(
         createMockWorkout({
-          totalDuration: 7200,
+          totalDuration: PERFORMANCE_THRESHOLDS.TWO_HOURS_SECONDS,
           segments: new Array(720).fill({
             type: 'SteadyState',
             duration: 10,
@@ -50,7 +70,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const parseTime = endTime - startTime;
 
-      expect(parseTime).toBeLessThan(500); // Should parse large workout in under 500ms
+      expect(parseTime).toBeLessThan(PERFORMANCE_THRESHOLDS.LARGE_PARSE_TIME); // Should parse large workout in under 500ms
     });
 
     it('should have linear parsing complexity', () => {
@@ -103,7 +123,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const renderTime = endTime - startTime;
 
-      expect(renderTime).toBeLessThan(100); // Should render in under 100ms
+      expect(renderTime).toBeLessThan(PERFORMANCE_THRESHOLDS.CHART_RENDER_TIME); // Should render in under 100ms
       expect(mockChart.update).toHaveBeenCalled();
     });
 
@@ -129,7 +149,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const reductionTime = endTime - startTime;
 
-      expect(reductionTime).toBeLessThan(50);
+      expect(reductionTime).toBeLessThan(PERFORMANCE_THRESHOLDS.DATA_REDUCTION_TIME);
       expect(reducedData.length).toBeLessThanOrEqual(1000);
       expect(reducedData.length).toBeGreaterThan(0);
     });
@@ -170,7 +190,7 @@ describe('Performance Tests', () => {
       const memoryIncrease = finalMemory - initialMemory;
 
       // Memory increase should be minimal (less than 10MB)
-      expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
+      expect(memoryIncrease).toBeLessThan(PERFORMANCE_THRESHOLDS.MAX_MEMORY_INCREASE);
     });
 
     it('should efficiently handle large datasets', () => {
@@ -191,13 +211,13 @@ describe('Performance Tests', () => {
       const memoryUsed = endMemory - startMemory;
 
       expect(result).toBeDefined();
-      expect(memoryUsed).toBeLessThan(100 * 1024 * 1024); // Less than 100MB
+      expect(memoryUsed).toBeLessThan(PERFORMANCE_THRESHOLDS.MAX_LARGE_DATASET_MEMORY); // Less than 100MB
     });
   });
 
   describe('File Processing Performance', () => {
     it('should upload files efficiently', async () => {
-      const fileSize = 1024 * 1024; // 1MB
+      const fileSize = PERFORMANCE_THRESHOLDS.MB_SIZE; // 1MB
       const mockFile = new Blob(['x'.repeat(fileSize)], { type: 'text/xml' });
 
       const startTime = performance.now();
@@ -209,7 +229,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const processTime = endTime - startTime;
 
-      expect(processTime).toBeLessThan(1000); // Should process 1MB in under 1 second
+      expect(processTime).toBeLessThan(PERFORMANCE_THRESHOLDS.FILE_PROCESS_TIME); // Should process 1MB in under 1 second
       expect(processFile).toHaveBeenCalledWith(mockFile);
     });
 
@@ -231,7 +251,7 @@ describe('Performance Tests', () => {
 
       expect(results).toHaveLength(uploadCount);
       expect(results.every(r => r.success)).toBe(true);
-      expect(totalTime).toBeLessThan(2000); // All uploads in under 2 seconds
+      expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.CONCURRENT_UPLOAD_TIME); // All uploads in under 2 seconds
     });
   });
 
@@ -254,14 +274,14 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const calcTime = endTime - startTime;
 
-      expect(calcTime).toBeLessThan(10); // Should calculate in under 10ms
+      expect(calcTime).toBeLessThan(PERFORMANCE_THRESHOLDS.TSS_CALC_TIME); // Should calculate in under 10ms
       expect(tss).toBe(85);
     });
 
     it('should generate power data efficiently', () => {
       const segment = {
         startTime: 0,
-        duration: 3600, // 1 hour
+        duration: PERFORMANCE_THRESHOLDS.ONE_HOUR_SECONDS, // 1 hour
         power: 0.8,
       };
 
@@ -278,7 +298,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const genTime = endTime - startTime;
 
-      expect(genTime).toBeLessThan(50); // Should generate in under 50ms
+      expect(genTime).toBeLessThan(PERFORMANCE_THRESHOLDS.POWER_GEN_TIME); // Should generate in under 50ms
       expect(powerData).toHaveLength(360);
     });
   });
@@ -305,7 +325,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const searchTime = endTime - startTime;
 
-      expect(searchTime).toBeLessThan(100); // Should search in under 100ms
+      expect(searchTime).toBeLessThan(PERFORMANCE_THRESHOLDS.SEARCH_TIME); // Should search in under 100ms
       expect(results.length).toBeGreaterThan(0);
     });
 
@@ -326,7 +346,7 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const filterTime = endTime - startTime;
 
-      expect(filterTime).toBeLessThan(50);
+      expect(filterTime).toBeLessThan(PERFORMANCE_THRESHOLDS.FILTER_TIME);
       expect(filtered.length).toBeGreaterThan(0);
     });
   });
@@ -402,6 +422,6 @@ async function processFileAsync(file) {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve({ success: true, size: file.size });
-    }, Math.random() * 100); // Random delay up to 100ms
+    }, Math.random() * PERFORMANCE_THRESHOLDS.RANDOM_DELAY_MAX); // Random delay up to 100ms
   });
 }
