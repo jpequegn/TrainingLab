@@ -150,17 +150,42 @@ export class Router {
    * Initialize route component
    */
   async initializeRouteComponent(route) {
+    console.log('Router: Initializing route component', route);
+
     if (route.component) {
       if (typeof route.component === 'function') {
+        console.log(
+          'Router: Instantiating component class with container:',
+          route.container
+        );
+
+        // Resolve container selector to DOM element
+        const containerElement = document.querySelector(route.container);
+        if (!containerElement) {
+          throw new Error(`Container element not found: ${route.container}`);
+        }
+        console.log('Router: Container element found:', containerElement);
+
         // Component is a class, instantiate it
-        const componentInstance = new route.component(route.container);
+        const componentInstance = new route.component(containerElement);
+        console.log('Router: Component instantiated:', componentInstance);
+
         route.component = componentInstance;
+
+        // Initialize the component
+        if (route.component.init) {
+          console.log('Router: Calling component.init()');
+          await route.component.init();
+        }
       }
 
       // Render the component
       if (route.component.render) {
+        console.log('Router: Calling component.render()');
         await route.component.render();
       }
+    } else {
+      console.log('Router: No component found for route');
     }
   }
 

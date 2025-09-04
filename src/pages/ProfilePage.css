@@ -1,0 +1,523 @@
+/**
+ * ProfilePage Styles
+ * Styles for the user profile, preferences, and training settings page
+ */
+
+/* Profile Content Layout */
+.profile-page {
+  min-height: 100vh;
+}
+
+.profile-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--gray-200);
+  background: white;
+  border-radius: 8px 8px 0 0;
+  padding: 1rem;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--gray-600);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.tab-button:hover {
+  background: var(--gray-50);
+  color: var(--primary-blue);
+}
+
+.tab-button.active {
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+  background: var(--gray-50);
+}
+
+.tab-button i {
+  font-size: 1.125rem;
+}
+
+/* Tab Content */
+.tab-content {
+  background: white;
+  border-radius: 0 0 8px 8px;
+  padding: 2rem;
+  min-height: 500px;
+}
+
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Sections */
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 1.5rem;
+}
+
+/* Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+}
+
+.form-input {
+  padding: 0.625rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-input:disabled {
+  background: var(--gray-100);
+  cursor: not-allowed;
+}
+
+/* Input with Unit */
+.input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-unit {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+/* Form Help Text */
+.form-help {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-top: 0.25rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary-blue);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: inherit;
+}
+
+.btn-link:hover {
+  color: var(--secondary-blue);
+}
+
+/* Metric Display */
+.metric-display {
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+}
+
+.metric-unit {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+/* Training Zones */
+.zones-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.zone-item {
+  display: grid;
+  grid-template-columns: 120px 1fr 100px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: 6px;
+  border-left: 4px solid;
+}
+
+.zone-item.zone-1 {
+  border-left-color: var(--zone1);
+}
+.zone-item.zone-2 {
+  border-left-color: var(--zone2);
+}
+.zone-item.zone-3 {
+  border-left-color: var(--zone3);
+}
+.zone-item.zone-4 {
+  border-left-color: var(--zone4);
+}
+.zone-item.zone-5 {
+  border-left-color: var(--zone5);
+}
+.zone-item.zone-6 {
+  border-left-color: var(--zone6);
+}
+.zone-item.zone-7 {
+  border-left-color: var(--zone7);
+}
+
+.zone-name {
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.zone-range {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.zone-power {
+  text-align: right;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* Preferences Grid */
+.preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.preference-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preference-label {
+  font-weight: 500;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+}
+
+.preference-description {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-top: 0.25rem;
+}
+
+/* Radio Group */
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  border-color: var(--primary-blue);
+  background: var(--gray-50);
+}
+
+.radio-option input[type='radio'] {
+  margin: 0;
+}
+
+.radio-option.selected {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+}
+
+/* Performance Metrics */
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.performance-card {
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.performance-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.performance-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  line-height: 1;
+}
+
+.performance-unit {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-left: 0.25rem;
+}
+
+.performance-trend {
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.performance-trend.positive {
+  color: var(--success-green);
+}
+
+.performance-trend.negative {
+  color: var(--danger-red);
+}
+
+/* FTP Test Section */
+.ftp-test-section {
+  background: var(--gray-50);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.ftp-test-section p {
+  color: var(--gray-700);
+  margin-bottom: 1.5rem;
+}
+
+.ftp-history {
+  margin-bottom: 2rem;
+}
+
+.ftp-history h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 1rem;
+}
+
+.ftp-timeline {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+}
+
+.ftp-entry {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  min-width: 120px;
+  text-align: center;
+}
+
+.ftp-date {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-bottom: 0.5rem;
+}
+
+.ftp-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin-bottom: 0.25rem;
+}
+
+.ftp-change {
+  font-size: 0.75rem;
+  color: var(--success-green);
+}
+
+.ftp-change.negative {
+  color: var(--danger-red);
+}
+
+.ftp-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tab-navigation {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+
+  .tab-button {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .tab-button span {
+    display: none;
+  }
+
+  .tab-content {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preferences-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .zone-item {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .zone-power {
+    display: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .profile-page {
+    background: var(--gray-900);
+  }
+
+  .tab-navigation {
+    background: var(--gray-800);
+    border-bottom-color: var(--gray-700);
+  }
+
+  .tab-button {
+    color: var(--gray-400);
+  }
+
+  .tab-button.active {
+    color: var(--primary-blue);
+    background: var(--gray-900);
+  }
+
+  .tab-content {
+    background: var(--gray-800);
+  }
+
+  .form-input {
+    background: var(--gray-900);
+    border-color: var(--gray-700);
+    color: white;
+  }
+
+  .metric-display {
+    background: var(--gray-900);
+  }
+
+  .zone-item {
+    background: var(--gray-900);
+  }
+
+  .performance-card {
+    background: var(--gray-900);
+    border-color: var(--gray-700);
+  }
+
+  .ftp-test-section {
+    background: var(--gray-900);
+  }
+
+  .ftp-entry {
+    background: var(--gray-800);
+    border-color: var(--gray-700);
+  }
+}
