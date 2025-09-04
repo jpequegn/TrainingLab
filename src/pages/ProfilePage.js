@@ -82,18 +82,43 @@ export class ProfilePage extends BasePage {
   }
 
   async render() {
+    console.log('ProfilePage: Starting render()');
+    console.log('ProfilePage: Active tab is:', this.activeTab);
+
+    const header = this.createProfileHeader();
+    const navigation = this.createTabNavigation();
+    const tabContent = this.createTabContent();
+
+    console.log('ProfilePage: Header generated, length:', header.length);
+    console.log(
+      'ProfilePage: Navigation generated, length:',
+      navigation.length
+    );
+    console.log(
+      'ProfilePage: Tab content generated, length:',
+      tabContent.length
+    );
+
     const content = `
       <div class="profile-content">
-        ${this.createProfileHeader()}
-        ${this.createTabNavigation()}
-        ${this.createTabContent()}
+        ${header}
+        ${navigation}
+        ${tabContent}
       </div>
     `;
+
+    console.log('ProfilePage: Full content generated, length:', content.length);
 
     this.container.innerHTML = this.generatePageHTML(content, {
       pageClass: 'profile-page',
       pageId: 'profile',
     });
+
+    console.log('ProfilePage: HTML set to container');
+    console.log(
+      'ProfilePage: Container innerHTML length:',
+      this.container.innerHTML.length
+    );
   }
 
   createProfileHeader() {
@@ -137,10 +162,21 @@ export class ProfilePage extends BasePage {
   }
 
   createTabContent() {
-    return `
+    console.log(
+      'ProfilePage: Creating tab content for active tab:',
+      this.activeTab
+    );
+
+    const generalContent = this.createGeneralTab();
+    console.log(
+      'ProfilePage: General tab content length:',
+      generalContent.length
+    );
+
+    const result = `
       <div class="tab-content">
         <div class="tab-panel ${this.activeTab === 'general' ? 'active' : ''}" id="general-panel">
-          ${this.createGeneralTab()}
+          ${generalContent}
         </div>
         <div class="tab-panel ${this.activeTab === 'training' ? 'active' : ''}" id="training-panel">
           ${this.createTrainingTab()}
@@ -153,10 +189,20 @@ export class ProfilePage extends BasePage {
         </div>
       </div>
     `;
+
+    console.log(
+      'ProfilePage: Tab content created, total length:',
+      result.length
+    );
+    return result;
   }
 
   createGeneralTab() {
-    return `
+    console.log('ProfilePage: Creating general tab content');
+    console.log('ProfilePage: Profile data:', this.profile);
+    console.log('ProfilePage: Preferences data:', this.preferences);
+
+    const result = `
       <div class="form-section">
         <h3 class="section-title">Personal Information</h3>
         
@@ -206,6 +252,12 @@ export class ProfilePage extends BasePage {
         </div>
       </div>
     `;
+
+    console.log(
+      'ProfilePage: General tab content created, length:',
+      result.length
+    );
+    return result;
   }
 
   createTrainingTab() {
@@ -423,19 +475,33 @@ export class ProfilePage extends BasePage {
   }
 
   async onInit() {
+    console.log('ProfilePage: Starting onInit()');
+
     this.setupTabs();
+    console.log('ProfilePage: Tabs setup completed');
+
     this.setupFormHandlers();
+    console.log('ProfilePage: Form handlers setup completed');
+
     this.setupSaveButton();
+    console.log('ProfilePage: Save button setup completed');
 
     logger.info('Profile page initialized successfully');
+    console.log('ProfilePage: onInit() completed successfully');
   }
 
   setupTabs() {
     const tabButtons = this.container.querySelectorAll('.tab-button');
+    console.log('ProfilePage: Found', tabButtons.length, 'tab buttons');
 
     tabButtons.forEach(button => {
+      console.log(
+        'ProfilePage: Setting up tab button for:',
+        button.dataset.tab
+      );
       this.addEventListener(button, 'click', () => {
         const tabId = button.dataset.tab;
+        console.log('ProfilePage: Tab clicked:', tabId);
         this.switchTab(tabId);
       });
     });
