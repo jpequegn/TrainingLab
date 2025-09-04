@@ -6,6 +6,9 @@
 import { BasePage } from './BasePage.js';
 import { createLogger } from '../utils/logger.js';
 import { profileService } from '../services/profile-service.js';
+import { FTPTestCalculator } from '../components/profile/FTPTestCalculator.js';
+import { TrainingZones } from '../components/profile/TrainingZones.js';
+import { FTPHistory } from '../components/profile/FTPHistory.js';
 
 const logger = createLogger('ProfilePage');
 
@@ -32,6 +35,11 @@ export class ProfilePage extends BasePage {
 
     this.preferences = {};
     this.activeTab = 'general';
+
+    // Advanced FTP and zone management components
+    this.ftpTestCalculator = null;
+    this.trainingZones = null;
+    this.ftpHistory = null;
   }
 
   async loadData() {
@@ -262,70 +270,29 @@ export class ProfilePage extends BasePage {
 
   createTrainingTab() {
     return `
-      <div class="form-section">
-        <h3 class="section-title">Power & Performance</h3>
-        
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="profileFTP">Functional Threshold Power (FTP)</label>
-            <div class="input-with-unit">
-              <input type="number" id="profileFTP" class="form-input" 
-                     value="${this.profile.ftp}" min="50" max="600">
-              <span class="input-unit">watts</span>
-            </div>
-            <div class="form-help">
-              Your FTP is used for workout intensity calculations. 
-              <button type="button" class="btn-link" id="ftpTestBtn">Take FTP Test</button>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label>Power-to-Weight Ratio</label>
-            <div class="metric-display">
-              <span class="metric-value">${(this.profile.ftp / this.profile.weight).toFixed(2)}</span>
-              <span class="metric-unit">W/kg</span>
-            </div>
+      <div class="training-tab-container">
+        <!-- FTP Test Calculator Section -->
+        <div class="ftp-calculator-section">
+          <div id="ftpTestCalculatorContainer" class="component-container">
+            <!-- FTPTestCalculator component will be rendered here -->
           </div>
         </div>
-      </div>
-
-      <div class="form-section">
-        <h3 class="section-title">Training Zones</h3>
         
-        <div class="zones-container">
-          ${this.createTrainingZones()}
+        <!-- Training Zones Section -->
+        <div class="training-zones-section">
+          <div id="trainingZonesContainer" class="component-container">
+            <!-- TrainingZones component will be rendered here -->
+          </div>
+        </div>
+        
+        <!-- FTP History Section -->
+        <div class="ftp-history-section">
+          <div id="ftpHistoryContainer" class="component-container">
+            <!-- FTPHistory component will be rendered here -->
+          </div>
         </div>
       </div>
     `;
-  }
-
-  createTrainingZones() {
-    const zones = [
-      { name: 'Active Recovery', range: [0, 55], color: '#9ca3af' },
-      { name: 'Endurance', range: [56, 75], color: '#3b82f6' },
-      { name: 'Tempo', range: [76, 90], color: '#10b981' },
-      { name: 'Lactate Threshold', range: [91, 105], color: '#f59e0b' },
-      { name: 'VO2 Max', range: [106, 120], color: '#ef4444' },
-      { name: 'Anaerobic Capacity', range: [121, 150], color: '#8b5cf6' },
-    ];
-
-    return zones
-      .map((zone, index) => {
-        const minPower = Math.round((this.profile.ftp * zone.range[0]) / 100);
-        const maxPower = Math.round((this.profile.ftp * zone.range[1]) / 100);
-
-        return `
-        <div class="zone-item">
-          <div class="zone-color" style="background-color: ${zone.color}"></div>
-          <div class="zone-info">
-            <div class="zone-name">Zone ${index + 1}: ${zone.name}</div>
-            <div class="zone-range">${zone.range[0]}% - ${zone.range[1]}% FTP</div>
-            <div class="zone-power">${minPower} - ${maxPower} watts</div>
-          </div>
-        </div>
-      `;
-      })
-      .join('');
   }
 
   createPreferencesTab() {
@@ -486,8 +453,45 @@ export class ProfilePage extends BasePage {
     this.setupSaveButton();
     console.log('ProfilePage: Save button setup completed');
 
+    // Initialize advanced components after base setup
+    this.initializeAdvancedComponents();
+
     logger.info('Profile page initialized successfully');
     console.log('ProfilePage: onInit() completed successfully');
+  }
+
+  /**
+   * Initialize advanced FTP and zone management components
+   */
+  initializeAdvancedComponents() {
+    console.log('ProfilePage: Initializing advanced components');
+
+    // Only initialize when training tab containers exist
+    const ftpCalculatorContainer = document.getElementById(
+      'ftpTestCalculatorContainer'
+    );
+    const trainingZonesContainer = document.getElementById(
+      'trainingZonesContainer'
+    );
+    const ftpHistoryContainer = document.getElementById('ftpHistoryContainer');
+
+    if (ftpCalculatorContainer && !this.ftpTestCalculator) {
+      console.log('ProfilePage: Initializing FTPTestCalculator');
+      this.ftpTestCalculator = new FTPTestCalculator(ftpCalculatorContainer);
+      this.ftpTestCalculator.render();
+    }
+
+    if (trainingZonesContainer && !this.trainingZones) {
+      console.log('ProfilePage: Initializing TrainingZones');
+      this.trainingZones = new TrainingZones(trainingZonesContainer);
+      this.trainingZones.render();
+    }
+
+    if (ftpHistoryContainer && !this.ftpHistory) {
+      console.log('ProfilePage: Initializing FTPHistory');
+      this.ftpHistory = new FTPHistory(ftpHistoryContainer);
+      this.ftpHistory.render();
+    }
   }
 
   setupTabs() {
@@ -521,6 +525,14 @@ export class ProfilePage extends BasePage {
     tabPanels.forEach(panel => {
       panel.classList.toggle('active', panel.id === `${tabId}-panel`);
     });
+
+    // Initialize advanced components when training tab is selected
+    if (tabId === 'training') {
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => {
+        this.initializeAdvancedComponents();
+      }, 100);
+    }
   }
 
   setupFormHandlers() {
@@ -696,6 +708,33 @@ export class ProfilePage extends BasePage {
   showError(message) {
     const error = new Error(message);
     this.handleError(error, message);
+  }
+
+  /**
+   * Clean up advanced components when page is destroyed
+   */
+  destroy() {
+    console.log('ProfilePage: Cleaning up advanced components');
+
+    if (this.ftpTestCalculator) {
+      this.ftpTestCalculator.destroy();
+      this.ftpTestCalculator = null;
+    }
+
+    if (this.trainingZones) {
+      this.trainingZones.destroy();
+      this.trainingZones = null;
+    }
+
+    if (this.ftpHistory) {
+      this.ftpHistory.destroy();
+      this.ftpHistory = null;
+    }
+
+    // Call parent cleanup if it exists
+    if (super.destroy) {
+      super.destroy();
+    }
   }
 }
 

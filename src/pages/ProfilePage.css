@@ -521,3 +521,70 @@
     border-color: var(--gray-700);
   }
 }
+
+/* Advanced FTP and Zone Management Components */
+.training-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.component-container {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ftp-calculator-section,
+.training-zones-section,
+.ftp-history-section {
+  margin-bottom: 1.5rem;
+}
+
+.ftp-calculator-section {
+  order: 1;
+}
+
+.training-zones-section {
+  order: 2;
+}
+
+.ftp-history-section {
+  order: 3;
+}
+
+/* Responsive layout for larger screens */
+@media (min-width: 1200px) {
+  .training-tab-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 2rem;
+    grid-template-areas:
+      'calculator zones'
+      'history history';
+  }
+
+  .ftp-calculator-section {
+    grid-area: calculator;
+  }
+
+  .training-zones-section {
+    grid-area: zones;
+  }
+
+  .ftp-history-section {
+    grid-area: history;
+  }
+}
+
+/* Ensure components have proper spacing and styling */
+.component-container > * {
+  margin: 0;
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .training-tab-container {
+  color: var(--foreground);
+}
