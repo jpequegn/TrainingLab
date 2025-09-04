@@ -1,18 +1,61 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+# Pre-commit hook for comprehensive quality gates
 
-echo "🔍 Running pre-commit quality gates..."
+echo "🔍 Running comprehensive pre-commit quality gates..."
+
+# Check if we have staged files
+staged_files=$(git diff --cached --name-only)
+if [ -z "$staged_files" ]; then
+    echo "⚠️  No staged files found. Skipping pre-commit hooks."
+    exit 0
+fi
+
+echo "📁 Staged files:"
+echo "$staged_files" | sed 's/^/  - /'
 
 # Run lint-staged for code formatting and linting
 echo "📝 Formatting and linting staged files..."
-npx lint-staged
+npx lint-staged || {
+    echo "❌ Linting failed. Please fix the issues and try again."
+    exit 1
+}
 
 # Run TypeScript type checking
 echo "🔍 Type checking TypeScript files..."
-npm run type-check
+npm run type-check || {
+    echo "❌ Type checking failed. Please fix type errors and try again."
+    exit 1
+}
 
-# Run basic tests (quick unit tests)
+# Run security audit (quick check)
+echo "🛡️  Running security audit..."
+npm audit --audit-level=high --production || {
+    echo "⚠️  Security vulnerabilities found. Consider running 'npm audit fix'"
+    # Don't exit on audit failures for pre-commit, just warn
+}
+
+# Run Python linting if Python files are staged
+python_files=$(echo "$staged_files" | grep -E '\.py$' || true)
+if [ -n "$python_files" ]; then
+    echo "🐍 Running Python linting..."
+    npm run lint:py || {
+        echo "❌ Python linting failed. Please fix the issues and try again."
+        exit 1
+    }
+fi
+
+# Run unit tests
 echo "🧪 Running unit tests..."
-npm run test:run
+npm run test:run || {
+    echo "❌ Unit tests failed. Please fix the failing tests and try again."
+    exit 1
+}
 
-echo "✅ Pre-commit hooks completed successfully!"
+# Build validation (ensure code compiles)
+echo "🏗️  Validating build..."
+npm run build || {
+    echo "❌ Build failed. Please fix build errors and try again."
+    exit 1
+}
+
+echo "✅ All pre-commit quality gates passed successfully!"
+echo "💡 Changes are ready for commit."
