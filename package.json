@@ -76,6 +76,7 @@
     "@types/chart.js": "^2.9.41",
     "@types/node": "^24.2.1",
     "@vitest/coverage-v8": "^3.2.4",
+    "autoprefixer": "^10.4.21",
     "browser-sync": "^3.0.4",
     "complexity-report": "^2.0.0-alpha",
     "concurrently": "^9.2.0",
@@ -91,14 +92,21 @@
     "madge": "^8.0.0",
     "nodemon": "^3.1.10",
     "npm-check-updates": "^18.0.2",
+    "postcss": "^8.5.6",
     "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.13",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "typhonjs-escomplex": "^0.1.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
     "chartjs-plugin-annotation": "^3.1.0",
-    "playwright": "^1.54.1"
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.542.0",
+    "playwright": "^1.54.1",
+    "tailwind-merge": "^3.3.1"
   }
 }

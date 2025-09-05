@@ -1,0 +1,177 @@
+/* Tailwind CSS utilities are loaded via CDN */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+
+    /* TrainingLab specific colors */
+    --training-primary: 214 100% 50%;
+    --training-secondary: 45 100% 50%;
+    --training-success: 142 76% 36%;
+    --training-warning: 38 92% 50%;
+    --training-danger: 0 84% 60%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Integration with existing TrainingLab styles */
+.btn {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2;
+}
+
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2;
+}
+
+.form-input {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.section-title {
+  @apply text-2xl font-semibold leading-none tracking-tight mb-4;
+}
+
+.form-section {
+  @apply rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-6;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.form-group {
+  @apply space-y-2;
+}
+
+.profile-photo-section {
+  @apply flex flex-col items-center space-y-4;
+}
+
+.profile-photo-preview {
+  @apply relative h-32 w-32 overflow-hidden rounded-full border-2 border-border;
+}
+
+.profile-photo-img {
+  @apply h-full w-full object-cover;
+}
+
+.profile-photo-placeholder {
+  @apply flex h-full w-full items-center justify-center bg-muted text-muted-foreground flex-col space-y-1;
+}
+
+.photo-upload-controls {
+  @apply flex space-x-2;
+}
+
+.tab-navigation {
+  @apply inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-6;
+}
+
+.tab-button {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm;
+}
+
+.tab-button.active {
+  @apply bg-background text-foreground shadow-sm;
+}
+
+.tab-content {
+  @apply mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+.tab-panel {
+  @apply hidden;
+}
+
+.tab-panel.active {
+  @apply block;
+}
+
+.metric-card {
+  @apply rounded-lg border bg-card text-card-foreground shadow-sm p-6;
+}
+
+.performance-metrics {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.success-toast {
+  @apply fixed top-4 right-4 z-50 rounded-lg border bg-card text-card-foreground shadow-lg p-4 flex items-center space-x-2;
+}
+
+.validation-feedback {
+  @apply rounded-lg border p-4 mb-4;
+}
+
+.error-feedback {
+  @apply border-destructive bg-destructive/10 text-destructive;
+}
+
+.warning-feedback {
+  @apply border-yellow-500 bg-yellow-50 text-yellow-800;
+}
+
+.feedback-header {
+  @apply flex items-center space-x-2 font-semibold;
+}
+
+.feedback-list {
+  @apply mt-2 space-y-1 text-sm list-disc list-inside;
+}
