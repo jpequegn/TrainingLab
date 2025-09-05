@@ -154,6 +154,38 @@ export class ProfilePageShadcn extends BasePage {
     console.log('ProfilePageShadcn: Starting render()');
     console.log('ProfilePageShadcn: Active tab is:', this.activeTab);
 
+    // Add CSS for tab functionality if not already added
+    if (!document.querySelector('#profile-tabs-css')) {
+      const style = document.createElement('style');
+      style.id = 'profile-tabs-css';
+      style.textContent = `
+        /* Tab container visibility - ensure wrapper is always visible */
+        .tab-content {
+          display: block !important;
+          width: 100%;
+          min-height: 200px;
+        }
+        
+        /* Tab panel visibility */
+        [data-tab-content] {
+          display: none;
+        }
+        
+        [data-tab-content].active {
+          display: block;
+        }
+        
+        /* Tab button active state */
+        [data-tab].active {
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+      `;
+      document.head.appendChild(style);
+      console.log('ProfilePageShadcn: Added tab CSS');
+    }
+
     const header = this.createProfileHeader();
     const navigation = this.createTabNavigation();
     const tabContent = this.createTabContent();
@@ -727,17 +759,64 @@ export class ProfilePageShadcn extends BasePage {
     const tabButtons = this.container.querySelectorAll('[data-tab]');
     console.log('ProfilePageShadcn: Found', tabButtons.length, 'tab buttons');
 
-    tabButtons.forEach(button => {
-      console.log(
-        'ProfilePageShadcn: Setting up tab button for:',
-        button.dataset.tab
-      );
-      this.addEventListener(button, 'click', () => {
-        const tabId = button.dataset.tab;
-        console.log('ProfilePageShadcn: Tab clicked:', tabId);
-        this.switchTab(tabId);
+    // Set up global event delegation if not already done
+    if (!window.profileTabHandlerSetup) {
+      console.log('ProfilePageShadcn: Setting up global tab event delegation');
+      document.addEventListener('click', event => {
+        // Check if clicked element is a profile tab button
+        if (
+          event.target.matches('[data-tab]') ||
+          event.target.closest('[data-tab]')
+        ) {
+          const button = event.target.matches('[data-tab]')
+            ? event.target
+            : event.target.closest('[data-tab]');
+          const tabId = button.dataset.tab;
+
+          console.log('ProfilePageShadcn: Global tab click detected:', tabId);
+
+          // Find the current ProfilePageShadcn instance and call switchTab
+          const profileContainer = button.closest('#profile, .profile-page');
+          if (profileContainer) {
+            // Call switchTab directly on the global functions
+            window.profileSwitchTab(tabId);
+          }
+        }
       });
-    });
+      window.profileTabHandlerSetup = true;
+    }
+
+    // Create global switchTab function
+    window.profileSwitchTab = tabId => {
+      console.log('ProfilePageShadcn: Global switchTab called for:', tabId);
+
+      const profileContainer = document.querySelector(
+        '#profile, .profile-page'
+      );
+      if (!profileContainer) return;
+
+      // Update button states
+      const tabButtons = profileContainer.querySelectorAll('[data-tab]');
+      tabButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.tab === tabId);
+      });
+
+      // Update panel visibility
+      const tabPanels = profileContainer.querySelectorAll('[data-tab-content]');
+      tabPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.tabContent === tabId);
+      });
+
+      // Store active tab
+      window.profileActiveTab = tabId;
+      console.log('ProfilePageShadcn: Tab switched to:', tabId);
+    };
+
+    // Initialize first tab as active if none is active
+    const activeTab = document.querySelector('[data-tab-content].active');
+    if (!activeTab) {
+      window.profileSwitchTab('general');
+    }
   }
 
   switchTab(tabId) {

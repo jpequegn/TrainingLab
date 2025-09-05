@@ -1,7 +1,7 @@
 import { cn } from '../../lib/utils.js';
 
 export function Tabs({ className = '', children, ...props }) {
-  const classes = cn('', className);
+  const classes = cn('w-full', className);
   return `<div class="${classes}" ${Object.entries(props)
     .map(([key, value]) => `${key}="${value}"`)
     .join(' ')}>${children}</div>`;
@@ -29,7 +29,7 @@ export function TabsTrigger({ className = '', children, value, ...props }) {
 
 export function TabsContent({ className = '', children, value, ...props }) {
   const classes = cn(
-    'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+    'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-full min-h-0',
     className
   );
   return `<div class="${classes}" data-tab-content="${value}" ${Object.entries(

@@ -16,7 +16,7 @@ export class FTPTestCalculator {
     // Bind methods
     this.render = this.render.bind(this);
     this.handleProtocolSelect = this.handleProtocolSelect.bind(this);
-    this.calculateFTP = this.calculateFTP.bind(this);
+    // Note: Specific calculation methods are bound when needed
 
     // Subscribe to profile changes
     this.unsubscribeProfile = stateManager.subscribe(
