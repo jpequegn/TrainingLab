@@ -61,16 +61,55 @@ export class ProfilePage extends BasePage {
   }
 
   async loadProfile() {
-    // TODO: Load from actual profile service
-    // For now, return default values
-    return {
-      name: 'TrainingLab User',
-      email: 'user@example.com',
-      ftp: 250,
-      weight: 70,
-      height: 175,
-      birthYear: 1990,
-    };
+    try {
+      // Initialize profile service if not already initialized
+      if (!profileService.initialized) {
+        await profileService.initialize();
+      }
+
+      // Get current profile from service
+      const currentProfile = profileService.getCurrentProfile();
+
+      if (currentProfile) {
+        logger.info('Profile loaded from service:', currentProfile.name);
+        return {
+          name: currentProfile.name || 'TrainingLab User',
+          email: currentProfile.email || '',
+          ftp: currentProfile.ftp || 250,
+          weight: currentProfile.weight || 70,
+          height: currentProfile.height || 175,
+          birthYear: currentProfile.birthYear || new Date().getFullYear() - 30,
+          gender: currentProfile.gender || 'other',
+          profilePhoto: currentProfile.profilePhoto || null,
+        };
+      } else {
+        // No profile exists, return defaults for new profile creation
+        logger.info('No existing profile found, using defaults');
+        return {
+          name: '',
+          email: '',
+          ftp: 250,
+          weight: 70,
+          height: 175,
+          birthYear: new Date().getFullYear() - 30,
+          gender: 'other',
+          profilePhoto: null,
+        };
+      }
+    } catch (error) {
+      logger.error('Failed to load profile from service:', error);
+      // Return defaults if loading fails
+      return {
+        name: '',
+        email: '',
+        ftp: 250,
+        weight: 70,
+        height: 175,
+        birthYear: new Date().getFullYear() - 30,
+        gender: 'other',
+        profilePhoto: null,
+      };
+    }
   }
 
   async loadPreferences() {
@@ -211,6 +250,40 @@ export class ProfilePage extends BasePage {
     console.log('ProfilePage: Preferences data:', this.preferences);
 
     const result = `
+      <div class="form-section">
+        <h3 class="section-title">Profile Photo</h3>
+        
+        <div class="profile-photo-section">
+          <div class="photo-upload-container">
+            <div class="profile-photo-preview">
+              ${
+                this.profile.profilePhoto
+                  ? `<img src="${this.profile.profilePhoto}" alt="Profile Photo" class="profile-photo-img">`
+                  : `<div class="profile-photo-placeholder">
+                     <i class="fas fa-user-circle"></i>
+                     <span>No photo</span>
+                   </div>`
+              }
+            </div>
+            <div class="photo-upload-controls">
+              <input type="file" id="profilePhotoInput" accept="image/*" class="file-input" style="display: none;">
+              <button type="button" class="btn btn-outline" id="uploadPhotoBtn">
+                <i class="fas fa-camera"></i>
+                Choose Photo
+              </button>
+              ${
+                this.profile.profilePhoto
+                  ? `<button type="button" class="btn btn-outline" id="removePhotoBtn">
+                     <i class="fas fa-trash"></i>
+                     Remove Photo
+                   </button>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="form-section">
         <h3 class="section-title">Personal Information</h3>
         
@@ -536,6 +609,33 @@ export class ProfilePage extends BasePage {
   }
 
   setupFormHandlers() {
+    // Profile photo upload handlers
+    const uploadPhotoBtn = this.container.querySelector('#uploadPhotoBtn');
+    const profilePhotoInput =
+      this.container.querySelector('#profilePhotoInput');
+    const removePhotoBtn = this.container.querySelector('#removePhotoBtn');
+
+    if (uploadPhotoBtn) {
+      this.addEventListener(uploadPhotoBtn, 'click', () => {
+        profilePhotoInput?.click();
+      });
+    }
+
+    if (profilePhotoInput) {
+      this.addEventListener(profilePhotoInput, 'change', async event => {
+        const file = event.target.files[0];
+        if (file) {
+          await this.handlePhotoUpload(file);
+        }
+      });
+    }
+
+    if (removePhotoBtn) {
+      this.addEventListener(removePhotoBtn, 'click', () => {
+        this.handlePhotoRemove();
+      });
+    }
+
     // FTP input handler
     const ftpInput = this.container.querySelector('#profileFTP');
     if (ftpInput) {
@@ -608,6 +708,80 @@ export class ProfilePage extends BasePage {
     }
   }
 
+  async handlePhotoUpload(file) {
+    try {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.showError('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.showError('Image file too large (maximum 5MB)');
+        return;
+      }
+
+      this.setLoadingState(true, 'Uploading photo...');
+
+      // Initialize profile service if needed
+      if (!profileService.initialized) {
+        await profileService.initialize();
+      }
+
+      // Upload photo using profile service
+      await profileService.updateProfilePhoto(file);
+
+      // Update local profile state
+      const reader = new FileReader();
+      reader.onload = e => {
+        this.profile.profilePhoto = e.target.result;
+        this.refreshGeneralTab();
+      };
+      reader.readAsDataURL(file);
+
+      this.setLoadingState(false);
+      this.showSuccess('Profile photo updated successfully!');
+
+      logger.info('Profile photo uploaded successfully');
+    } catch (error) {
+      logger.error('Failed to upload profile photo:', error);
+      this.setLoadingState(false);
+      this.showError(`Failed to upload photo: ${error.message}`);
+    }
+  }
+
+  handlePhotoRemove() {
+    try {
+      // Update local state
+      this.profile.profilePhoto = null;
+
+      // Refresh the UI to hide the photo and remove button
+      this.refreshGeneralTab();
+
+      // Note: Photo will be removed from service when profile is saved
+      this.showSuccess(
+        "Profile photo removed. Don't forget to save your changes."
+      );
+
+      logger.info('Profile photo removed from local state');
+    } catch (error) {
+      logger.error('Failed to remove profile photo:', error);
+      this.showError('Failed to remove photo');
+    }
+  }
+
+  refreshGeneralTab() {
+    // Refresh only the General tab content
+    const generalPanel = this.container.querySelector('#general-panel');
+    if (generalPanel && this.activeTab === 'general') {
+      generalPanel.innerHTML = this.createGeneralTab();
+      // Re-setup form handlers for the refreshed content
+      this.setupFormHandlers();
+    }
+  }
+
   startFTPTest() {
     // TODO: Implement FTP test functionality
     this.showSuccess('FTP Test functionality coming soon!');
@@ -615,38 +789,95 @@ export class ProfilePage extends BasePage {
 
   async saveProfile() {
     try {
-      this.setLoadingState(true, 'Saving profile...');
-
       // Collect form data
       const formData = this.collectFormData();
+
+      // Validate profile data
+      const validation = this.validateProfileData(formData.profile);
+
+      if (!validation.isValid) {
+        this.showValidationFeedback(validation.errors, validation.warnings);
+        return;
+      }
+
+      // Show warnings but allow save to continue
+      if (validation.warnings.length > 0) {
+        this.showValidationFeedback([], validation.warnings);
+      }
+
+      this.setLoadingState(true, 'Saving profile...');
 
       // Update local state
       this.profile = { ...this.profile, ...formData.profile };
       this.preferences = { ...this.preferences, ...formData.preferences };
 
-      // Save to profile service
-      if (profileService && profileService.updatePreferences) {
-        await profileService.updatePreferences(formData.preferences);
+      // Initialize profile service if needed
+      if (!profileService.initialized) {
+        await profileService.initialize();
       }
 
-      // TODO: Save profile data to service
+      // Check if this is a new profile or an update
+      const currentProfile = profileService.getCurrentProfile();
+
+      if (currentProfile) {
+        // Update existing profile
+        await profileService.updateProfile(formData.profile);
+        logger.info('Profile updated successfully');
+      } else {
+        // Create new profile
+        const profileId = await profileService.createProfile(formData.profile);
+        logger.info('New profile created with ID:', profileId);
+        this.showSuccess(
+          'Welcome! Your profile has been created successfully!'
+        );
+      }
+
+      // Update preferences if they exist
+      if (
+        formData.preferences &&
+        Object.keys(formData.preferences).length > 0
+      ) {
+        // Note: ProfileService may not have updatePreferences method, so we save as part of profile
+        const profileUpdate = {
+          ...formData.profile,
+          preferences: formData.preferences,
+        };
+
+        if (currentProfile) {
+          await profileService.updateProfile(profileUpdate);
+        }
+      }
 
       this.setLoadingState(false);
-      this.showSuccess('Profile saved successfully!');
+
+      // Clear validation feedback on successful save
+      const existingFeedback = this.container.querySelectorAll(
+        '.validation-feedback'
+      );
+      existingFeedback.forEach(el => el.remove());
+
+      this.showSuccess(
+        currentProfile
+          ? 'Profile updated successfully!'
+          : 'Profile created successfully!'
+      );
+
+      // Reload profile data to reflect any server-side changes
+      await this.loadData();
     } catch (error) {
       logger.error('Failed to save profile:', error);
       this.setLoadingState(false);
-      this.showError('Failed to save profile. Please try again.');
+      this.showError(`Failed to save profile: ${error.message}`);
     }
   }
 
   collectFormData() {
     const profile = {
       name:
-        this.container.querySelector('#profileName')?.value ||
+        this.container.querySelector('#profileName')?.value?.trim() ||
         this.profile.name,
       email:
-        this.container.querySelector('#profileEmail')?.value ||
+        this.container.querySelector('#profileEmail')?.value?.trim() ||
         this.profile.email,
       birthYear:
         parseInt(this.container.querySelector('#profileBirthYear')?.value) ||
@@ -663,6 +894,7 @@ export class ProfilePage extends BasePage {
       ftp:
         parseInt(this.container.querySelector('#profileFTP')?.value) ||
         this.profile.ftp,
+      profilePhoto: this.profile.profilePhoto || null,
     };
 
     const preferences = {
@@ -708,6 +940,127 @@ export class ProfilePage extends BasePage {
   showError(message) {
     const error = new Error(message);
     this.handleError(error, message);
+  }
+
+  /**
+   * Validate profile form data
+   * @param {Object} profileData - Profile data to validate
+   * @returns {Object} Validation result with isValid flag and errors array
+   */
+  validateProfileData(profileData) {
+    const errors = [];
+    const warnings = [];
+
+    // Name validation
+    if (!profileData.name || profileData.name.trim() === '') {
+      errors.push('Name is required');
+    } else if (profileData.name.length < 2) {
+      errors.push('Name must be at least 2 characters long');
+    } else if (profileData.name.length > 100) {
+      errors.push('Name must be less than 100 characters');
+    }
+
+    // Email validation
+    if (profileData.email && profileData.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(profileData.email)) {
+        errors.push('Please enter a valid email address');
+      }
+    }
+
+    // Birth year validation
+    const currentYear = new Date().getFullYear();
+    if (profileData.birthYear) {
+      if (profileData.birthYear < 1920 || profileData.birthYear > currentYear) {
+        errors.push(`Birth year must be between 1920 and ${currentYear}`);
+      }
+      const age = currentYear - profileData.birthYear;
+      if (age < 10 || age > 100) {
+        warnings.push('Age seems unusual, please verify');
+      }
+    }
+
+    // FTP validation
+    if (profileData.ftp) {
+      if (profileData.ftp < 50 || profileData.ftp > 600) {
+        errors.push('FTP must be between 50 and 600 watts');
+      }
+    } else {
+      warnings.push('FTP is recommended for accurate training zones');
+    }
+
+    // Weight validation
+    if (profileData.weight) {
+      if (profileData.weight < 30 || profileData.weight > 200) {
+        errors.push('Weight must be between 30 and 200 kg');
+      }
+    }
+
+    // Height validation
+    if (profileData.height) {
+      if (profileData.height < 100 || profileData.height > 250) {
+        errors.push('Height must be between 100 and 250 cm');
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  /**
+   * Show validation errors and warnings to the user
+   * @param {Array} errors - Array of error messages
+   * @param {Array} warnings - Array of warning messages
+   */
+  showValidationFeedback(errors = [], warnings = []) {
+    // Remove existing feedback
+    const existingFeedback = this.container.querySelectorAll(
+      '.validation-feedback'
+    );
+    existingFeedback.forEach(el => el.remove());
+
+    // Show errors
+    if (errors.length > 0) {
+      const errorContainer = document.createElement('div');
+      errorContainer.className = 'validation-feedback error-feedback';
+      errorContainer.innerHTML = `
+        <div class="feedback-header">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Please fix the following issues:</span>
+        </div>
+        <ul class="feedback-list">
+          ${errors.map(error => `<li>${error}</li>`).join('')}
+        </ul>
+      `;
+
+      const saveButton = this.container.querySelector('#saveProfileBtn');
+      if (saveButton) {
+        saveButton.parentNode.insertBefore(errorContainer, saveButton);
+      }
+    }
+
+    // Show warnings
+    if (warnings.length > 0) {
+      const warningContainer = document.createElement('div');
+      warningContainer.className = 'validation-feedback warning-feedback';
+      warningContainer.innerHTML = `
+        <div class="feedback-header">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>Please review:</span>
+        </div>
+        <ul class="feedback-list">
+          ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+        </ul>
+      `;
+
+      const saveButton = this.container.querySelector('#saveProfileBtn');
+      if (saveButton) {
+        saveButton.parentNode.insertBefore(warningContainer, saveButton);
+      }
+    }
   }
 
   /**
