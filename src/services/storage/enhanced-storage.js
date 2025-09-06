@@ -794,6 +794,88 @@ export class EnhancedStorageService {
   }
 
   /**
+   * Save performance metric data
+   * @param {Object} metric - Performance metric data
+   * @returns {Promise<void>}
+   */
+  async savePerformanceMetric(metric) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const record = {
+      ...metric,
+      id: metric.id || `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: metric.timestamp || new Date().toISOString()
+    };
+
+    await this.saveToStore('performanceMetrics', record);
+  }
+
+  /**
+   * Get performance metrics with optional filtering
+   * @param {Object} options - Query options
+   * @param {string} options.startDate - Start date filter (ISO string)
+   * @param {string} options.endDate - End date filter (ISO string)
+   * @param {string} options.type - Metric type filter
+   * @param {number} options.limit - Maximum results to return
+   * @returns {Promise<Array>} Performance metrics
+   */
+  async getPerformanceMetrics(options = {}) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const { startDate, endDate, type, limit = 1000 } = options;
+
+    try {
+      const transaction = this.db.transaction(['performanceMetrics'], 'readonly');
+      const store = transaction.objectStore('performanceMetrics');
+      const allMetrics = await new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+
+      let filteredMetrics = allMetrics;
+
+      // Apply filters
+      if (startDate) {
+        const startTime = new Date(startDate).getTime();
+        filteredMetrics = filteredMetrics.filter(metric => {
+          const metricTime = new Date(metric.timestamp).getTime();
+          return metricTime >= startTime;
+        });
+      }
+
+      if (endDate) {
+        const endTime = new Date(endDate).getTime();
+        filteredMetrics = filteredMetrics.filter(metric => {
+          const metricTime = new Date(metric.timestamp).getTime();
+          return metricTime <= endTime;
+        });
+      }
+
+      if (type) {
+        filteredMetrics = filteredMetrics.filter(metric => metric.type === type);
+      }
+
+      // Sort by timestamp (newest first) and apply limit
+      filteredMetrics.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      if (limit && filteredMetrics.length > limit) {
+        filteredMetrics = filteredMetrics.slice(0, limit);
+      }
+
+      return filteredMetrics;
+
+    } catch (error) {
+      console.error('Failed to get performance metrics:', error);
+      throw new Error(`Failed to retrieve performance metrics: ${error.message}`);
+    }
+  }
+
+  /**
    * Internal helper to get all records from a store
    * @private
    * @param {string} storeName - Store name
