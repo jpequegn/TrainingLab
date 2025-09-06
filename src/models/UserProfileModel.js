@@ -19,6 +19,8 @@ export class UserProfileModel {
     this.ftp = data.ftp || 250; // Functional Threshold Power in watts
     this.ftpHistory = data.ftpHistory || [];
     this.weight = data.weight || 70; // kg
+    this.height = data.height || null; // cm
+    this.birthYear = data.birthYear || null;
     this.powerZones = data.powerZones || this._calculatePowerZones(this.ftp);
     this.hrZones = data.hrZones || null;
     this.preferences = data.preferences || this._getDefaultPreferences();
@@ -356,6 +358,8 @@ export class UserProfileModel {
       ftp: this.ftp,
       ftpHistory: this.ftpHistory,
       weight: this.weight,
+      height: this.height,
+      birthYear: this.birthYear,
       powerZones: {
         ...this.powerZones,
         updated: this.powerZones.updated.toISOString(),

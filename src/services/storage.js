@@ -110,7 +110,9 @@ export class WorkoutStorage {
 
       profileStore.createIndex('email', 'email', { unique: true });
       profileStore.createIndex('dateCreated', 'dateCreated', { unique: false });
-      profileStore.createIndex('dateModified', 'dateModified', { unique: false });
+      profileStore.createIndex('dateModified', 'dateModified', {
+        unique: false,
+      });
     }
 
     // FTP history store for tracking FTP changes over time
@@ -861,50 +863,62 @@ export class WorkoutStorage {
 
     const now = new Date().toISOString();
     const isUpdate = !!profileData.id;
-    
+
     const profileRecord = {
       id: profileData.id || this.generateProfileId(),
-      
+
       // Personal information
       name: profileData.name || '',
       email: profileData.email || '',
       weight: profileData.weight || null, // in kg
+      height: profileData.height || null, // in cm
       age: profileData.age || null,
-      
+      birthYear: profileData.birthYear || null,
+
       // Training data
       ftp: profileData.ftp || 250,
       units: profileData.units || 'metric', // metric or imperial
-      
+
       // Profile photo
       profilePhoto: profileData.profilePhoto || null, // base64 string or blob URL
-      
+
       // Preferences
       preferences: {
         theme: profileData.preferences?.theme || 'light',
         notifications: profileData.preferences?.notifications !== false,
         dataPrivacy: profileData.preferences?.dataPrivacy || 'private',
         displayOptions: {
-          showPowerInWatts: profileData.preferences?.displayOptions?.showPowerInWatts !== false,
-          chartType: profileData.preferences?.displayOptions?.chartType || 'line',
-          zoneModel: profileData.preferences?.displayOptions?.zoneModel || 'coggan',
+          showPowerInWatts:
+            profileData.preferences?.displayOptions?.showPowerInWatts !== false,
+          chartType:
+            profileData.preferences?.displayOptions?.chartType || 'line',
+          zoneModel:
+            profileData.preferences?.displayOptions?.zoneModel || 'coggan',
         },
-        ...profileData.preferences
+        ...profileData.preferences,
       },
-      
+
       // System metadata
       dateCreated: profileData.dateCreated || now,
       dateModified: now,
     };
 
     return new Promise(async (resolve, reject) => {
-      const transaction = this.db.transaction([this.stores.userProfiles], 'readwrite');
+      const transaction = this.db.transaction(
+        [this.stores.userProfiles],
+        'readwrite'
+      );
       const store = transaction.objectStore(this.stores.userProfiles);
-      
-      const request = isUpdate ? store.put(profileRecord) : store.add(profileRecord);
-      
+
+      const request = isUpdate
+        ? store.put(profileRecord)
+        : store.add(profileRecord);
+
       request.onsuccess = async () => {
-        console.log(`User profile ${isUpdate ? 'updated' : 'created'}: ${profileRecord.name} (${profileRecord.id})`);
-        
+        console.log(
+          `User profile ${isUpdate ? 'updated' : 'created'}: ${profileRecord.name} (${profileRecord.id})`
+        );
+
         // If FTP changed, add to history
         if (isUpdate && profileData.ftp !== undefined) {
           try {
@@ -913,10 +927,10 @@ export class WorkoutStorage {
             console.warn('Failed to add FTP history entry:', error);
           }
         }
-        
+
         resolve(profileRecord.id);
       };
-      
+
       request.onerror = () => {
         reject(new Error(`Failed to save user profile: ${request.error}`));
       };
@@ -934,7 +948,10 @@ export class WorkoutStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([this.stores.userProfiles], 'readonly');
+      const transaction = this.db.transaction(
+        [this.stores.userProfiles],
+        'readonly'
+      );
       const store = transaction.objectStore(this.stores.userProfiles);
       const request = store.get(profileId);
 
@@ -958,12 +975,15 @@ export class WorkoutStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([this.stores.userProfiles], 'readonly');
+      const transaction = this.db.transaction(
+        [this.stores.userProfiles],
+        'readonly'
+      );
       const store = transaction.objectStore(this.stores.userProfiles);
       const index = store.index('dateCreated');
       const request = index.openCursor();
 
-      request.onsuccess = (event) => {
+      request.onsuccess = event => {
         const cursor = event.target.result;
         if (cursor) {
           resolve(cursor.value); // Return the first (oldest) profile
@@ -973,7 +993,9 @@ export class WorkoutStorage {
       };
 
       request.onerror = () => {
-        reject(new Error(`Failed to get primary user profile: ${request.error}`));
+        reject(
+          new Error(`Failed to get primary user profile: ${request.error}`)
+        );
       };
     });
   }
@@ -990,35 +1012,41 @@ export class WorkoutStorage {
 
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction(
-        [this.stores.userProfiles, this.stores.ftpHistory], 
+        [this.stores.userProfiles, this.stores.ftpHistory],
         'readwrite'
       );
-      
+
       const profileStore = transaction.objectStore(this.stores.userProfiles);
       const ftpHistoryStore = transaction.objectStore(this.stores.ftpHistory);
-      
+
       // Delete profile
       const deleteProfileRequest = profileStore.delete(profileId);
-      
+
       // Delete associated FTP history
       const ftpHistoryIndex = ftpHistoryStore.index('profileId');
-      const ftpHistoryCursor = ftpHistoryIndex.openCursor(IDBKeyRange.only(profileId));
-      
-      ftpHistoryCursor.onsuccess = (event) => {
+      const ftpHistoryCursor = ftpHistoryIndex.openCursor(
+        IDBKeyRange.only(profileId)
+      );
+
+      ftpHistoryCursor.onsuccess = event => {
         const cursor = event.target.result;
         if (cursor) {
           cursor.delete();
           cursor.continue();
         }
       };
-      
+
       deleteProfileRequest.onsuccess = () => {
         console.log(`User profile deleted: ${profileId}`);
         resolve();
       };
 
       deleteProfileRequest.onerror = () => {
-        reject(new Error(`Failed to delete user profile: ${deleteProfileRequest.error}`));
+        reject(
+          new Error(
+            `Failed to delete user profile: ${deleteProfileRequest.error}`
+          )
+        );
       };
     });
   }
@@ -1035,7 +1063,12 @@ export class WorkoutStorage {
    * @param {string} source - Source of FTP data (test, estimate, manual)
    * @returns {Promise<string>} FTP history entry ID
    */
-  async addFTPHistoryEntry(profileId, ftpValue, date = null, source = 'manual') {
+  async addFTPHistoryEntry(
+    profileId,
+    ftpValue,
+    date = null,
+    source = 'manual'
+  ) {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
@@ -1050,12 +1083,17 @@ export class WorkoutStorage {
     };
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([this.stores.ftpHistory], 'readwrite');
+      const transaction = this.db.transaction(
+        [this.stores.ftpHistory],
+        'readwrite'
+      );
       const store = transaction.objectStore(this.stores.ftpHistory);
       const request = store.add(ftpHistoryRecord);
 
       request.onsuccess = () => {
-        console.log(`FTP history entry added: ${ftpValue}W on ${ftpHistoryRecord.date}`);
+        console.log(
+          `FTP history entry added: ${ftpValue}W on ${ftpHistoryRecord.date}`
+        );
         resolve(ftpHistoryRecord.id);
       };
 
@@ -1077,20 +1115,23 @@ export class WorkoutStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([this.stores.ftpHistory], 'readonly');
+      const transaction = this.db.transaction(
+        [this.stores.ftpHistory],
+        'readonly'
+      );
       const store = transaction.objectStore(this.stores.ftpHistory);
       const index = store.index('profileId');
       const request = index.getAll(profileId);
 
       request.onsuccess = () => {
         let results = request.result;
-        
+
         // Sort by date descending and limit results
         results.sort((a, b) => new Date(b.date) - new Date(a.date));
         if (limit) {
           results = results.slice(0, limit);
         }
-        
+
         resolve(results);
       };
 
@@ -1108,7 +1149,7 @@ export class WorkoutStorage {
   async exportUserProfile(profileId) {
     const [profile, ftpHistory] = await Promise.all([
       this.getUserProfile(profileId),
-      this.getFTPHistory(profileId, null) // Get all history
+      this.getFTPHistory(profileId, null), // Get all history
     ]);
 
     if (!profile) {
@@ -1136,7 +1177,7 @@ export class WorkoutStorage {
     // Import the profile
     const newProfileId = await this.saveUserProfile({
       ...profileData.profile,
-      id: undefined // Generate new ID
+      id: undefined, // Generate new ID
     });
 
     // Import FTP history if available
@@ -1155,10 +1196,17 @@ export class WorkoutStorage {
       }
     }
 
-    console.log(`User profile imported with ${profileData.ftpHistory?.length || 0} FTP history entries`);
+    console.log(
+      `User profile imported with ${profileData.ftpHistory?.length || 0} FTP history entries`
+    );
     return newProfileId;
   }
 }
 
 // Create singleton instance
 export const workoutStorage = new WorkoutStorage();
+
+// Make globally accessible for debugging
+if (typeof window !== 'undefined') {
+  window.workoutStorage = workoutStorage;
+}
