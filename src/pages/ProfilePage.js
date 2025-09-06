@@ -50,10 +50,11 @@ export class ProfilePage extends BasePage {
 
   async loadData() {
     try {
-      // Load user profile and preferences
+      // Load user profile, preferences, and goals
       const [profileData, preferencesData] = await Promise.all([
         this.loadProfile(),
         this.loadPreferences(),
+        this.loadGoals(),
       ]);
 
       this.profile = { ...this.profile, ...profileData };
@@ -132,6 +133,33 @@ export class ProfilePage extends BasePage {
       theme: 'light',
       powerDisplay: 'ftp-percentage',
     };
+  }
+
+  async loadGoals() {
+    try {
+      logger.info('Loading training goals...');
+      
+      // Load goals from profile service
+      const goals = await profileService.getTrainingGoals();
+      
+      if (goals && goals.length > 0) {
+        // Convert stored goals back to TrainingGoal instances
+        this.goals = goals.map(goalData => {
+          const goal = new TrainingGoal(goalData);
+          this.setupGoalMilestoneCallbacks(goal);
+          return goal;
+        });
+        
+        logger.info(`Loaded ${this.goals.length} training goals`);
+      } else {
+        // No existing goals, load sample goals for demonstration
+        await this.loadSampleGoals();
+      }
+    } catch (error) {
+      logger.error('Failed to load goals:', error);
+      // Load sample goals as fallback
+      await this.loadSampleGoals();
+    }
   }
 
   async render() {
@@ -958,7 +986,7 @@ export class ProfilePage extends BasePage {
     }
   }
 
-  handleSaveGoal() {
+  async handleSaveGoal() {
     // Collect form data
     const type = this.container.querySelector('#goalType').value;
     const name = this.container.querySelector('#goalName').value.trim();
@@ -996,6 +1024,10 @@ export class ProfilePage extends BasePage {
           updatedGoal.targetValue = targetValue;
           updatedGoal.targetDate = new Date(targetDate);
           updatedGoal.updateProgress(currentValue);
+          
+          // Save updated goal to persistent storage
+          const goalData = updatedGoal.toJSON();
+          await profileService.updateTrainingGoal(this.editingGoal.id, goalData);
           
           this.showSuccess('Goal updated successfully!');
         }
@@ -1050,6 +1082,11 @@ export class ProfilePage extends BasePage {
             });
         }
 
+        // Save new goal to persistent storage
+        const goalData = newGoal.toJSON();
+        const goalId = await profileService.saveTrainingGoal(goalData);
+        newGoal.id = goalId;
+        
         this.goals.push(newGoal);
         this.showSuccess('Goal created successfully!');
         
@@ -1073,24 +1110,43 @@ export class ProfilePage extends BasePage {
     }
   }
 
-  handleCompleteGoal(goalId) {
-    const goal = this.goals.find(g => g.id === goalId);
-    if (goal) {
-      goal.complete();
-      this.showSuccess(`Goal "${goal.name}" marked as complete!`);
-      this.refreshGoalsTab();
+  async handleCompleteGoal(goalId) {
+    try {
+      const goal = this.goals.find(g => g.id === goalId);
+      if (goal) {
+        goal.complete();
+        
+        // Update goal in persistent storage
+        const goalData = goal.toJSON();
+        await profileService.updateTrainingGoal(goalId, goalData);
+        
+        this.showSuccess(`Goal "${goal.name}" marked as complete!`);
+        this.refreshGoalsTab();
+      }
+    } catch (error) {
+      logger.error('Failed to complete goal:', error);
+      this.showError('Failed to complete goal. Please try again.');
     }
   }
 
-  handleDeleteGoal(goalId) {
-    const goal = this.goals.find(g => g.id === goalId);
-    if (goal && confirm(`Are you sure you want to delete the goal "${goal.name}"?`)) {
-      const index = this.goals.findIndex(g => g.id === goalId);
-      if (index !== -1) {
-        this.goals.splice(index, 1);
-        this.showSuccess('Goal deleted successfully!');
-        this.refreshGoalsTab();
+  async handleDeleteGoal(goalId) {
+    try {
+      const goal = this.goals.find(g => g.id === goalId);
+      if (goal && confirm(`Are you sure you want to delete the goal "${goal.name}"?`)) {
+        // Delete from persistent storage first
+        await profileService.deleteTrainingGoal(goalId);
+        
+        // Remove from local array
+        const index = this.goals.findIndex(g => g.id === goalId);
+        if (index !== -1) {
+          this.goals.splice(index, 1);
+          this.showSuccess('Goal deleted successfully!');
+          this.refreshGoalsTab();
+        }
       }
+    } catch (error) {
+      logger.error('Failed to delete goal:', error);
+      this.showError('Failed to delete goal. Please try again.');
     }
   }
 

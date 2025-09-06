@@ -659,3 +659,242 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Goals Section
+   ========================================================================== */
+
+.goals-section {
+  background: var(--dashboard-card-bg);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: var(--section-spacing);
+}
+
+.goals-section .section-header {
+  padding: var(--card-padding);
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.goals-section .section-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.goals-section .section-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--stat-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.goals-section .section-link:hover {
+  color: #2c5aa0;
+}
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: var(--card-padding);
+}
+
+.goal-card {
+  background: var(--dashboard-bg);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.goal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--dashboard-shadow-hover);
+}
+
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.goal-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.goal-status {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--stat-primary);
+}
+
+.goal-status.active {
+  color: var(--stat-primary);
+}
+
+.goal-status.completed {
+  color: var(--stat-success);
+}
+
+.goal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goal-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--page-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.goal-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+}
+
+.current-value {
+  font-weight: 600;
+  color: var(--page-text);
+}
+
+.target-value {
+  color: #64748b;
+}
+
+.goal-progress-container .progress-bar {
+  height: 8px;
+  background: var(--progress-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.goal-progress-container .progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.goal-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.goal-timeline i {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.goals-footer {
+  padding: 1rem var(--card-padding);
+  border-top: 1px solid var(--dashboard-border);
+  text-align: center;
+}
+
+.view-all-goals {
+  color: var(--stat-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.view-all-goals:hover {
+  color: #2c5aa0;
+}
+
+.view-all-goals i {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.view-all-goals:hover i {
+  transform: translateX(4px);
+}
+
+/* Empty goals state */
+.goals-section .empty-goals {
+  padding: 3rem var(--card-padding);
+  text-align: center;
+  color: #9ca3af;
+}
+
+.goals-section .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  color: #cbd5e0;
+}
+
+.goals-section .empty-goals p {
+  margin: 0.5rem 0;
+}
+
+.goals-section .empty-goals p:first-of-type {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--page-text);
+}
+
+.goals-section .empty-subtext {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Responsive adjustments for goals */
+@media (max-width: 767px) {
+  .goals-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .goal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .goal-status {
+    align-self: flex-end;
+  }
+}
+
+@media (min-width: 768px) {
+  .goals-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .goals-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -573,6 +573,187 @@ export class ProfileService {
     stateManager.dispatch('SET_PROFILE_ERROR', null);
   }
 
+  // === TRAINING GOALS MANAGEMENT ===
+
+  /**
+   * Save a training goal
+   * @param {Object} goalData - Goal data
+   * @returns {Promise<string>} Goal ID
+   */
+  async saveTrainingGoal(goalData) {
+    try {
+      if (!this.currentProfileId) {
+        throw new Error('No profile loaded');
+      }
+
+      // Add user ID to goal data
+      const goalWithUserId = {
+        ...goalData,
+        userId: this.currentProfileId,
+      };
+
+      const goalId = await enhancedStorage.saveTrainingGoal(goalWithUserId);
+      
+      // Update state if needed
+      stateManager.dispatch('ADD_TRAINING_GOAL', { ...goalWithUserId, id: goalId });
+
+      console.log('Training goal saved:', goalId);
+      return goalId;
+    } catch (error) {
+      console.error('Failed to save training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get training goals for the current profile
+   * @param {Object} filter - Optional filter
+   * @returns {Promise<Array>} Training goals
+   */
+  async getTrainingGoals(filter = {}) {
+    try {
+      if (!this.currentProfileId) {
+        return [];
+      }
+
+      const goals = await enhancedStorage.getTrainingGoals({
+        userId: this.currentProfileId,
+        ...filter,
+      });
+
+      return goals;
+    } catch (error) {
+      console.error('Failed to get training goals:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get active training goals for the current profile
+   * @returns {Promise<Array>} Active goals
+   */
+  async getActiveTrainingGoals() {
+    return await this.getTrainingGoals({ status: 'active' });
+  }
+
+  /**
+   * Get completed training goals for the current profile
+   * @returns {Promise<Array>} Completed goals
+   */
+  async getCompletedTrainingGoals() {
+    return await this.getTrainingGoals({ status: 'completed' });
+  }
+
+  /**
+   * Update a training goal
+   * @param {string} goalId - Goal ID
+   * @param {Object} updates - Goal updates
+   * @returns {Promise<void>}
+   */
+  async updateTrainingGoal(goalId, updates) {
+    try {
+      await enhancedStorage.updateTrainingGoal(goalId, updates);
+      
+      // Update state if needed
+      stateManager.dispatch('UPDATE_TRAINING_GOAL', { id: goalId, ...updates });
+
+      console.log('Training goal updated:', goalId);
+    } catch (error) {
+      console.error('Failed to update training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a training goal
+   * @param {string} goalId - Goal ID
+   * @returns {Promise<void>}
+   */
+  async deleteTrainingGoal(goalId) {
+    try {
+      await enhancedStorage.deleteTrainingGoal(goalId);
+      
+      // Update state if needed
+      stateManager.dispatch('REMOVE_TRAINING_GOAL', goalId);
+
+      console.log('Training goal deleted:', goalId);
+    } catch (error) {
+      console.error('Failed to delete training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update goal progress based on workout or profile data
+   * @param {string} goalId - Goal ID
+   * @param {Object} progressData - Progress data
+   * @returns {Promise<void>}
+   */
+  async updateGoalProgress(goalId, progressData) {
+    try {
+      const goal = await enhancedStorage.getTrainingGoal(goalId);
+      if (!goal) {
+        throw new Error('Goal not found');
+      }
+
+      // Calculate new progress based on goal type and progress data
+      let updatedGoal = { ...goal };
+      
+      // Update progress based on goal type
+      switch (goal.type) {
+        case 'ftp':
+          if (progressData.ftp) {
+            updatedGoal.currentValue = Math.max(goal.currentValue || goal.initialValue || 0, progressData.ftp);
+            updatedGoal.progress = Math.min(100, ((updatedGoal.currentValue - (goal.initialValue || 0)) / (goal.targetValue - (goal.initialValue || 0))) * 100);
+          }
+          break;
+        case 'weight':
+          if (progressData.weight) {
+            updatedGoal.currentValue = progressData.weight;
+            // For weight goals, calculate progress differently based on goal direction
+            const initialWeight = goal.initialValue || goal.currentValue || progressData.weight;
+            const targetWeight = goal.targetValue;
+            const currentWeight = progressData.weight;
+            
+            if (targetWeight > initialWeight) {
+              // Weight gain goal
+              updatedGoal.progress = Math.min(100, ((currentWeight - initialWeight) / (targetWeight - initialWeight)) * 100);
+            } else {
+              // Weight loss goal
+              updatedGoal.progress = Math.min(100, ((initialWeight - currentWeight) / (initialWeight - targetWeight)) * 100);
+            }
+          }
+          break;
+        case 'volume':
+          if (progressData.duration) {
+            // Add duration to accumulated volume (convert minutes to hours)
+            updatedGoal.currentValue = (goal.currentValue || 0) + (progressData.duration / 60);
+            updatedGoal.progress = Math.min(100, (updatedGoal.currentValue / goal.targetValue) * 100);
+          }
+          break;
+        case 'custom':
+          if (progressData.customProgress !== undefined) {
+            updatedGoal.progress = Math.min(100, Math.max(0, progressData.customProgress));
+          }
+          break;
+      }
+
+      // Check if goal is completed
+      if (updatedGoal.progress >= 100 && goal.status === 'active') {
+        updatedGoal.status = 'completed';
+        updatedGoal.completedDate = new Date().toISOString();
+      }
+
+      // Update the goal
+      await this.updateTrainingGoal(goalId, updatedGoal);
+
+      return updatedGoal;
+    } catch (error) {
+      console.error('Failed to update goal progress:', error);
+      throw error;
+    }
+  }
+
   /**
    * Get user preferences from localStorage
    * @returns {Object} Preferences object
