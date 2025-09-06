@@ -5,6 +5,10 @@
 
 import { BasePage } from './BasePage.js';
 import { createLogger } from '../utils/logger.js';
+import { activityService } from '../services/activity-service.js';
+import { profileService } from '../services/profile-service.js';
+import { ActivityCalendar } from '../components/history/ActivityCalendar.js';
+import { PerformanceTrends } from '../components/history/PerformanceTrends.js';
 
 const logger = createLogger('HistoryPage');
 
@@ -22,25 +26,60 @@ export class HistoryPage extends BasePage {
     this.currentFilter = 'all';
     this.dateRange = 'month';
     this.selectedActivity = null;
+    
+    // Component instances
+    this.activityCalendar = null;
+    this.performanceTrends = null;
   }
 
   async loadData() {
     try {
-      // Load training history data
-      this.activities = await this.loadActivities();
+      // Initialize activity service
+      await activityService.initialize();
+      
+      // Load real training history data
+      this.activities = await activityService.getActivities({
+        limit: 100,
+        sortBy: 'date',
+        sortOrder: 'desc'
+      });
+      
+      // Convert to plain objects for compatibility
+      this.activities = this.activities.map(activity => ({
+        id: activity.id,
+        name: activity.name,
+        type: activity.type,
+        date: activity.date,
+        duration: activity.duration,
+        distance: activity.distance,
+        avgPower: activity.avgPower,
+        maxPower: activity.maxPower,
+        normalizedPower: activity.normalizedPower,
+        tss: activity.tss,
+        intensityFactor: activity.intensityFactor,
+        avgCadence: activity.cadence?.avg,
+        avgSpeed: activity.speed?.avg,
+        avgHeartRate: activity.heartRate?.avg,
+        elevation: activity.elevation,
+        calories: activity.calories,
+        notes: activity.notes,
+        completed: true, // All saved activities are considered completed
+        source: activity.source
+      }));
+      
       this.filteredActivities = [...this.activities];
 
       logger.info(`History loaded with ${this.activities.length} activities`);
     } catch (error) {
       logger.error('Failed to load history data:', error);
-      // Use empty array as fallback
-      this.activities = [];
-      this.filteredActivities = [];
+      // Fall back to mock data if service fails
+      this.activities = await this.loadMockActivities();
+      this.filteredActivities = [...this.activities];
     }
   }
 
-  async loadActivities() {
-    // Mock activity data - in real implementation, this would come from a service
+  async loadMockActivities() {
+    // Mock activity data - fallback when service is unavailable
     const now = new Date();
     const activities = [];
 
@@ -376,14 +415,7 @@ export class HistoryPage extends BasePage {
   createCalendarView() {
     return `
       <div class="calendar-view">
-        <div class="calendar-placeholder">
-          <div class="placeholder-icon">
-            <i class="fas fa-calendar-alt"></i>
-          </div>
-          <h3>Calendar View</h3>
-          <p>Calendar view functionality coming soon!</p>
-          <p>This will show your training activities in a calendar format with monthly/weekly views.</p>
-        </div>
+        <div id="activityCalendarContainer"></div>
       </div>
     `;
   }
@@ -426,11 +458,11 @@ export class HistoryPage extends BasePage {
           
           <div class="stat-card">
             <div class="stat-icon">
-              <i class="fas fa-percentage"></i>
+              <i class="fas fa-fire"></i>
             </div>
             <div class="stat-content">
-              <div class="stat-value">${stats.completionRate}%</div>
-              <div class="stat-label">Completion Rate</div>
+              <div class="stat-value">${Math.round(stats.totalTSS || 0)}</div>
+              <div class="stat-label">Total TSS</div>
             </div>
           </div>
         </div>
@@ -443,11 +475,8 @@ export class HistoryPage extends BasePage {
             </div>
           </div>
           
-          <div class="breakdown-section">
-            <h3>Weekly Summary</h3>
-            <div class="weekly-chart-placeholder">
-              <p>Weekly activity chart coming soon!</p>
-            </div>
+          <div class="breakdown-section" id="performanceTrendsContainer">
+            <!-- Performance trends will be rendered here -->
           </div>
         </div>
       </div>
@@ -520,6 +549,13 @@ export class HistoryPage extends BasePage {
 
     // Update main content
     this.updateMainContent();
+    
+    // Update component instances when view changes
+    if (this.currentView === 'calendar' && this.activityCalendar) {
+      this.activityCalendar.setActivities(this.filteredActivities);
+    } else if (this.currentView === 'stats' && this.performanceTrends) {
+      this.performanceTrends.setActivities(this.filteredActivities);
+    }
   }
 
   setupFilters() {
@@ -628,6 +664,13 @@ export class HistoryPage extends BasePage {
 
     this.filteredActivities = filtered;
     this.updateMainContent();
+    
+    // Update component instances with new filtered data
+    if (this.currentView === 'calendar' && this.activityCalendar) {
+      this.activityCalendar.setActivities(this.filteredActivities);
+    } else if (this.currentView === 'stats' && this.performanceTrends) {
+      this.performanceTrends.setActivities(this.filteredActivities);
+    }
   }
 
   updateMainContent() {
@@ -637,6 +680,7 @@ export class HistoryPage extends BasePage {
     if (mainContentArea) {
       mainContentArea.outerHTML = this.createMainContent();
       this.setupActivityCards(); // Re-setup event listeners
+      this.initializeViewComponents(); // Initialize view-specific components
     }
   }
 
@@ -739,6 +783,10 @@ export class HistoryPage extends BasePage {
       (sum, activity) => sum + (activity.distance || 0),
       0
     );
+    const totalTSS = completed.reduce(
+      (sum, activity) => sum + (activity.tss || 0),
+      0
+    );
     const completionRate =
       this.filteredActivities.length > 0
         ? Math.round((completed.length / this.filteredActivities.length) * 100)
@@ -747,16 +795,18 @@ export class HistoryPage extends BasePage {
     const byType = {};
     completed.forEach(activity => {
       if (!byType[activity.type]) {
-        byType[activity.type] = { count: 0, totalTime: 0 };
+        byType[activity.type] = { count: 0, totalTime: 0, totalTSS: 0 };
       }
       byType[activity.type].count++;
       byType[activity.type].totalTime += activity.duration;
+      byType[activity.type].totalTSS += activity.tss || 0;
     });
 
     return {
       totalActivities: completed.length,
       totalTime,
       totalDistance,
+      totalTSS,
       completionRate,
       byType,
     };
@@ -781,14 +831,38 @@ export class HistoryPage extends BasePage {
     return `${minutes}:${seconds.toString().padStart(2, '0')}/km`;
   }
 
-  exportHistory() {
-    logger.info('Exporting training history');
-    this.showSuccess('Export functionality coming soon!');
+  async exportHistory() {
+    try {
+      logger.info('Exporting training history');
+      
+      const exportData = await activityService.exportActivities();
+      
+      // Create download link
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `training-history-${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      
+      this.showSuccess('Training history exported successfully!');
+    } catch (error) {
+      logger.error('Failed to export history:', error);
+      this.showError('Failed to export training history');
+    }
   }
 
   addActivity() {
     logger.info('Adding new activity');
-    this.showSuccess('Add activity functionality coming soon!');
+    this.showAddActivityModal();
   }
 
   showSuccess(message) {
@@ -804,6 +878,221 @@ export class HistoryPage extends BasePage {
     this.setTimeout(() => {
       successElement.remove();
     }, 3000);
+  }
+
+  showError(message) {
+    const errorElement = document.createElement('div');
+    errorElement.className = 'error-toast';
+    errorElement.innerHTML = `
+      <i class="fas fa-exclamation-circle"></i>
+      <span>${message}</span>
+    `;
+
+    document.body.appendChild(errorElement);
+
+    this.setTimeout(() => {
+      errorElement.remove();
+    }, 3000);
+  }
+
+  showAddActivityModal() {
+    // Create a simple modal for adding activities
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Activity</h3>
+          <button class="modal-close" id="closeModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addActivityForm">
+            <div class="form-group">
+              <label for="activityName">Activity Name</label>
+              <input type="text" id="activityName" required>
+            </div>
+            <div class="form-group">
+              <label for="activityType">Type</label>
+              <select id="activityType" required>
+                <option value="workout">Workout</option>
+                <option value="race">Race</option>
+                <option value="test">Test</option>
+                <option value="recovery">Recovery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="activityDate">Date</label>
+              <input type="datetime-local" id="activityDate" required>
+            </div>
+            <div class="form-group">
+              <label for="activityDuration">Duration (minutes)</label>
+              <input type="number" id="activityDuration" min="1" required>
+            </div>
+            <div class="form-group">
+              <label for="activityTSS">TSS (optional)</label>
+              <input type="number" id="activityTSS" min="0" max="1000">
+            </div>
+            <div class="form-group">
+              <label for="activityNotes">Notes</label>
+              <textarea id="activityNotes" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancelAdd">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveActivity">Save Activity</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Set default date to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('activityDate').value = now.toISOString().slice(0, 16);
+
+    // Add event listeners
+    const closeModal = () => {
+      document.body.removeChild(modal);
+    };
+
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('cancelAdd').addEventListener('click', closeModal);
+    
+    document.getElementById('saveActivity').addEventListener('click', async () => {
+      await this.handleSaveActivity();
+      closeModal();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+
+  async handleSaveActivity() {
+    try {
+      const formData = {
+        name: document.getElementById('activityName').value,
+        type: document.getElementById('activityType').value,
+        date: new Date(document.getElementById('activityDate').value).toISOString(),
+        duration: parseInt(document.getElementById('activityDuration').value) * 60, // Convert to seconds
+        tss: parseInt(document.getElementById('activityTSS').value) || 0,
+        notes: document.getElementById('activityNotes').value
+      };
+
+      await activityService.saveActivity(formData);
+      
+      this.showSuccess('Activity added successfully!');
+      
+      // Reload data
+      await this.loadData();
+      this.render();
+      this.initializeViewComponents();
+    } catch (error) {
+      logger.error('Failed to save activity:', error);
+      this.showError('Failed to save activity');
+    }
+  }
+  
+  /**
+   * Initialize view-specific components
+   */
+  initializeViewComponents() {
+    if (this.currentView === 'calendar') {
+      this.initializeCalendarView();
+    } else if (this.currentView === 'stats') {
+      this.initializeStatsView();
+    }
+  }
+  
+  /**
+   * Initialize calendar view with ActivityCalendar component
+   */
+  initializeCalendarView() {
+    const container = this.container.querySelector('#activityCalendarContainer');
+    if (container) {
+      // Destroy existing instance
+      if (this.activityCalendar) {
+        this.activityCalendar.destroy();
+      }
+      
+      // Create new ActivityCalendar instance
+      this.activityCalendar = new ActivityCalendar(container, {
+        activities: this.filteredActivities,
+        onActivityClick: (activity) => {
+          this.viewActivity(activity);
+        },
+        onDateClick: (date, activities) => {
+          if (activities.length > 0) {
+            // Show activities for the selected date
+            this.showActivitiesForDate(date, activities);
+          }
+        }
+      });
+    }
+  }
+  
+  /**
+   * Initialize stats view with PerformanceTrends component
+   */
+  initializeStatsView() {
+    const container = this.container.querySelector('#performanceTrendsContainer');
+    if (container) {
+      // Destroy existing instance
+      if (this.performanceTrends) {
+        this.performanceTrends.destroy();
+      }
+      
+      // Create new PerformanceTrends instance
+      this.performanceTrends = new PerformanceTrends(container, {
+        activities: this.filteredActivities
+      });
+    }
+  }
+  
+  /**
+   * Show activities for a specific date
+   */
+  showActivitiesForDate(date, activities) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Activities for ${new Date(date).toLocaleDateString()}</h3>
+          <button class="modal-close" id="closeActivitiesModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="activities-list">
+            ${activities.map(activity => this.createActivityCard(activity)).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add event listeners
+    const closeModal = () => {
+      document.body.removeChild(modal);
+    };
+
+    document.getElementById('closeActivitiesModal').addEventListener('click', closeModal);
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
   }
 }
 
