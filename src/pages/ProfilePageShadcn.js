@@ -154,6 +154,38 @@ export class ProfilePageShadcn extends BasePage {
     console.log('ProfilePageShadcn: Starting render()');
     console.log('ProfilePageShadcn: Active tab is:', this.activeTab);
 
+    // Add CSS for tab functionality if not already added
+    if (!document.querySelector('#profile-tabs-css')) {
+      const style = document.createElement('style');
+      style.id = 'profile-tabs-css';
+      style.textContent = `
+        /* Tab container visibility - ensure wrapper is always visible */
+        .tab-content {
+          display: block !important;
+          width: 100%;
+          min-height: 200px;
+        }
+        
+        /* Tab panel visibility */
+        [data-tab-content] {
+          display: none;
+        }
+        
+        [data-tab-content].active {
+          display: block;
+        }
+        
+        /* Tab button active state */
+        [data-tab].active {
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
+          box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+      `;
+      document.head.appendChild(style);
+      console.log('ProfilePageShadcn: Added tab CSS');
+    }
+
     const header = this.createProfileHeader();
     const navigation = this.createTabNavigation();
     const tabContent = this.createTabContent();
@@ -676,11 +708,15 @@ export class ProfilePageShadcn extends BasePage {
     this.setupTabs();
     console.log('ProfilePageShadcn: Tabs setup completed');
 
+    // Register this instance globally for event delegation
+    window.currentProfilePageInstance = this;
+    console.log('ProfilePageShadcn: Instance registered globally');
+
     this.setupFormHandlers();
     console.log('ProfilePageShadcn: Form handlers setup completed');
 
-    this.setupSaveButton();
-    console.log('ProfilePageShadcn: Save button setup completed');
+    // Save button is now handled by global event delegation (see setupTabs)
+    console.log('ProfilePageShadcn: Save button handled by global delegation');
 
     // Initialize advanced components after base setup
     this.initializeAdvancedComponents();
@@ -727,17 +763,96 @@ export class ProfilePageShadcn extends BasePage {
     const tabButtons = this.container.querySelectorAll('[data-tab]');
     console.log('ProfilePageShadcn: Found', tabButtons.length, 'tab buttons');
 
-    tabButtons.forEach(button => {
-      console.log(
-        'ProfilePageShadcn: Setting up tab button for:',
-        button.dataset.tab
-      );
-      this.addEventListener(button, 'click', () => {
-        const tabId = button.dataset.tab;
-        console.log('ProfilePageShadcn: Tab clicked:', tabId);
-        this.switchTab(tabId);
+    // Set up global event delegation if not already done
+    if (!window.profileTabHandlerSetup) {
+      console.log('ProfilePageShadcn: Setting up global tab event delegation');
+      document.addEventListener('click', event => {
+        // Check if clicked element is a profile tab button
+        if (
+          event.target.matches('[data-tab]') ||
+          event.target.closest('[data-tab]')
+        ) {
+          const button = event.target.matches('[data-tab]')
+            ? event.target
+            : event.target.closest('[data-tab]');
+          const tabId = button.dataset.tab;
+
+          console.log('ProfilePageShadcn: Global tab click detected:', tabId);
+
+          // Find the current ProfilePageShadcn instance and call switchTab
+          const profileContainer = button.closest('#profile, .profile-page');
+          if (profileContainer) {
+            // Call switchTab directly on the global functions
+            window.profileSwitchTab(tabId);
+          }
+        }
       });
-    });
+      window.profileTabHandlerSetup = true;
+    }
+
+    // Set up global event delegation for save button (survives re-initialization)
+    if (!window.profileSaveHandlerSetup) {
+      console.log(
+        'ProfilePageShadcn: Setting up global save button event delegation'
+      );
+      document.addEventListener('click', async event => {
+        if (
+          event.target.matches('#saveProfileBtn') ||
+          event.target.closest('#saveProfileBtn')
+        ) {
+          console.log('ProfilePageShadcn: Global save button clicked');
+          event.preventDefault();
+
+          // Find the current ProfilePageShadcn instance from global registry
+          if (
+            window.currentProfilePageInstance &&
+            typeof window.currentProfilePageInstance.saveProfile === 'function'
+          ) {
+            console.log(
+              'ProfilePageShadcn: Calling saveProfile on registered instance'
+            );
+            await window.currentProfilePageInstance.saveProfile();
+          } else {
+            console.error(
+              'ProfilePageShadcn: No valid instance found for save operation'
+            );
+          }
+        }
+      });
+      window.profileSaveHandlerSetup = true;
+    }
+
+    // Create global switchTab function
+    window.profileSwitchTab = tabId => {
+      console.log('ProfilePageShadcn: Global switchTab called for:', tabId);
+
+      const profileContainer = document.querySelector(
+        '#profile, .profile-page'
+      );
+      if (!profileContainer) return;
+
+      // Update button states
+      const tabButtons = profileContainer.querySelectorAll('[data-tab]');
+      tabButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.tab === tabId);
+      });
+
+      // Update panel visibility
+      const tabPanels = profileContainer.querySelectorAll('[data-tab-content]');
+      tabPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.tabContent === tabId);
+      });
+
+      // Store active tab
+      window.profileActiveTab = tabId;
+      console.log('ProfilePageShadcn: Tab switched to:', tabId);
+    };
+
+    // Initialize first tab as active if none is active
+    const activeTab = document.querySelector('[data-tab-content].active');
+    if (!activeTab) {
+      window.profileSwitchTab('general');
+    }
   }
 
   switchTab(tabId) {
@@ -827,10 +942,24 @@ export class ProfilePageShadcn extends BasePage {
 
   setupSaveButton() {
     const saveButton = this.container.querySelector('#saveProfileBtn');
+    console.log(
+      'ProfilePageShadcn: setupSaveButton - button found:',
+      !!saveButton
+    );
     if (saveButton) {
-      this.addEventListener(saveButton, 'click', async () => {
+      console.log(
+        'ProfilePageShadcn: setupSaveButton - attaching event listener'
+      );
+      this.addEventListener(saveButton, 'click', async event => {
+        console.log(
+          'ProfilePageShadcn: Save button clicked - calling saveProfile()'
+        );
+        event.preventDefault();
         await this.saveProfile();
       });
+      console.log(
+        'ProfilePageShadcn: setupSaveButton - event listener attached'
+      );
     }
   }
 
@@ -947,8 +1076,11 @@ export class ProfilePageShadcn extends BasePage {
 
   async saveProfile() {
     try {
+      console.log('ProfilePageShadcn: saveProfile() called');
+
       // Collect form data
       const formData = this.collectFormData();
+      console.log('ProfilePageShadcn: Form data collected:', formData);
 
       // Validate profile data
       const validation = this.validateProfileData(formData.profile);
@@ -1083,7 +1215,7 @@ export class ProfilePageShadcn extends BasePage {
     // Create temporary success message with Tailwind styling
     const successElement = document.createElement('div');
     successElement.className =
-      'fixed top-4 right-4 z-50 rounded-lg border bg-card text-card-foreground shadow-lg p-4 flex items-center space-x-2 bg-green-50 border-green-200 text-green-800';
+      'fixed top-20 right-4 z-[9999] rounded-lg border bg-card text-card-foreground shadow-lg p-4 flex items-center space-x-2 bg-green-50 border-green-200 text-green-800';
     successElement.innerHTML = `
       <i class="fas fa-check-circle text-green-600"></i>
       <span>${message}</span>
@@ -1229,6 +1361,12 @@ export class ProfilePageShadcn extends BasePage {
    */
   destroy() {
     console.log('ProfilePageShadcn: Cleaning up advanced components');
+
+    // Unregister global instance
+    if (window.currentProfilePageInstance === this) {
+      window.currentProfilePageInstance = null;
+      console.log('ProfilePageShadcn: Instance unregistered globally');
+    }
 
     if (this.ftpTestCalculator) {
       this.ftpTestCalculator.destroy();

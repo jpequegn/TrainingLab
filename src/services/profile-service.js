@@ -564,6 +564,54 @@ export class ProfileService {
   clearError() {
     stateManager.dispatch('SET_PROFILE_ERROR', null);
   }
+
+  /**
+   * Get user preferences from localStorage
+   * @returns {Object} Preferences object
+   */
+  getPreferences() {
+    try {
+      const preferences = JSON.parse(
+        localStorage.getItem('workout-visualizer-preferences') || '{}'
+      );
+
+      // Return default preferences merged with stored ones
+      return {
+        theme: 'light',
+        units: 'metric',
+        powerDisplay: 'watts',
+        profileId: null,
+        ...preferences,
+      };
+    } catch (error) {
+      console.warn('Failed to load preferences, using defaults:', error);
+      return {
+        theme: 'light',
+        units: 'metric',
+        powerDisplay: 'watts',
+        profileId: null,
+      };
+    }
+  }
+
+  /**
+   * Save user preferences to localStorage
+   * @param {Object} preferences - Preferences to save
+   */
+  savePreferences(preferences) {
+    try {
+      const currentPrefs = this.getPreferences();
+      const updatedPrefs = { ...currentPrefs, ...preferences };
+      localStorage.setItem(
+        'workout-visualizer-preferences',
+        JSON.stringify(updatedPrefs)
+      );
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
 }
 
 // Create singleton instance
