@@ -5,7 +5,7 @@
  * @class WorkoutLibrary
  * @description Manages the workout library interface and interactions
  */
-import { workoutStorage } from '../services/storage.js';
+import { enhancedStorage } from '../services/storage/enhanced-storage.js';
 import { formatDuration } from '../core/workout.js';
 import { WorkoutComparison } from '../utils/comparison.js';
 
@@ -34,7 +34,7 @@ export class WorkoutLibrary {
    */
   async initializeStorage() {
     try {
-      await workoutStorage.initialize();
+      await enhancedStorage.initialize();
       this.isInitialized = true;
       console.log('Workout library initialized successfully');
 
@@ -377,9 +377,9 @@ export class WorkoutLibrary {
       let workouts = [];
 
       if (this.searchQuery.trim()) {
-        workouts = await workoutStorage.searchWorkouts(this.searchQuery);
+        workouts = await enhancedStorage.searchWorkouts(this.searchQuery);
       } else {
-        workouts = await workoutStorage.getAllWorkouts(this.currentFilters);
+        workouts = await enhancedStorage.getAllWorkouts(this.currentFilters);
       }
 
       // Sort workouts
@@ -555,7 +555,7 @@ export class WorkoutLibrary {
    */
   async loadWorkout(workoutId) {
     try {
-      const workout = await workoutStorage.getWorkout(workoutId);
+      const workout = await enhancedStorage.getWorkout(workoutId);
       if (!workout) {
         this.showToast('Workout not found', 'error');
         return;
@@ -584,7 +584,7 @@ export class WorkoutLibrary {
 
     try {
       const { workoutData } = this.visualizer.workout;
-      await workoutStorage.saveWorkout(workoutData, {
+      await enhancedStorage.saveWorkout(workoutData, {
         source: 'current',
       });
 
@@ -601,10 +601,10 @@ export class WorkoutLibrary {
    */
   async toggleWorkoutStar(workoutId) {
     try {
-      const workout = await workoutStorage.getWorkout(workoutId);
+      const workout = await enhancedStorage.getWorkout(workoutId);
       if (!workout) return;
 
-      await workoutStorage.updateWorkout(workoutId, {
+      await enhancedStorage.updateWorkout(workoutId, {
         starred: !workout.starred,
       });
 
@@ -624,7 +624,7 @@ export class WorkoutLibrary {
     }
 
     try {
-      await workoutStorage.deleteWorkout(workoutId);
+      await enhancedStorage.deleteWorkout(workoutId);
       this.showToast('Workout deleted', 'success');
       this.refreshLibraryView();
     } catch (error) {
@@ -684,7 +684,7 @@ export class WorkoutLibrary {
     if (!content) return;
 
     try {
-      const collections = await workoutStorage.getAllCollections();
+      const collections = await enhancedStorage.getAllCollections();
 
       if (collections.length === 0) {
         content.innerHTML = `
@@ -736,7 +736,7 @@ export class WorkoutLibrary {
    */
   async exportLibrary() {
     try {
-      const libraryData = await workoutStorage.exportLibrary();
+      const libraryData = await enhancedStorage.exportLibrary();
       const jsonString = JSON.stringify(libraryData, null, 2);
 
       const blob = new Blob([jsonString], { type: 'application/json' });
@@ -772,7 +772,7 @@ export class WorkoutLibrary {
         const text = await file.text();
         const libraryData = JSON.parse(text);
 
-        await workoutStorage.importLibrary(libraryData);
+        await enhancedStorage.importLibrary(libraryData);
         this.showToast('Library imported successfully', 'success');
         this.refreshLibraryView();
       } catch (error) {

@@ -5,7 +5,7 @@
  * @class WorkoutComparison
  * @description Manages workout comparison interface and analysis tools
  */
-import { workoutStorage } from '../services/storage.js';
+import { enhancedStorage } from '../services/storage/enhanced-storage.js';
 import { formatDuration } from '../core/workout.js';
 
 export class WorkoutComparison {
@@ -329,7 +329,7 @@ export class WorkoutComparison {
       card.classList.add('selected');
 
       try {
-        const workout = await workoutStorage.getWorkout(workoutId);
+        const workout = await enhancedStorage.getWorkout(workoutId);
         if (workout) {
           this.selectedWorkouts.set(workoutId, workout);
         }
