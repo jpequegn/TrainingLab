@@ -660,6 +660,161 @@ export class EnhancedStorageService {
   }
 
   /**
+   * Backup and restore support methods
+   */
+
+  /**
+   * Get all user profiles for backup
+   * @returns {Promise<Array>} All user profiles
+   */
+  async getAllUserProfiles() {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return this._getAllFromStore('userProfiles');
+  }
+
+  /**
+   * Get all activities for backup
+   * @returns {Promise<Array>} All activities
+   */
+  async getAllActivities() {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return this._getAllFromStore('activities');
+  }
+
+  /**
+   * Get all workouts for backup
+   * @returns {Promise<Array>} All workouts
+   */
+  async getAllWorkouts() {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return this._getAllFromStore('workouts');
+  }
+
+  /**
+   * Get all FTP history for backup
+   * @returns {Promise<Array>} All FTP history entries
+   */
+  async getAllFTPHistory() {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return this._getAllFromStore('ftpHistory');
+  }
+
+  /**
+   * Get all records from a specific store
+   * @param {string} storeName - Store name
+   * @returns {Promise<Array>} All records from the store
+   */
+  async getAllFromStore(storeName) {
+    return this._getAllFromStore(storeName);
+  }
+
+  /**
+   * Check if a record exists in a store
+   * @param {string} storeName - Store name
+   * @param {string} id - Record ID
+   * @returns {Promise<boolean>} True if record exists
+   */
+  async recordExists(storeName, id) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const transaction = this.db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getKey(id);
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result !== undefined);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Save a record to a specific store
+   * @param {string} storeName - Store name
+   * @param {Object} record - Record to save
+   * @returns {Promise<void>}
+   */
+  async saveToStore(storeName, record) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const transaction = this.db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(record);
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Get all backup metadata
+   * @returns {Promise<Array>} All backup metadata entries
+   */
+  async getAllBackupMetadata() {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    return this._getAllFromStore('backupMetadata');
+  }
+
+  /**
+   * Save backup metadata
+   * @param {Object} metadata - Backup metadata
+   * @returns {Promise<void>}
+   */
+  async saveBackupMetadata(metadata) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const record = {
+      ...metadata,
+      id: metadata.id || `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: metadata.timestamp || new Date().toISOString()
+    };
+
+    await this.saveToStore('backupMetadata', record);
+  }
+
+  /**
+   * Internal helper to get all records from a store
+   * @private
+   * @param {string} storeName - Store name
+   * @returns {Promise<Array>} All records
+   */
+  async _getAllFromStore(storeName) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const transaction = this.db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
    * Placeholder methods for future implementation
    */
   async queryWithPagination(storeName, options) {
