@@ -3,7 +3,8 @@
  * Handles business logic for user profile management
  */
 
-import { workoutStorage } from './storage.js';
+import { enhancedStorage } from './storage/enhanced-storage.js';
+import { performanceMonitor } from './storage/performance-monitor.js';
 import { stateManager } from './state-manager.js';
 import { powerZoneManager } from '../core/power-zones.js';
 import { UserProfileModel } from '../models/UserProfileModel.js';
@@ -22,7 +23,14 @@ export class ProfileService {
   async initialize() {
     try {
       // Initialize storage
-      await workoutStorage.initialize();
+      await enhancedStorage.initialize();
+      
+      // Initialize performance monitoring
+      await performanceMonitor.initialize();
+      await performanceMonitor.startMonitoring({
+        enableAlerts: true,
+        enableOptimization: true
+      });
 
       // Load saved profile ID from preferences
       const preferences = JSON.parse(
@@ -33,7 +41,7 @@ export class ProfileService {
         await this.loadProfile(preferences.profileId);
       } else {
         // Try to load the primary profile
-        const primaryProfile = await workoutStorage.getPrimaryUserProfile();
+        const primaryProfile = await enhancedStorage.getPrimaryUserProfile();
         if (primaryProfile) {
           await this.loadProfile(primaryProfile.id);
         }
@@ -75,7 +83,7 @@ export class ProfileService {
 
       // Save to storage
       const profileId =
-        await workoutStorage.saveUserProfile(enhancedProfileData);
+        await enhancedStorage.saveUserProfile(enhancedProfileData);
 
       // Store the model instance
       this.currentUserModel = userModel;
@@ -118,13 +126,13 @@ export class ProfileService {
     try {
       stateManager.dispatch('SET_PROFILE_LOADING', true);
 
-      const profile = await workoutStorage.getUserProfile(profileId);
+      const profile = await enhancedStorage.getUserProfile(profileId);
       if (!profile) {
         throw new Error('Profile not found');
       }
 
       // Load FTP history
-      const ftpHistory = await workoutStorage.getFTPHistory(profileId);
+      const ftpHistory = await enhancedStorage.getFTPHistory(profileId);
 
       // Create UserProfileModel instance with enhanced data
       const modelData = {
@@ -238,14 +246,14 @@ export class ProfileService {
         this.currentUserModel.lastActive = new Date();
 
         // Save model data to storage
-        await workoutStorage.saveUserProfile(this.currentUserModel.toJSON());
+        await enhancedStorage.saveUserProfile(this.currentUserModel.toJSON());
 
         // Update state with model data
         stateManager.dispatch('UPDATE_USER_PROFILE', updates);
         stateManager.dispatch('SET_USER_PROFILE_MODEL', this.currentUserModel);
       } else {
         // Fallback to original behavior
-        await workoutStorage.saveUserProfile(updatedProfile);
+        await enhancedStorage.saveUserProfile(updatedProfile);
         stateManager.dispatch('UPDATE_USER_PROFILE', updates);
       }
 
@@ -291,7 +299,7 @@ export class ProfileService {
         throw new Error('No profile loaded');
       }
 
-      const entryId = await workoutStorage.addFTPHistoryEntry(
+      const entryId = await enhancedStorage.addFTPHistoryEntry(
         this.currentProfileId,
         ftpValue,
         date,
@@ -388,7 +396,7 @@ export class ProfileService {
         throw new Error('No profile loaded');
       }
 
-      return await workoutStorage.exportUserProfile(this.currentProfileId);
+      return await enhancedStorage.exportUserProfile(this.currentProfileId);
     } catch (error) {
       console.error('Failed to export profile:', error);
       throw error;
@@ -404,7 +412,7 @@ export class ProfileService {
     try {
       stateManager.dispatch('SET_PROFILE_LOADING', true);
 
-      const profileId = await workoutStorage.importUserProfile(profileData);
+      const profileId = await enhancedStorage.importUserProfile(profileData);
       await this.loadProfile(profileId);
 
       stateManager.dispatch('SET_PROFILE_LOADING', false);
@@ -432,7 +440,7 @@ export class ProfileService {
 
       stateManager.dispatch('SET_PROFILE_LOADING', true);
 
-      await workoutStorage.deleteUserProfile(this.currentProfileId);
+      await enhancedStorage.deleteUserProfile(this.currentProfileId);
 
       // Clear state
       stateManager.dispatch('CLEAR_USER_PROFILE');

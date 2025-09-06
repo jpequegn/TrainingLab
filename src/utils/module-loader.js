@@ -148,7 +148,7 @@ export class ModuleLoader {
 
       // Library modules
       library: () => import('./library.js'),
-      storage: () => import('./storage.js'),
+      storage: () => import('./storage/enhanced-storage.js'),
 
       // Parser modules
       parser: () => import('./parser.js'),
