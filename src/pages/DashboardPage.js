@@ -5,6 +5,8 @@
 
 import { BasePage } from './BasePage.js';
 import { createLogger } from '../utils/logger.js';
+import { goalProgressService } from '../services/GoalProgressService.js';
+import { profileService } from '../services/profile-service.js';
 
 const logger = createLogger('DashboardPage');
 
@@ -24,6 +26,7 @@ export class DashboardPage extends BasePage {
     };
     this.recentActivities = [];
     this.quickActions = [];
+    this.goals = [];
   }
 
   async loadData() {
@@ -72,6 +75,9 @@ export class DashboardPage extends BasePage {
         },
       ];
 
+      // Load goals data from persistent storage
+      await this.loadGoals();
+
       // Define quick actions
       this.quickActions = [
         {
@@ -115,15 +121,82 @@ export class DashboardPage extends BasePage {
     }
   }
 
+  /**
+   * Load goals data from persistent storage
+   * @returns {Promise<void>}
+   */
+  async loadGoals() {
+    try {
+      // Load goals from profile service
+      const goals = await profileService.getActiveTrainingGoals();
+      
+      if (goals && goals.length > 0) {
+        this.goals = goals;
+        logger.info(`Loaded ${this.goals.length} active goals for dashboard`);
+      } else {
+        // No goals exist, use mock data for demonstration
+        this.goals = this.createMockGoals();
+      }
+    } catch (error) {
+      logger.error('Failed to load goals for dashboard:', error);
+      // Fallback to mock data
+      this.goals = this.createMockGoals();
+    }
+  }
+
+  /**
+   * Create mock goals data for demonstration when no real goals exist
+   * @returns {Array} Mock goals array
+   */
+  createMockGoals() {
+    return [
+      {
+        id: 'goal-ftp-300',
+        name: 'Reach 300W FTP',
+        type: 'ftp',
+        currentValue: 275,
+        targetValue: 300,
+        progress: 75,
+        status: 'active',
+        targetDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+        unit: 'W'
+      },
+      {
+        id: 'goal-volume-8h',
+        name: 'Train 8h/week',
+        type: 'volume',
+        currentValue: 6.5,
+        targetValue: 8,
+        progress: 81.25,
+        status: 'active',
+        targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        unit: 'hours'
+      },
+      {
+        id: 'goal-century-prep',
+        name: 'Century Ride Ready',
+        type: 'event',
+        currentValue: 45,
+        targetValue: 100,
+        progress: 45,
+        status: 'active',
+        targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        unit: 'miles'
+      }
+    ];
+  }
+
   async render() {
     const welcomeSection = this.createWelcomeSection();
     const statsSection = this.createStatsSection();
+    const goalsSection = this.createGoalsSection();
     const quickActionsSection = this.createQuickActionsSection();
     const recentActivitiesSection = this.createRecentActivitiesSection();
 
     const content = `
       ${welcomeSection}
       ${statsSection}
+      ${goalsSection}
       <div class="dashboard-grid">
         <div class="dashboard-main">
           ${quickActionsSection}
@@ -224,6 +297,119 @@ export class DashboardPage extends BasePage {
         </div>
       </section>
     `;
+  }
+
+  createGoalsSection() {
+    if (!this.goals || this.goals.length === 0) {
+      return `
+        <section class="goals-section">
+          <div class="section-header">
+            <h2 class="section-title">Training Goals</h2>
+            <a href="#/profile" class="section-link">
+              <i class="fas fa-plus"></i>
+              Add Goals
+            </a>
+          </div>
+          <div class="empty-goals">
+            <i class="fas fa-bullseye empty-icon"></i>
+            <p>No active goals yet</p>
+            <p class="empty-subtext">Set up your training goals to track progress</p>
+          </div>
+        </section>
+      `;
+    }
+
+    const activeGoals = this.goals.filter(goal => goal.status === 'active');
+    const goalsHTML = activeGoals.slice(0, 3).map(goal => this.createGoalCard(goal)).join('');
+
+    return `
+      <section class="goals-section">
+        <div class="section-header">
+          <h2 class="section-title">Training Goals</h2>
+          <a href="#/profile" class="section-link">
+            <i class="fas fa-cog"></i>
+            Manage Goals
+          </a>
+        </div>
+        <div class="goals-grid">
+          ${goalsHTML}
+        </div>
+        ${activeGoals.length > 3 ? `
+          <div class="goals-footer">
+            <a href="#/profile" class="view-all-goals">
+              View all ${activeGoals.length} goals
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        ` : ''}
+      </section>
+    `;
+  }
+
+  createGoalCard(goal) {
+    const progressPercentage = Math.min(100, Math.max(0, goal.progress || 0));
+    const daysRemaining = goal.targetDate ? 
+      Math.max(0, Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24))) : 0;
+    
+    const statusColor = this.getGoalStatusColor(goal.type);
+    const goalIcon = this.getGoalIcon(goal.type);
+
+    return `
+      <div class="goal-card" data-goal-id="${goal.id}">
+        <div class="goal-header">
+          <div class="goal-type" style="color: ${statusColor}">
+            ${goalIcon}
+            ${goal.type.toUpperCase()}
+          </div>
+          <div class="goal-status ${goal.status}">
+            ${progressPercentage.toFixed(0)}%
+          </div>
+        </div>
+        
+        <div class="goal-content">
+          <h4 class="goal-name">${goal.name}</h4>
+          
+          <div class="goal-progress-container">
+            <div class="progress-info">
+              <span class="current-value">${goal.currentValue} ${goal.unit || ''}</span>
+              <span class="target-value">/ ${goal.targetValue} ${goal.unit || ''}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progressPercentage}%; background: ${statusColor}"></div>
+            </div>
+          </div>
+
+          ${daysRemaining > 0 ? `
+            <div class="goal-timeline">
+              <i class="fas fa-calendar-alt"></i>
+              <span>${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  getGoalStatusColor(type) {
+    const colorMap = {
+      'ftp': '#f59e0b',
+      'volume': '#10b981', 
+      'event': '#3b82f6',
+      'weight': '#ef4444',
+      'custom': '#6366f1'
+    };
+    return colorMap[type] || '#6366f1';
+  }
+
+  getGoalIcon(type) {
+    const iconMap = {
+      'ftp': '<i class="fas fa-bolt"></i>',
+      'volume': '<i class="fas fa-clock"></i>',
+      'event': '<i class="fas fa-flag"></i>',
+      'weight': '<i class="fas fa-weight"></i>',
+      'custom': '<i class="fas fa-star"></i>'
+    };
+    return iconMap[type] || '<i class="fas fa-bullseye"></i>';
   }
 
   createQuickActionsSection() {

@@ -64,6 +64,10 @@ export const ENHANCED_DATABASE_SCHEMA = {
       keyPath: 'id',
       indexes: ['timestamp', 'operation', 'duration'],
     },
+    trainingGoals: {
+      keyPath: 'id',
+      indexes: ['userId', 'type', 'status', 'createdDate', 'targetDate'],
+    },
   },
 };
 
@@ -365,6 +369,221 @@ export class EnhancedStorageService {
     }
   }
 
+  // === TRAINING GOALS MANAGEMENT (New Feature) ===
+
+  /**
+   * Save training goal with full detail tracking
+   * @param {Object} goal - Goal data
+   * @returns {Promise<string>} Goal ID
+   */
+  async saveTrainingGoal(goal) {
+    const startTime = performance.now();
+
+    try {
+      // Validate goal data
+      this.validateTrainingGoalData(goal);
+
+      // Generate ID if not provided
+      if (!goal.id) {
+        goal.id = this.generateGoalId();
+      }
+
+      // Add metadata
+      goal.createdAt = goal.createdAt || new Date().toISOString();
+      goal.lastModified = new Date().toISOString();
+
+      // Save to database
+      await this.save('trainingGoals', goal);
+
+      // Update cache
+      this.cache.set(`goal_${goal.id}`, {
+        data: goal,
+        timestamp: Date.now(),
+      });
+
+      // Record performance
+      this.recordPerformance('saveTrainingGoal', performance.now() - startTime);
+
+      console.log(`Training goal saved: ${goal.id}`);
+      return goal.id;
+    } catch (error) {
+      console.error('Failed to save training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get training goals with advanced filtering
+   * @param {Object} filter - Filter options
+   * @returns {Promise<Array>} Filtered goals
+   */
+  async getTrainingGoals(filter = {}) {
+    const startTime = performance.now();
+
+    try {
+      const {
+        userId,
+        type,
+        status,
+        limit = 100,
+        sortBy = 'createdDate',
+        sortOrder = 'desc',
+      } = filter;
+
+      // Check cache first
+      const cacheKey = `goals_${JSON.stringify(filter)}`;
+      const cached = this.getCached(cacheKey);
+      if (cached) {
+        this.recordPerformance(
+          'getTrainingGoals_cached',
+          performance.now() - startTime
+        );
+        return cached;
+      }
+
+      // Query database
+      const results = await this.queryGoalsWithFilter('trainingGoals', {
+        userId,
+        type,
+        status,
+        limit,
+        sortBy,
+        sortOrder,
+      });
+
+      // Cache results
+      this.setCached(cacheKey, results);
+
+      // Record performance
+      this.recordPerformance('getTrainingGoals', performance.now() - startTime);
+
+      return results;
+    } catch (error) {
+      console.error('Failed to get training goals:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a specific training goal by ID
+   * @param {string} goalId - Goal ID
+   * @returns {Promise<Object|null>} Goal data or null
+   */
+  async getTrainingGoal(goalId) {
+    try {
+      return await this.get('trainingGoals', goalId);
+    } catch (error) {
+      console.error('Failed to get training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a training goal
+   * @param {string} goalId - Goal ID
+   * @param {Object} updates - Goal updates
+   * @returns {Promise<void>}
+   */
+  async updateTrainingGoal(goalId, updates) {
+    const startTime = performance.now();
+
+    try {
+      const existingGoal = await this.getTrainingGoal(goalId);
+      if (!existingGoal) {
+        throw new Error('Goal not found');
+      }
+
+      const updatedGoal = {
+        ...existingGoal,
+        ...updates,
+        id: goalId, // Ensure ID is preserved
+        lastModified: new Date().toISOString(),
+      };
+
+      // Validate updated goal
+      this.validateTrainingGoalData(updatedGoal);
+
+      // Save to database
+      await this.save('trainingGoals', updatedGoal);
+
+      // Update cache
+      this.cache.set(`goal_${goalId}`, {
+        data: updatedGoal,
+        timestamp: Date.now(),
+      });
+
+      // Clear related cache entries
+      this.clearGoalCaches(existingGoal.userId);
+
+      // Record performance
+      this.recordPerformance('updateTrainingGoal', performance.now() - startTime);
+
+      console.log(`Training goal updated: ${goalId}`);
+    } catch (error) {
+      console.error('Failed to update training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a training goal
+   * @param {string} goalId - Goal ID
+   * @returns {Promise<void>}
+   */
+  async deleteTrainingGoal(goalId) {
+    const startTime = performance.now();
+
+    try {
+      const existingGoal = await this.getTrainingGoal(goalId);
+      if (!existingGoal) {
+        throw new Error('Goal not found');
+      }
+
+      // Delete from database
+      await this.deleteFromStore('trainingGoals', goalId);
+
+      // Clear cache
+      this.cache.delete(`goal_${goalId}`);
+      this.clearGoalCaches(existingGoal.userId);
+
+      // Record performance
+      this.recordPerformance('deleteTrainingGoal', performance.now() - startTime);
+
+      console.log(`Training goal deleted: ${goalId}`);
+    } catch (error) {
+      console.error('Failed to delete training goal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get active training goals for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<Array>} Active goals
+   */
+  async getActiveTrainingGoals(userId) {
+    return await this.getTrainingGoals({
+      userId,
+      status: 'active',
+      sortBy: 'createdDate',
+      sortOrder: 'desc',
+    });
+  }
+
+  /**
+   * Get completed training goals for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<Array>} Completed goals
+   */
+  async getCompletedTrainingGoals(userId) {
+    return await this.getTrainingGoals({
+      userId,
+      status: 'completed',
+      sortBy: 'completedDate',
+      sortOrder: 'desc',
+    });
+  }
+
   // === SYNC STATE MANAGEMENT (New Feature) ===
 
   /**
@@ -572,6 +791,16 @@ export class EnhancedStorageService {
   }
 
   /**
+   * Generate goal ID
+   * @returns {string} Goal ID
+   */
+  generateGoalId() {
+    const RANDOM_BASE = 36;
+    const RANDOM_LENGTH = 9;
+    return `goal_${Date.now()}_${Math.random().toString(RANDOM_BASE).substr(2, RANDOM_LENGTH)}`;
+  }
+
+  /**
    * Validate activity data
    * @param {Object} activity - Activity to validate
    * @throws {Error} If validation fails
@@ -590,6 +819,50 @@ export class EnhancedStorageService {
     }
 
     // Additional validation can be added here
+  }
+
+  /**
+   * Validate training goal data
+   * @param {Object} goal - Goal to validate
+   * @throws {Error} If validation fails
+   */
+  validateTrainingGoalData(goal) {
+    if (!goal) {
+      throw new Error('Goal data is required');
+    }
+
+    if (!goal.name || goal.name.trim().length === 0) {
+      throw new Error('Goal name is required');
+    }
+
+    if (!goal.type) {
+      throw new Error('Goal type is required');
+    }
+
+    if (!goal.userId) {
+      throw new Error('User ID is required');
+    }
+
+    if (!goal.targetDate) {
+      throw new Error('Target date is required');
+    }
+
+    if (goal.targetValue !== undefined && goal.targetValue <= 0) {
+      throw new Error('Target value must be greater than 0');
+    }
+
+    // Validate dates
+    const targetDate = new Date(goal.targetDate);
+    if (isNaN(targetDate.getTime())) {
+      throw new Error('Invalid target date');
+    }
+
+    if (goal.createdDate) {
+      const createdDate = new Date(goal.createdDate);
+      if (isNaN(createdDate.getTime())) {
+        throw new Error('Invalid created date');
+      }
+    }
   }
 
   /**
@@ -937,6 +1210,98 @@ export class EnhancedStorageService {
 
     // This would implement actual cleanup logic
     console.log(`Cleaning up performance metrics older than ${cutoffDate}`);
+  }
+
+  /**
+   * Query training goals with advanced filtering
+   * @param {string} storeName - Store name
+   * @param {Object} filter - Filter options
+   * @returns {Promise<Array>} Filtered goals
+   */
+  async queryGoalsWithFilter(storeName, filter) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const { userId, type, status, limit = 100, sortBy = 'createdDate', sortOrder = 'desc' } = filter;
+
+    const transaction = this.db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      
+      request.onsuccess = () => {
+        let results = request.result || [];
+
+        // Apply filters
+        if (userId) {
+          results = results.filter(goal => goal.userId === userId);
+        }
+        
+        if (type) {
+          results = results.filter(goal => goal.type === type);
+        }
+        
+        if (status) {
+          results = results.filter(goal => goal.status === status);
+        }
+
+        // Sort results
+        results.sort((a, b) => {
+          const aValue = a[sortBy];
+          const bValue = b[sortBy];
+          
+          if (sortOrder === 'desc') {
+            return new Date(bValue) - new Date(aValue);
+          } else {
+            return new Date(aValue) - new Date(bValue);
+          }
+        });
+
+        // Apply limit
+        if (limit && results.length > limit) {
+          results = results.slice(0, limit);
+        }
+
+        resolve(results);
+      };
+      
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Delete record from store
+   * @param {string} storeName - Store name
+   * @param {string} id - Record ID
+   * @returns {Promise<void>}
+   */
+  async deleteFromStore(storeName, id) {
+    if (!this.db) {
+      await this.initialize();
+    }
+
+    const transaction = this.db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(id);
+
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * Clear goal-related cache entries
+   * @param {string} userId - User ID
+   */
+  clearGoalCaches(userId) {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith('goals_') && key.includes(userId)) {
+        this.cache.delete(key);
+      }
+    }
   }
 }
 

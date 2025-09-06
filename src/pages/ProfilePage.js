@@ -9,6 +9,8 @@ import { profileService } from '../services/profile-service.js';
 import { FTPTestCalculator } from '../components/profile/FTPTestCalculator.js';
 import { TrainingZones } from '../components/profile/TrainingZones.js';
 import { FTPHistory } from '../components/profile/FTPHistory.js';
+import { TrainingGoal, GOAL_TYPES } from '../models/TrainingGoal.js';
+import { goalProgressService } from '../services/GoalProgressService.js';
 
 const logger = createLogger('ProfilePage');
 
@@ -40,14 +42,19 @@ export class ProfilePage extends BasePage {
     this.ftpTestCalculator = null;
     this.trainingZones = null;
     this.ftpHistory = null;
+
+    // Training goals state
+    this.goals = [];
+    this.editingGoal = null;
   }
 
   async loadData() {
     try {
-      // Load user profile and preferences
+      // Load user profile, preferences, and goals
       const [profileData, preferencesData] = await Promise.all([
         this.loadProfile(),
         this.loadPreferences(),
+        this.loadGoals(),
       ]);
 
       this.profile = { ...this.profile, ...profileData };
@@ -128,6 +135,33 @@ export class ProfilePage extends BasePage {
     };
   }
 
+  async loadGoals() {
+    try {
+      logger.info('Loading training goals...');
+      
+      // Load goals from profile service
+      const goals = await profileService.getTrainingGoals();
+      
+      if (goals && goals.length > 0) {
+        // Convert stored goals back to TrainingGoal instances
+        this.goals = goals.map(goalData => {
+          const goal = new TrainingGoal(goalData);
+          this.setupGoalMilestoneCallbacks(goal);
+          return goal;
+        });
+        
+        logger.info(`Loaded ${this.goals.length} training goals`);
+      } else {
+        // No existing goals, load sample goals for demonstration
+        await this.loadSampleGoals();
+      }
+    } catch (error) {
+      logger.error('Failed to load goals:', error);
+      // Load sample goals as fallback
+      await this.loadSampleGoals();
+    }
+  }
+
   async render() {
     console.log('ProfilePage: Starting render()');
     console.log('ProfilePage: Active tab is:', this.activeTab);
@@ -185,6 +219,7 @@ export class ProfilePage extends BasePage {
     const tabs = [
       { id: 'general', label: 'General', icon: 'fas fa-user' },
       { id: 'training', label: 'Training', icon: 'fas fa-dumbbell' },
+      { id: 'goals', label: 'Goals', icon: 'fas fa-bullseye' },
       { id: 'preferences', label: 'Preferences', icon: 'fas fa-cog' },
       { id: 'performance', label: 'Performance', icon: 'fas fa-chart-line' },
     ];
@@ -227,6 +262,9 @@ export class ProfilePage extends BasePage {
         </div>
         <div class="tab-panel ${this.activeTab === 'training' ? 'active' : ''}" id="training-panel">
           ${this.createTrainingTab()}
+        </div>
+        <div class="tab-panel ${this.activeTab === 'goals' ? 'active' : ''}" id="goals-panel">
+          ${this.createGoalsTab()}
         </div>
         <div class="tab-panel ${this.activeTab === 'preferences' ? 'active' : ''}" id="preferences-panel">
           ${this.createPreferencesTab()}
@@ -514,6 +552,188 @@ export class ProfilePage extends BasePage {
     `;
   }
 
+  createGoalsTab() {
+    const activeGoals = this.goals.filter(goal => goal.status === 'active');
+    const completedGoals = this.goals.filter(goal => goal.status === 'completed');
+
+    return `
+      <div class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">Training Goals</h3>
+          <button class="btn btn-primary" id="addGoalBtn">
+            <i class="fas fa-plus"></i>
+            Add New Goal
+          </button>
+        </div>
+
+        <!-- Goal Creation/Edit Form -->
+        <div class="goal-form-container" id="goalFormContainer" style="display: none;">
+          <div class="goal-form">
+            <h4 id="goalFormTitle">Create New Goal</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="goalType">Goal Type</label>
+                <select id="goalType" class="form-select">
+                  <option value="${GOAL_TYPES.FTP}">FTP Improvement</option>
+                  <option value="${GOAL_TYPES.VOLUME}">Training Volume</option>
+                  <option value="${GOAL_TYPES.EVENT}">Event Preparation</option>
+                  <option value="${GOAL_TYPES.WEIGHT}">Weight Management</option>
+                  <option value="${GOAL_TYPES.CUSTOM}">Custom Goal</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="goalName">Goal Name</label>
+                <input type="text" id="goalName" class="form-input" placeholder="Enter goal name" required>
+              </div>
+
+              <div class="form-group">
+                <label for="goalDescription">Description</label>
+                <textarea id="goalDescription" class="form-textarea" placeholder="Describe your goal..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="goalTargetValue">Target Value</label>
+                <input type="number" id="goalTargetValue" class="form-input" placeholder="Target value" required>
+              </div>
+
+              <div class="form-group">
+                <label for="goalCurrentValue">Current Value</label>
+                <input type="number" id="goalCurrentValue" class="form-input" placeholder="Current value" required>
+              </div>
+
+              <div class="form-group">
+                <label for="goalTargetDate">Target Date</label>
+                <input type="date" id="goalTargetDate" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="goal-form-actions">
+              <button class="btn btn-primary" id="saveGoalBtn">
+                <i class="fas fa-save"></i>
+                Save Goal
+              </button>
+              <button class="btn btn-outline" id="cancelGoalBtn">
+                <i class="fas fa-times"></i>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Goals Section -->
+        <div class="goals-section">
+          <h4 class="subsection-title">Active Goals (${activeGoals.length})</h4>
+          
+          ${activeGoals.length === 0 
+            ? `<div class="empty-goals">
+                <i class="fas fa-bullseye empty-icon"></i>
+                <p>No active goals yet</p>
+                <p class="empty-subtext">Create your first training goal to start tracking progress</p>
+               </div>`
+            : `<div class="goals-grid">
+                ${activeGoals.map(goal => this.createGoalCard(goal)).join('')}
+               </div>`
+          }
+        </div>
+
+        <!-- Completed Goals Section -->
+        ${completedGoals.length > 0 ? `
+          <div class="goals-section">
+            <h4 class="subsection-title">Completed Goals (${completedGoals.length})</h4>
+            <div class="goals-grid">
+              ${completedGoals.map(goal => this.createGoalCard(goal)).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  createGoalCard(goal) {
+    const progressPercentage = Math.min(100, Math.max(0, goal.progress));
+    const statusClass = goal.status === 'completed' ? 'completed' : 
+                       goal.status === 'paused' ? 'paused' : 'active';
+    
+    const daysRemaining = goal.targetDate ? 
+      Math.max(0, Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24))) : 0;
+
+    return `
+      <div class="goal-card ${statusClass}" data-goal-id="${goal.id}">
+        <div class="goal-header">
+          <div class="goal-type-badge ${goal.type}">
+            ${this.getGoalTypeIcon(goal.type)}
+            ${goal.type.toUpperCase()}
+          </div>
+          <div class="goal-actions">
+            <button class="goal-action-btn edit-goal" data-goal-id="${goal.id}" title="Edit Goal">
+              <i class="fas fa-edit"></i>
+            </button>
+            ${goal.status !== 'completed' ? `
+              <button class="goal-action-btn complete-goal" data-goal-id="${goal.id}" title="Mark Complete">
+                <i class="fas fa-check"></i>
+              </button>
+            ` : ''}
+            <button class="goal-action-btn delete-goal" data-goal-id="${goal.id}" title="Delete Goal">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="goal-content">
+          <h5 class="goal-name">${goal.name}</h5>
+          <p class="goal-description">${goal.description}</p>
+
+          <div class="goal-progress">
+            <div class="progress-header">
+              <span class="progress-label">Progress</span>
+              <span class="progress-value">${progressPercentage.toFixed(1)}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+            </div>
+            <div class="progress-details">
+              <span class="current-value">${goal.currentValue} ${goal.unit || ''}</span>
+              <span class="target-value">of ${goal.targetValue} ${goal.unit || ''}</span>
+            </div>
+          </div>
+
+          ${goal.targetDate ? `
+            <div class="goal-timeline">
+              <div class="timeline-item">
+                <i class="fas fa-calendar"></i>
+                <span>Target: ${new Date(goal.targetDate).toLocaleDateString()}</span>
+              </div>
+              ${goal.status !== 'completed' ? `
+                <div class="timeline-item">
+                  <i class="fas fa-clock"></i>
+                  <span>${daysRemaining} days remaining</span>
+                </div>
+              ` : `
+                <div class="timeline-item completed">
+                  <i class="fas fa-trophy"></i>
+                  <span>Completed ${new Date(goal.completedDate).toLocaleDateString()}</span>
+                </div>
+              `}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  getGoalTypeIcon(type) {
+    const iconMap = {
+      [GOAL_TYPES.FTP]: '<i class="fas fa-bolt"></i>',
+      [GOAL_TYPES.VOLUME]: '<i class="fas fa-clock"></i>',
+      [GOAL_TYPES.EVENT]: '<i class="fas fa-flag"></i>',
+      [GOAL_TYPES.WEIGHT]: '<i class="fas fa-weight"></i>',
+      [GOAL_TYPES.CUSTOM]: '<i class="fas fa-star"></i>'
+    };
+    return iconMap[type] || '<i class="fas fa-bullseye"></i>';
+  }
+
   async onInit() {
     console.log('ProfilePage: Starting onInit()');
 
@@ -523,8 +743,15 @@ export class ProfilePage extends BasePage {
     this.setupFormHandlers();
     console.log('ProfilePage: Form handlers setup completed');
 
+    this.setupGoalsHandlers();
+    console.log('ProfilePage: Goals handlers setup completed');
+
     this.setupSaveButton();
     console.log('ProfilePage: Save button setup completed');
+
+    // Load sample goals for demonstration
+    this.loadSampleGoals();
+    console.log('ProfilePage: Sample goals loaded');
 
     // Initialize advanced components after base setup
     this.initializeAdvancedComponents();
@@ -669,6 +896,455 @@ export class ProfilePage extends BasePage {
     }
   }
 
+  setupGoalsHandlers() {
+    // Add Goal button
+    const addGoalBtn = this.container.querySelector('#addGoalBtn');
+    if (addGoalBtn) {
+      this.addEventListener(addGoalBtn, 'click', () => {
+        this.showGoalForm();
+      });
+    }
+
+    // Goal form buttons
+    const saveGoalBtn = this.container.querySelector('#saveGoalBtn');
+    if (saveGoalBtn) {
+      this.addEventListener(saveGoalBtn, 'click', () => {
+        this.handleSaveGoal();
+      });
+    }
+
+    const cancelGoalBtn = this.container.querySelector('#cancelGoalBtn');
+    if (cancelGoalBtn) {
+      this.addEventListener(cancelGoalBtn, 'click', () => {
+        this.hideGoalForm();
+      });
+    }
+
+    // Goal action buttons (edit, complete, delete)
+    const editGoalBtns = this.container.querySelectorAll('.edit-goal');
+    editGoalBtns.forEach(btn => {
+      this.addEventListener(btn, 'click', (event) => {
+        const goalId = event.target.closest('.edit-goal').dataset.goalId;
+        this.handleEditGoal(goalId);
+      });
+    });
+
+    const completeGoalBtns = this.container.querySelectorAll('.complete-goal');
+    completeGoalBtns.forEach(btn => {
+      this.addEventListener(btn, 'click', (event) => {
+        const goalId = event.target.closest('.complete-goal').dataset.goalId;
+        this.handleCompleteGoal(goalId);
+      });
+    });
+
+    const deleteGoalBtns = this.container.querySelectorAll('.delete-goal');
+    deleteGoalBtns.forEach(btn => {
+      this.addEventListener(btn, 'click', (event) => {
+        const goalId = event.target.closest('.delete-goal').dataset.goalId;
+        this.handleDeleteGoal(goalId);
+      });
+    });
+  }
+
+  showGoalForm(goal = null) {
+    const formContainer = this.container.querySelector('#goalFormContainer');
+    const formTitle = this.container.querySelector('#goalFormTitle');
+    
+    if (!formContainer || !formTitle) return;
+
+    // Set form title and mode
+    this.editingGoal = goal;
+    formTitle.textContent = goal ? 'Edit Goal' : 'Create New Goal';
+
+    // Populate form if editing
+    if (goal) {
+      this.container.querySelector('#goalType').value = goal.type;
+      this.container.querySelector('#goalName').value = goal.name;
+      this.container.querySelector('#goalDescription').value = goal.description || '';
+      this.container.querySelector('#goalTargetValue').value = goal.targetValue;
+      this.container.querySelector('#goalCurrentValue').value = goal.currentValue;
+      this.container.querySelector('#goalTargetDate').value = goal.targetDate ? 
+        new Date(goal.targetDate).toISOString().split('T')[0] : '';
+    } else {
+      // Clear form for new goal
+      this.container.querySelector('#goalType').value = GOAL_TYPES.CUSTOM;
+      this.container.querySelector('#goalName').value = '';
+      this.container.querySelector('#goalDescription').value = '';
+      this.container.querySelector('#goalTargetValue').value = '';
+      this.container.querySelector('#goalCurrentValue').value = '';
+      this.container.querySelector('#goalTargetDate').value = '';
+    }
+
+    formContainer.style.display = 'block';
+  }
+
+  hideGoalForm() {
+    const formContainer = this.container.querySelector('#goalFormContainer');
+    if (formContainer) {
+      formContainer.style.display = 'none';
+      this.editingGoal = null;
+    }
+  }
+
+  async handleSaveGoal() {
+    // Collect form data
+    const type = this.container.querySelector('#goalType').value;
+    const name = this.container.querySelector('#goalName').value.trim();
+    const description = this.container.querySelector('#goalDescription').value.trim();
+    const targetValue = parseFloat(this.container.querySelector('#goalTargetValue').value);
+    const currentValue = parseFloat(this.container.querySelector('#goalCurrentValue').value);
+    const targetDate = this.container.querySelector('#goalTargetDate').value;
+
+    // Validate form
+    if (!name) {
+      this.showError('Goal name is required');
+      return;
+    }
+    if (isNaN(targetValue) || targetValue <= 0) {
+      this.showError('Target value must be a positive number');
+      return;
+    }
+    if (isNaN(currentValue) || currentValue < 0) {
+      this.showError('Current value must be a non-negative number');
+      return;
+    }
+    if (!targetDate) {
+      this.showError('Target date is required');
+      return;
+    }
+
+    try {
+      if (this.editingGoal) {
+        // Update existing goal
+        const goalIndex = this.goals.findIndex(g => g.id === this.editingGoal.id);
+        if (goalIndex !== -1) {
+          const updatedGoal = this.goals[goalIndex];
+          updatedGoal.name = name;
+          updatedGoal.description = description;
+          updatedGoal.targetValue = targetValue;
+          updatedGoal.targetDate = new Date(targetDate);
+          updatedGoal.updateProgress(currentValue);
+          
+          // Save updated goal to persistent storage
+          const goalData = updatedGoal.toJSON();
+          await profileService.updateTrainingGoal(this.editingGoal.id, goalData);
+          
+          this.showSuccess('Goal updated successfully!');
+        }
+      } else {
+        // Create new goal using factory methods
+        let newGoal;
+        switch (type) {
+          case GOAL_TYPES.FTP:
+            newGoal = TrainingGoal.createFTPGoal({
+              name,
+              description,
+              targetValue,
+              currentValue,
+              targetDate: new Date(targetDate)
+            });
+            break;
+          case GOAL_TYPES.VOLUME:
+            newGoal = TrainingGoal.createVolumeGoal({
+              name,
+              description,
+              targetValue,
+              currentValue,
+              targetDate: new Date(targetDate)
+            });
+            break;
+          case GOAL_TYPES.EVENT:
+            newGoal = TrainingGoal.createEventGoal({
+              name,
+              description,
+              targetValue,
+              currentValue,
+              targetDate: new Date(targetDate)
+            });
+            break;
+          case GOAL_TYPES.WEIGHT:
+            newGoal = TrainingGoal.createWeightGoal({
+              name,
+              description,
+              targetValue,
+              currentValue,
+              targetDate: new Date(targetDate)
+            });
+            break;
+          default:
+            newGoal = new TrainingGoal({
+              type,
+              name,
+              description,
+              targetValue,
+              currentValue,
+              targetDate: new Date(targetDate)
+            });
+        }
+
+        // Save new goal to persistent storage
+        const goalData = newGoal.toJSON();
+        const goalId = await profileService.saveTrainingGoal(goalData);
+        newGoal.id = goalId;
+        
+        this.goals.push(newGoal);
+        this.showSuccess('Goal created successfully!');
+        
+        // Register milestone callbacks for the new goal
+        this.setupGoalMilestoneCallbacks(newGoal);
+      }
+
+      this.hideGoalForm();
+      this.refreshGoalsTab();
+
+    } catch (error) {
+      logger.error('Failed to save goal:', error);
+      this.showError('Failed to save goal. Please try again.');
+    }
+  }
+
+  handleEditGoal(goalId) {
+    const goal = this.goals.find(g => g.id === goalId);
+    if (goal) {
+      this.showGoalForm(goal);
+    }
+  }
+
+  async handleCompleteGoal(goalId) {
+    try {
+      const goal = this.goals.find(g => g.id === goalId);
+      if (goal) {
+        goal.complete();
+        
+        // Update goal in persistent storage
+        const goalData = goal.toJSON();
+        await profileService.updateTrainingGoal(goalId, goalData);
+        
+        this.showSuccess(`Goal "${goal.name}" marked as complete!`);
+        this.refreshGoalsTab();
+      }
+    } catch (error) {
+      logger.error('Failed to complete goal:', error);
+      this.showError('Failed to complete goal. Please try again.');
+    }
+  }
+
+  async handleDeleteGoal(goalId) {
+    try {
+      const goal = this.goals.find(g => g.id === goalId);
+      if (goal && confirm(`Are you sure you want to delete the goal "${goal.name}"?`)) {
+        // Delete from persistent storage first
+        await profileService.deleteTrainingGoal(goalId);
+        
+        // Remove from local array
+        const index = this.goals.findIndex(g => g.id === goalId);
+        if (index !== -1) {
+          this.goals.splice(index, 1);
+          this.showSuccess('Goal deleted successfully!');
+          this.refreshGoalsTab();
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to delete goal:', error);
+      this.showError('Failed to delete goal. Please try again.');
+    }
+  }
+
+  refreshGoalsTab() {
+    const goalsPanel = this.container.querySelector('#goals-panel');
+    if (goalsPanel && this.activeTab === 'goals') {
+      goalsPanel.innerHTML = this.createGoalsTab();
+      // Re-setup goals handlers for the refreshed content
+      this.setupGoalsHandlers();
+    }
+  }
+
+  /**
+   * Setup milestone callbacks for a goal
+   * @param {TrainingGoal} goal - The goal to setup callbacks for
+   */
+  setupGoalMilestoneCallbacks(goal) {
+    // Register progress milestone callback
+    goalProgressService.registerMilestoneCallback('progress', (milestone, goal) => {
+      this.showMilestoneNotification(milestone);
+      this.refreshGoalsTab(); // Refresh UI to show progress updates
+    });
+
+    // Register completion milestone callback  
+    goalProgressService.registerMilestoneCallback('completion', (milestone, goal) => {
+      this.showMilestoneNotification({
+        ...milestone,
+        type: 'celebration',
+        message: `🎉 Congratulations! You completed "${goal.name}"!`
+      });
+      this.refreshGoalsTab();
+    });
+  }
+
+  /**
+   * Show milestone notification
+   * @param {Object} milestone - Milestone data
+   */
+  showMilestoneNotification(milestone) {
+    const notification = document.createElement('div');
+    notification.className = `milestone-notification ${milestone.type}`;
+    notification.innerHTML = `
+      <div class="milestone-content">
+        <div class="milestone-icon">
+          ${milestone.type === 'completion' ? '🏆' : '🎯'}
+        </div>
+        <div class="milestone-message">${milestone.message}</div>
+        <div class="milestone-close">×</div>
+      </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      max-width: 400px;
+      animation: slideIn 0.3s ease-out;
+    `;
+
+    const closeBtn = notification.querySelector('.milestone-close');
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      opacity: 0.8;
+    `;
+
+    closeBtn.addEventListener('click', () => notification.remove());
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Update goal progress when profile data changes
+   * @param {Object} profileChanges - Changed profile data
+   */
+  async updateGoalsFromProfileChanges(profileChanges) {
+    try {
+      if (this.goals.length === 0) return;
+
+      logger.info('Updating goals from profile changes:', profileChanges);
+
+      const results = await goalProgressService.updateGoalsFromProfile(this.goals, profileChanges);
+      
+      let updatedCount = 0;
+      let milestonesCount = 0;
+
+      results.forEach(result => {
+        if (result.updated) {
+          updatedCount++;
+          if (result.milestones) {
+            milestonesCount += result.milestones.length;
+          }
+        }
+      });
+
+      if (updatedCount > 0) {
+        this.showSuccess(`Updated ${updatedCount} goal${updatedCount > 1 ? 's' : ''} based on profile changes`);
+        this.refreshGoalsTab();
+        
+        if (milestonesCount > 0) {
+          logger.info(`${milestonesCount} milestone(s) achieved from profile updates`);
+        }
+      }
+
+    } catch (error) {
+      logger.error('Failed to update goals from profile changes:', error);
+      this.showError('Failed to update goals from profile changes');
+    }
+  }
+
+  /**
+   * Load sample goals for demonstration
+   */
+  loadSampleGoals() {
+    if (this.goals.length > 0) return; // Don't load if goals already exist
+
+    try {
+      // Create sample goals
+      const ftpGoal = TrainingGoal.createFTPGoal({
+        name: 'Increase FTP to 300W',
+        description: 'Improve functional threshold power for better performance',
+        targetValue: 300,
+        currentValue: this.profile.ftp || 250,
+        targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days from now
+      });
+
+      const volumeGoal = TrainingGoal.createVolumeGoal({
+        name: 'Train 8 Hours Per Week',
+        description: 'Maintain consistent weekly training volume',
+        targetValue: 8,
+        currentValue: 2.5,
+        targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      });
+
+      const eventGoal = TrainingGoal.createEventGoal({
+        name: 'Century Ride Preparation',
+        description: 'Prepare for 100-mile cycling event',
+        targetValue: 100,
+        currentValue: 45,
+        targetDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000) // 120 days from now
+      });
+
+      this.goals = [ftpGoal, volumeGoal, eventGoal];
+      
+      // Setup milestone callbacks for sample goals
+      this.goals.forEach(goal => this.setupGoalMilestoneCallbacks(goal));
+      
+      logger.info('Sample goals loaded successfully');
+      
+    } catch (error) {
+      logger.error('Failed to load sample goals:', error);
+    }
+  }
+
+  /**
+   * Get goal-relevant changes from profile update
+   * @param {Object} oldProfile - Previous profile state
+   * @param {Object} newProfile - New profile state
+   * @returns {Object} Goal-relevant changes
+   */
+  getGoalRelevantChanges(oldProfile, newProfile) {
+    const changes = {};
+
+    // FTP changes affect FTP goals
+    if (oldProfile.ftp !== newProfile.ftp && newProfile.ftp) {
+      changes.ftp = newProfile.ftp;
+    }
+
+    // Weight changes affect weight goals and power-to-weight calculations
+    if (oldProfile.weight !== newProfile.weight && newProfile.weight) {
+      changes.weight = newProfile.weight;
+    }
+
+    // Height changes might affect some calculations
+    if (oldProfile.height !== newProfile.height && newProfile.height) {
+      changes.height = newProfile.height;
+    }
+
+    return changes;
+  }
+
   setupSaveButton() {
     const saveButton = this.container.querySelector('#saveProfileBtn');
     if (saveButton) {
@@ -808,8 +1484,15 @@ export class ProfilePage extends BasePage {
       this.setLoadingState(true, 'Saving profile...');
 
       // Update local state
+      const oldProfile = { ...this.profile };
       this.profile = { ...this.profile, ...formData.profile };
       this.preferences = { ...this.preferences, ...formData.preferences };
+
+      // Check for goal-relevant profile changes and update goals
+      const profileChanges = this.getGoalRelevantChanges(oldProfile, this.profile);
+      if (Object.keys(profileChanges).length > 0) {
+        await this.updateGoalsFromProfileChanges(profileChanges);
+      }
 
       // Initialize profile service if needed
       if (!profileService.initialized) {
