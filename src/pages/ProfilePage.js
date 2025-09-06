@@ -10,6 +10,7 @@ import { FTPTestCalculator } from '../components/profile/FTPTestCalculator.js';
 import { TrainingZones } from '../components/profile/TrainingZones.js';
 import { FTPHistory } from '../components/profile/FTPHistory.js';
 import { TrainingGoal, GOAL_TYPES } from '../models/TrainingGoal.js';
+import { goalProgressService } from '../services/GoalProgressService.js';
 
 const logger = createLogger('ProfilePage');
 
@@ -720,6 +721,10 @@ export class ProfilePage extends BasePage {
     this.setupSaveButton();
     console.log('ProfilePage: Save button setup completed');
 
+    // Load sample goals for demonstration
+    this.loadSampleGoals();
+    console.log('ProfilePage: Sample goals loaded');
+
     // Initialize advanced components after base setup
     this.initializeAdvancedComponents();
 
@@ -1047,6 +1052,9 @@ export class ProfilePage extends BasePage {
 
         this.goals.push(newGoal);
         this.showSuccess('Goal created successfully!');
+        
+        // Register milestone callbacks for the new goal
+        this.setupGoalMilestoneCallbacks(newGoal);
       }
 
       this.hideGoalForm();
@@ -1093,6 +1101,192 @@ export class ProfilePage extends BasePage {
       // Re-setup goals handlers for the refreshed content
       this.setupGoalsHandlers();
     }
+  }
+
+  /**
+   * Setup milestone callbacks for a goal
+   * @param {TrainingGoal} goal - The goal to setup callbacks for
+   */
+  setupGoalMilestoneCallbacks(goal) {
+    // Register progress milestone callback
+    goalProgressService.registerMilestoneCallback('progress', (milestone, goal) => {
+      this.showMilestoneNotification(milestone);
+      this.refreshGoalsTab(); // Refresh UI to show progress updates
+    });
+
+    // Register completion milestone callback  
+    goalProgressService.registerMilestoneCallback('completion', (milestone, goal) => {
+      this.showMilestoneNotification({
+        ...milestone,
+        type: 'celebration',
+        message: `🎉 Congratulations! You completed "${goal.name}"!`
+      });
+      this.refreshGoalsTab();
+    });
+  }
+
+  /**
+   * Show milestone notification
+   * @param {Object} milestone - Milestone data
+   */
+  showMilestoneNotification(milestone) {
+    const notification = document.createElement('div');
+    notification.className = `milestone-notification ${milestone.type}`;
+    notification.innerHTML = `
+      <div class="milestone-content">
+        <div class="milestone-icon">
+          ${milestone.type === 'completion' ? '🏆' : '🎯'}
+        </div>
+        <div class="milestone-message">${milestone.message}</div>
+        <div class="milestone-close">×</div>
+      </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      max-width: 400px;
+      animation: slideIn 0.3s ease-out;
+    `;
+
+    const closeBtn = notification.querySelector('.milestone-close');
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      opacity: 0.8;
+    `;
+
+    closeBtn.addEventListener('click', () => notification.remove());
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Update goal progress when profile data changes
+   * @param {Object} profileChanges - Changed profile data
+   */
+  async updateGoalsFromProfileChanges(profileChanges) {
+    try {
+      if (this.goals.length === 0) return;
+
+      logger.info('Updating goals from profile changes:', profileChanges);
+
+      const results = await goalProgressService.updateGoalsFromProfile(this.goals, profileChanges);
+      
+      let updatedCount = 0;
+      let milestonesCount = 0;
+
+      results.forEach(result => {
+        if (result.updated) {
+          updatedCount++;
+          if (result.milestones) {
+            milestonesCount += result.milestones.length;
+          }
+        }
+      });
+
+      if (updatedCount > 0) {
+        this.showSuccess(`Updated ${updatedCount} goal${updatedCount > 1 ? 's' : ''} based on profile changes`);
+        this.refreshGoalsTab();
+        
+        if (milestonesCount > 0) {
+          logger.info(`${milestonesCount} milestone(s) achieved from profile updates`);
+        }
+      }
+
+    } catch (error) {
+      logger.error('Failed to update goals from profile changes:', error);
+      this.showError('Failed to update goals from profile changes');
+    }
+  }
+
+  /**
+   * Load sample goals for demonstration
+   */
+  loadSampleGoals() {
+    if (this.goals.length > 0) return; // Don't load if goals already exist
+
+    try {
+      // Create sample goals
+      const ftpGoal = TrainingGoal.createFTPGoal({
+        name: 'Increase FTP to 300W',
+        description: 'Improve functional threshold power for better performance',
+        targetValue: 300,
+        currentValue: this.profile.ftp || 250,
+        targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days from now
+      });
+
+      const volumeGoal = TrainingGoal.createVolumeGoal({
+        name: 'Train 8 Hours Per Week',
+        description: 'Maintain consistent weekly training volume',
+        targetValue: 8,
+        currentValue: 2.5,
+        targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      });
+
+      const eventGoal = TrainingGoal.createEventGoal({
+        name: 'Century Ride Preparation',
+        description: 'Prepare for 100-mile cycling event',
+        targetValue: 100,
+        currentValue: 45,
+        targetDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000) // 120 days from now
+      });
+
+      this.goals = [ftpGoal, volumeGoal, eventGoal];
+      
+      // Setup milestone callbacks for sample goals
+      this.goals.forEach(goal => this.setupGoalMilestoneCallbacks(goal));
+      
+      logger.info('Sample goals loaded successfully');
+      
+    } catch (error) {
+      logger.error('Failed to load sample goals:', error);
+    }
+  }
+
+  /**
+   * Get goal-relevant changes from profile update
+   * @param {Object} oldProfile - Previous profile state
+   * @param {Object} newProfile - New profile state
+   * @returns {Object} Goal-relevant changes
+   */
+  getGoalRelevantChanges(oldProfile, newProfile) {
+    const changes = {};
+
+    // FTP changes affect FTP goals
+    if (oldProfile.ftp !== newProfile.ftp && newProfile.ftp) {
+      changes.ftp = newProfile.ftp;
+    }
+
+    // Weight changes affect weight goals and power-to-weight calculations
+    if (oldProfile.weight !== newProfile.weight && newProfile.weight) {
+      changes.weight = newProfile.weight;
+    }
+
+    // Height changes might affect some calculations
+    if (oldProfile.height !== newProfile.height && newProfile.height) {
+      changes.height = newProfile.height;
+    }
+
+    return changes;
   }
 
   setupSaveButton() {
@@ -1234,8 +1428,15 @@ export class ProfilePage extends BasePage {
       this.setLoadingState(true, 'Saving profile...');
 
       // Update local state
+      const oldProfile = { ...this.profile };
       this.profile = { ...this.profile, ...formData.profile };
       this.preferences = { ...this.preferences, ...formData.preferences };
+
+      // Check for goal-relevant profile changes and update goals
+      const profileChanges = this.getGoalRelevantChanges(oldProfile, this.profile);
+      if (Object.keys(profileChanges).length > 0) {
+        await this.updateGoalsFromProfileChanges(profileChanges);
+      }
 
       // Initialize profile service if needed
       if (!profileService.initialized) {
