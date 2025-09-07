@@ -1,7 +1,9 @@
 /**
  * Chart Utilities Module
- * Lazy-loaded chart functionality
+ * Lazy-loaded chart functionality with advanced chart support
  */
+
+import { advancedCharts } from './advancedCharts.js';
 
 export class ChartUtils {
   constructor() {
@@ -360,6 +362,196 @@ export class ChartUtils {
   }
 
   /**
+   * Create 3D Power Surface Plot
+   * Advanced visualization for power/elevation data
+   */
+  async create3DPowerSurface(containerId, workoutData, options = {}) {
+    try {
+      return await advancedCharts.create3DPowerSurface(
+        containerId,
+        workoutData,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create 3D power surface:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Heat Map Calendar
+   * Training load calendar visualization
+   */
+  createHeatMapCalendar(containerId, trainingData, options = {}) {
+    try {
+      return advancedCharts.createHeatMapCalendar(
+        containerId,
+        trainingData,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create heat map calendar:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Zone Distribution Chart
+   * Interactive pie/donut chart for power zones
+   */
+  createZoneDistribution(containerId, workoutData, options = {}) {
+    try {
+      return advancedCharts.createZoneDistribution(
+        containerId,
+        workoutData,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create zone distribution:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Animated Workout Preview
+   * Real-time workout visualization
+   */
+  createAnimatedPreview(containerId, workoutData, options = {}) {
+    try {
+      return advancedCharts.createAnimatedPreview(
+        containerId,
+        workoutData,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create animated preview:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Power Duration Curve
+   * Best efforts analysis with trend lines
+   */
+  createPowerDurationCurve(containerId, workoutHistory, options = {}) {
+    try {
+      return advancedCharts.createPowerDurationCurve(
+        containerId,
+        workoutHistory,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create power duration curve:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Comparative Heat Maps
+   * Compare multiple workouts side by side
+   */
+  createComparativeHeatMaps(containerId, workoutsData, options = {}) {
+    try {
+      return advancedCharts.createComparativeHeatMaps(
+        containerId,
+        workoutsData,
+        options
+      );
+    } catch (error) {
+      console.error('Failed to create comparative heat maps:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export chart in multiple formats
+   */
+  async exportAdvancedChart(
+    containerId,
+    format = 'png',
+    filename,
+    options = {}
+  ) {
+    try {
+      switch (format.toLowerCase()) {
+        case 'png':
+          return await advancedCharts.exportChartAsPNG(
+            containerId,
+            filename,
+            options
+          );
+        case 'svg':
+          return advancedCharts.exportChartAsSVG(containerId, filename);
+        case 'pdf':
+          return await advancedCharts.exportChartAsPDF(
+            containerId,
+            filename,
+            options
+          );
+        case 'json':
+          return advancedCharts.exportChartData(containerId, filename);
+        case 'multiple':
+          return await advancedCharts.exportChartMultiple(
+            containerId,
+            filename || 'chart',
+            options.formats || ['png', 'svg', 'json']
+          );
+        default:
+          throw new Error(`Unsupported export format: ${format}`);
+      }
+    } catch (error) {
+      console.error(`Failed to export chart as ${format}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Destroy advanced chart instance
+   */
+  destroyAdvancedChart(containerId) {
+    try {
+      advancedCharts.destroyChart(containerId);
+    } catch (error) {
+      console.error('Failed to destroy advanced chart:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get chart type from container
+   */
+  getChartType(containerId) {
+    // Check if it's a traditional Chart.js chart
+    if (this.chartInstances.has(containerId)) {
+      return 'chartjs';
+    }
+
+    // Check if it's an advanced chart
+    if (advancedCharts.d3Charts.has(containerId)) {
+      return 'advanced-d3';
+    }
+
+    if (advancedCharts.threeJsScenes.has(containerId)) {
+      return 'advanced-3d';
+    }
+
+    return null;
+  }
+
+  /**
+   * Universal chart destroyer - handles all chart types
+   */
+  destroyAllCharts() {
+    // Destroy traditional charts
+    for (const canvasId of this.chartInstances.keys()) {
+      this.destroyChart(canvasId);
+    }
+
+    // Destroy advanced charts
+    advancedCharts.destroyAll();
+  }
+
+  /**
    * Update chart theme
    */
   updateChartTheme(canvasId, isDark = false) {
@@ -406,3 +598,33 @@ export const highlightSegment = (canvasId, segmentIndex) =>
 
 export const addPowerZones = (canvasId, zones) =>
   chartUtils.addPowerZoneAnnotations(canvasId, zones);
+
+// Advanced chart exports
+export const create3DPowerSurface = (containerId, workoutData, options) =>
+  chartUtils.create3DPowerSurface(containerId, workoutData, options);
+
+export const createHeatMapCalendar = (containerId, trainingData, options) =>
+  chartUtils.createHeatMapCalendar(containerId, trainingData, options);
+
+export const createZoneDistribution = (containerId, workoutData, options) =>
+  chartUtils.createZoneDistribution(containerId, workoutData, options);
+
+export const createAnimatedPreview = (containerId, workoutData, options) =>
+  chartUtils.createAnimatedPreview(containerId, workoutData, options);
+
+export const createPowerDurationCurve = (
+  containerId,
+  workoutHistory,
+  options
+) => chartUtils.createPowerDurationCurve(containerId, workoutHistory, options);
+
+export const createComparativeHeatMaps = (containerId, workoutsData, options) =>
+  chartUtils.createComparativeHeatMaps(containerId, workoutsData, options);
+
+export const exportAdvancedChart = (containerId, format, filename, options) =>
+  chartUtils.exportAdvancedChart(containerId, format, filename, options);
+
+export const destroyAdvancedChart = containerId =>
+  chartUtils.destroyAdvancedChart(containerId);
+
+export const getChartType = containerId => chartUtils.getChartType(containerId);
