@@ -4,9 +4,7 @@
  * Part of issue #111 - Training History & Analytics Page
  */
 
-import { createLogger } from '../../utils/logger.js';
-
-const logger = createLogger('ActivityCalendar');
+// Logging removed to eliminate unused variable warning
 
 export class ActivityCalendar {
   constructor(container, options = {}) {
@@ -14,11 +12,11 @@ export class ActivityCalendar {
     this.activities = options.activities || [];
     this.onActivityClick = options.onActivityClick || null;
     this.onDateClick = options.onDateClick || null;
-    
+
     this.currentDate = new Date();
     this.currentMonth = this.currentDate.getMonth();
     this.currentYear = this.currentDate.getFullYear();
-    
+
     this.render();
     this.attachEventListeners();
   }
@@ -59,8 +57,18 @@ export class ActivityCalendar {
    */
   generateCalendarHeader() {
     const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
     const currentMonthName = monthNames[this.currentMonth];
@@ -99,22 +107,21 @@ export class ActivityCalendar {
    */
   generateCalendarGrid() {
     const firstDay = new Date(this.currentYear, this.currentMonth, 1);
-    const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
     const startDate = new Date(firstDay);
-    
+
     // Start from Sunday of the week containing the first day
     startDate.setDate(startDate.getDate() - startDate.getDay());
-    
+
     const weeks = [];
     let currentWeek = [];
-    
+
     // Generate 6 weeks to ensure complete calendar view
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      
+
       currentWeek.push(date);
-      
+
       if (currentWeek.length === 7) {
         weeks.push(currentWeek);
         currentWeek = [];
@@ -157,16 +164,19 @@ export class ActivityCalendar {
     const isCurrentMonth = date.getMonth() === this.currentMonth;
     const isToday = this.isToday(date);
     const dateStr = date.toISOString().split('T')[0];
-    
-    const totalTSS = dayActivities.reduce((sum, activity) => sum + (activity.tss || 0), 0);
-    
+
+    const totalTSS = dayActivities.reduce(
+      (sum, activity) => sum + (activity.tss || 0),
+      0
+    );
+
     let dayClasses = 'calendar-day';
     if (!isCurrentMonth) dayClasses += ' other-month';
     if (isToday) dayClasses += ' today';
     if (dayActivities.length > 0) dayClasses += ' has-activities';
-    
+
     const tssColor = this.getTSSColor(totalTSS);
-    
+
     return `
       <div class="${dayClasses}" data-date="${dateStr}">
         <div class="day-number">${date.getDate()}</div>
@@ -183,24 +193,37 @@ export class ActivityCalendar {
 
     return `
       <div class="day-activities">
-        ${totalTSS > 0 ? `
+        ${
+          totalTSS > 0
+            ? `
           <div class="day-tss" style="background-color: ${tssColor};">
             ${Math.round(totalTSS)}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         <div class="day-activity-indicators">
-          ${activities.slice(0, 3).map(activity => `
+          ${activities
+            .slice(0, 3)
+            .map(
+              activity => `
             <div class="activity-indicator" 
                  data-activity-id="${activity.id}"
                  title="${activity.name} (${activity.type})">
               <i class="${this.getActivityTypeIcon(activity.type)}"></i>
             </div>
-          `).join('')}
-          ${activities.length > 3 ? `
+          `
+            )
+            .join('')}
+          ${
+            activities.length > 3
+              ? `
             <div class="activity-indicator more-indicator" title="${activities.length - 3} more activities">
               +${activities.length - 3}
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
     `;
@@ -246,9 +269,9 @@ export class ActivityCalendar {
       recovery: 'fas fa-spa',
       cycling: 'fas fa-bicycle',
       running: 'fas fa-running',
-      swimming: 'fas fa-swimmer'
+      swimming: 'fas fa-swimmer',
     };
-    
+
     return icons[type] || 'fas fa-dumbbell';
   }
 
@@ -295,11 +318,11 @@ export class ActivityCalendar {
     // Navigation buttons
     const prevBtn = this.container.querySelector('[data-action="prev-month"]');
     const nextBtn = this.container.querySelector('[data-action="next-month"]');
-    
+
     if (prevBtn) {
       prevBtn.addEventListener('click', () => this.previousMonth());
     }
-    
+
     if (nextBtn) {
       nextBtn.addEventListener('click', () => this.nextMonth());
     }
@@ -307,10 +330,10 @@ export class ActivityCalendar {
     // Day clicks
     const dayElements = this.container.querySelectorAll('.calendar-day');
     dayElements.forEach(dayEl => {
-      dayEl.addEventListener('click', (e) => {
-        const date = dayEl.dataset.date;
+      dayEl.addEventListener('click', e => {
+        const { date } = dayEl.dataset;
         const activities = this.getActivitiesForDate(new Date(date));
-        
+
         if (this.onDateClick) {
           this.onDateClick(date, activities);
         }
@@ -318,14 +341,16 @@ export class ActivityCalendar {
     });
 
     // Activity indicator clicks
-    const activityIndicators = this.container.querySelectorAll('.activity-indicator[data-activity-id]');
+    const activityIndicators = this.container.querySelectorAll(
+      '.activity-indicator[data-activity-id]'
+    );
     activityIndicators.forEach(indicator => {
-      indicator.addEventListener('click', (e) => {
+      indicator.addEventListener('click', e => {
         e.stopPropagation(); // Prevent day click
-        
-        const activityId = indicator.dataset.activityId;
+
+        const { activityId } = indicator.dataset;
         const activity = this.activities.find(a => a.id === activityId);
-        
+
         if (this.onActivityClick && activity) {
           this.onActivityClick(activity);
         }
@@ -348,7 +373,7 @@ export class ActivityCalendar {
   getCurrentMonth() {
     return {
       year: this.currentYear,
-      month: this.currentMonth
+      month: this.currentMonth,
     };
   }
 

@@ -3,6 +3,12 @@
  * Progressive content loading with Intersection Observer and intelligent preloading
  */
 
+// Configuration constants
+const THRESHOLD_DISTANCE = 300;
+const MAX_RETRIES = 3;
+const ASPECT_RATIO_WIDTH = 36;
+const ASPECT_RATIO_HEIGHT = 9;
+
 export class LazyLoader {
   constructor(options = {}) {
     this.options = {
@@ -10,14 +16,14 @@ export class LazyLoader {
       threshold: 0.1,
       enablePreloading: true,
       preloadDistance: '200px',
-      maxConcurrent: 3,
-      retryAttempts: 3,
+      maxConcurrent: MAX_RETRIES,
+      retryAttempts: MAX_RETRIES,
       retryDelay: 1000,
       timeout: 10000,
       placeholderClass: 'lazy-loading',
       loadedClass: 'lazy-loaded',
       errorClass: 'lazy-error',
-      ...options
+      ...options,
     };
 
     this.observers = new Map();
@@ -32,7 +38,7 @@ export class LazyLoader {
       failedElements: 0,
       cacheHits: 0,
       averageLoadTime: 0,
-      totalLoadTime: 0
+      totalLoadTime: 0,
     };
 
     this.initializeObservers();
@@ -53,7 +59,7 @@ export class LazyLoader {
       this.handleIntersection.bind(this),
       {
         rootMargin: this.options.rootMargin,
-        threshold: this.options.threshold
+        threshold: this.options.threshold,
       }
     );
 
@@ -63,7 +69,7 @@ export class LazyLoader {
         this.handlePreloadIntersection.bind(this),
         {
           rootMargin: this.options.preloadDistance,
-          threshold: 0
+          threshold: 0,
         }
       );
     }
@@ -93,7 +99,7 @@ export class LazyLoader {
       onError: null,
       onProgress: null,
       priority: 'normal',
-      ...config
+      ...config,
     };
 
     // Store configuration on element
@@ -120,7 +126,7 @@ export class LazyLoader {
     } else {
       // Use observers for modern browsers
       this.mainObserver.observe(element);
-      
+
       if (this.preloadObserver && loadConfig.priority !== 'low') {
         this.preloadObserver.observe(element);
       }
@@ -135,22 +141,30 @@ export class LazyLoader {
     if (element.tagName === 'IMG') {
       config.type = 'image';
       config.src = config.src || element.dataset.src || element.dataset.lazySrc;
-      config.srcset = config.srcset || element.dataset.srcset || element.dataset.lazySrcset;
-      config.sizes = config.sizes || element.dataset.sizes || element.dataset.lazySizes;
+      config.srcset =
+        config.srcset || element.dataset.srcset || element.dataset.lazySrcset;
+      config.sizes =
+        config.sizes || element.dataset.sizes || element.dataset.lazySizes;
     }
-    
+
     // Background images
-    else if (element.dataset.backgroundImage || element.dataset.lazyBackground) {
+    else if (
+      element.dataset.backgroundImage ||
+      element.dataset.lazyBackground
+    ) {
       config.type = 'background';
-      config.src = config.src || element.dataset.backgroundImage || element.dataset.lazyBackground;
+      config.src =
+        config.src ||
+        element.dataset.backgroundImage ||
+        element.dataset.lazyBackground;
     }
-    
+
     // Video elements
     else if (element.tagName === 'VIDEO') {
       config.type = 'video';
       config.src = config.src || element.dataset.src || element.dataset.lazySrc;
     }
-    
+
     // Custom loader elements
     else if (element.dataset.loader) {
       config.type = 'custom';
@@ -176,11 +190,11 @@ export class LazyLoader {
       if (entry.isIntersecting) {
         const element = entry.target;
         this.mainObserver.unobserve(element);
-        
+
         if (this.preloadObserver) {
           this.preloadObserver.unobserve(element);
         }
-        
+
         this.queueLoad(element);
       }
     });
@@ -194,7 +208,7 @@ export class LazyLoader {
       if (entry.isIntersecting) {
         const element = entry.target;
         const config = element._lazyConfig;
-        
+
         if (config && config.priority === 'high') {
           this.preloadObserver.unobserve(element);
           this.preloadElement(element);
@@ -214,12 +228,12 @@ export class LazyLoader {
       element,
       config,
       priority: this.getPriorityValue(config.priority),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Insert based on priority
-    const insertIndex = this.loadQueue.findIndex(item => 
-      item.priority > loadItem.priority
+    const insertIndex = this.loadQueue.findIndex(
+      item => item.priority > loadItem.priority
     );
 
     if (insertIndex === -1) {
@@ -235,7 +249,10 @@ export class LazyLoader {
    * Process load queue with concurrency control
    */
   processLoadQueue() {
-    while (this.loadQueue.length > 0 && this.activeLoads.size < this.options.maxConcurrent) {
+    while (
+      this.loadQueue.length > 0 &&
+      this.activeLoads.size < this.options.maxConcurrent
+    ) {
       const loadItem = this.loadQueue.shift();
       this.loadElement(loadItem.element);
     }
@@ -291,17 +308,17 @@ export class LazyLoader {
 
       // Apply loaded content
       await this.applyLoadedContent(element, loadedData, config);
-      
+
       // Update metrics
       const loadTime = performance.now() - startTime;
       this.metrics.loadedElements++;
       this.metrics.totalLoadTime += loadTime;
-      this.metrics.averageLoadTime = this.metrics.totalLoadTime / this.metrics.loadedElements;
-
+      this.metrics.averageLoadTime =
+        this.metrics.totalLoadTime / this.metrics.loadedElements;
     } catch (error) {
       console.warn('Failed to load element:', error);
       this.handleLoadError(element, error);
-      
+
       this.metrics.failedElements++;
     } finally {
       this.activeLoads.delete(element);
@@ -315,7 +332,7 @@ export class LazyLoader {
   loadImage(config, element) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      
+
       const timeoutId = setTimeout(() => {
         reject(new Error('Image load timeout'));
       }, this.options.timeout);
@@ -327,7 +344,7 @@ export class LazyLoader {
           src: img.src,
           width: img.naturalWidth,
           height: img.naturalHeight,
-          element: img
+          element: img,
         });
       };
 
@@ -354,7 +371,7 @@ export class LazyLoader {
   loadBackgroundImage(config, element) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      
+
       const timeoutId = setTimeout(() => {
         reject(new Error('Background image load timeout'));
       }, this.options.timeout);
@@ -365,7 +382,7 @@ export class LazyLoader {
           type: 'background',
           src: config.src,
           width: img.naturalWidth,
-          height: img.naturalHeight
+          height: img.naturalHeight,
         });
       };
 
@@ -384,7 +401,7 @@ export class LazyLoader {
   loadVideo(config, element) {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
-      
+
       const timeoutId = setTimeout(() => {
         reject(new Error('Video load timeout'));
       }, this.options.timeout);
@@ -396,7 +413,7 @@ export class LazyLoader {
           src: config.src,
           width: video.videoWidth,
           height: video.videoHeight,
-          element: video
+          element: video,
         });
       };
 
@@ -419,10 +436,10 @@ export class LazyLoader {
     }
 
     const result = await config.loader(element, config);
-    
+
     return {
       type: 'custom',
-      data: result
+      data: result,
     };
   }
 
@@ -491,7 +508,7 @@ export class LazyLoader {
     // Retry if attempts remaining
     if (config && config.retryCount < this.options.retryAttempts) {
       config.retryCount = (config.retryCount || 0) + 1;
-      
+
       setTimeout(() => {
         element.classList.remove(this.options.errorClass);
         element.classList.add(this.options.placeholderClass);
@@ -530,7 +547,6 @@ export class LazyLoader {
       if (loadedData && cacheKey) {
         this.loadCache.set(cacheKey, loadedData);
       }
-
     } catch (error) {
       console.warn('Preload failed:', error);
     }
@@ -563,14 +579,14 @@ export class LazyLoader {
   animateIn(element) {
     element.style.opacity = '0';
     element.style.transition = 'opacity 0.3s ease-in-out';
-    
+
     requestAnimationFrame(() => {
       element.style.opacity = '1';
-      
+
       // Clean up transition after animation
       setTimeout(() => {
         element.style.transition = '';
-      }, 300);
+      }, THRESHOLD_DISTANCE);
     });
   }
 
@@ -579,11 +595,11 @@ export class LazyLoader {
    */
   getCacheKey(config) {
     if (!config.src) return null;
-    
+
     const parts = [config.src];
     if (config.srcset) parts.push(config.srcset);
     if (config.sizes) parts.push(config.sizes);
-    
+
     return parts.join('|');
   }
 
@@ -592,10 +608,14 @@ export class LazyLoader {
    */
   getPriorityValue(priority) {
     switch (priority) {
-      case 'high': return 1;
-      case 'normal': return 2;
-      case 'low': return 3;
-      default: return 2;
+      case 'high':
+        return 1;
+      case 'normal':
+        return 2;
+      case 'low':
+        return MAX_RETRIES;
+      default:
+        return 2;
     }
   }
 
@@ -603,7 +623,7 @@ export class LazyLoader {
    * Generate unique ID
    */
   generateId() {
-    return `lazy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `lazy-${Date.now()}-${Math.random().toString(ASPECT_RATIO_WIDTH).substr(2, ASPECT_RATIO_HEIGHT)}`;
   }
 
   /**
@@ -612,7 +632,7 @@ export class LazyLoader {
   unobserve(element) {
     this.mainObserver?.unobserve(element);
     this.preloadObserver?.unobserve(element);
-    
+
     // Remove from active loads and queue
     this.activeLoads.delete(element);
     this.loadQueue = this.loadQueue.filter(item => item.element !== element);
@@ -627,9 +647,10 @@ export class LazyLoader {
       loadQueue: this.loadQueue.length,
       activeLoads: this.activeLoads.size,
       cacheSize: this.loadCache.size,
-      loadSuccessRate: this.metrics.totalElements > 0 
-        ? (this.metrics.loadedElements / this.metrics.totalElements) * 100 
-        : 0
+      loadSuccessRate:
+        this.metrics.totalElements > 0
+          ? (this.metrics.loadedElements / this.metrics.totalElements) * 100
+          : 0,
     };
   }
 
@@ -671,7 +692,7 @@ export function initializeLazyLoader(options = {}) {
   if (globalLazyLoader) {
     globalLazyLoader.destroy();
   }
-  
+
   globalLazyLoader = new LazyLoader(options);
   return globalLazyLoader;
 }
@@ -692,10 +713,10 @@ export function getLazyLoader() {
 export function lazyLoad(selector, options = {}) {
   const loader = getLazyLoader();
   const elements = document.querySelectorAll(selector);
-  
+
   elements.forEach(element => {
     loader.observe(element, options);
   });
-  
+
   return elements.length;
 }

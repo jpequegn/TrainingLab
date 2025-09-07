@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HistoryPage Manual Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .test-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-header {
+        color: #2563eb;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+      .test-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .test-item:last-child {
+        border-bottom: none;
+      }
+      .status {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+      }
+      .status.pass {
+        background: #10b981;
+      }
+      .status.fail {
+        background: #ef4444;
+      }
+      .status.warn {
+        background: #f59e0b;
+      }
+      .status.pending {
+        background: #6b7280;
+      }
+      .instructions {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+      }
+      .instructions h4 {
+        margin-top: 0;
+        color: #1e40af;
+      }
+      .app-link {
+        display: inline-block;
+        background: #2563eb;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .app-link:hover {
+        background: #1d4ed8;
+      }
+      .checklist {
+        list-style: none;
+        padding: 0;
+      }
+      .checklist li {
+        padding: 5px 0;
+      }
+      .checklist input[type='checkbox'] {
+        margin-right: 8px;
+        transform: scale(1.2);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 TrainingLab HistoryPage Manual Test Checklist</h1>
+
+    <div class="instructions">
+      <h4>🚀 Getting Started</h4>
+      <ol>
+        <li>Start the local server: <code>python server.py</code></li>
+        <li>
+          Open the TrainingLab application:
+          <a href="http://localhost:3000" class="app-link" target="_blank"
+            >Open TrainingLab</a
+          >
+        </li>
+        <li>Navigate to the History page using the navigation menu</li>
+        <li>Complete the checklist below by manually testing each feature</li>
+      </ol>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">📋 Page Loading & Navigation</h2>
+      <ul class="checklist">
+        <li><input type="checkbox" id="load1" /> Page loads without errors</li>
+        <li>
+          <input type="checkbox" id="load2" /> "Training History" title is
+          displayed
+        </li>
+        <li>
+          <input type="checkbox" id="load3" /> View toggle buttons are visible
+          (Timeline, Calendar, Statistics)
+        </li>
+        <li>
+          <input type="checkbox" id="load4" /> Filter bar is present with
+          dropdowns
+        </li>
+        <li>
+          <input type="checkbox" id="load5" /> Main content area displays
+          properly
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">🔄 View Toggle Functionality</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="view1" /> Timeline view loads by default
+        </li>
+        <li>
+          <input type="checkbox" id="view2" /> Clicking "Calendar" switches to
+          calendar view
+        </li>
+        <li>
+          <input type="checkbox" id="view3" /> Active view button is highlighted
+        </li>
+        <li>
+          <input type="checkbox" id="view4" /> Clicking "Statistics" switches to
+          stats view
+        </li>
+        <li>
+          <input type="checkbox" id="view5" /> Switching back to "Timeline"
+          works correctly
+        </li>
+        <li>
+          <input type="checkbox" id="view6" /> Content changes appropriately
+          with each view
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">📅 ActivityCalendar Component</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="cal1" /> Calendar displays current month
+          and year
+        </li>
+        <li>
+          <input type="checkbox" id="cal2" /> Previous/Next month buttons work
+        </li>
+        <li>
+          <input type="checkbox" id="cal3" /> Weekday headers are displayed
+          (Sun-Sat)
+        </li>
+        <li>
+          <input type="checkbox" id="cal4" /> TSS legend shows three color
+          ranges
+        </li>
+        <li>
+          <input type="checkbox" id="cal5" /> Calendar grid displays properly
+        </li>
+        <li>
+          <input type="checkbox" id="cal6" /> Days with activities show TSS
+          indicators (if data available)
+        </li>
+        <li>
+          <input type="checkbox" id="cal7" /> Clicking on calendar days works
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">📊 PerformanceTrends Component</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="perf1" /> "Performance Trends" header is
+          displayed
+        </li>
+        <li>
+          <input type="checkbox" id="perf2" /> Date range selector is functional
+        </li>
+        <li>
+          <input type="checkbox" id="perf3" /> Four metric cards are displayed
+          (ATL, CTL, TSB, Weekly TSS)
+        </li>
+        <li>
+          <input type="checkbox" id="perf4" /> Metric cards show values or
+          placeholders
+        </li>
+        <li>
+          <input type="checkbox" id="perf5" /> Chart containers are present
+        </li>
+        <li>
+          <input type="checkbox" id="perf6" /> Charts render (if Chart.js
+          loaded)
+        </li>
+        <li>
+          <input type="checkbox" id="perf7" /> Date range changes update the
+          display
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">⚙️ Filter & Modal Functionality</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="filter1" /> Date range filter dropdown
+          works
+        </li>
+        <li>
+          <input type="checkbox" id="filter2" /> Activity type filter dropdown
+          works
+        </li>
+        <li>
+          <input type="checkbox" id="filter3" /> Status filter dropdown works
+        </li>
+        <li>
+          <input type="checkbox" id="filter4" /> Filter changes update the
+          display
+        </li>
+        <li>
+          <input type="checkbox" id="modal1" /> "Add Activity" button is present
+        </li>
+        <li>
+          <input type="checkbox" id="modal2" /> Clicking "Add Activity" opens
+          modal
+        </li>
+        <li>
+          <input type="checkbox" id="modal3" /> Modal has form fields (name,
+          type, date, duration)
+        </li>
+        <li>
+          <input type="checkbox" id="modal4" /> Modal can be closed properly
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">📱 Timeline & Responsive Design</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="timeline1" /> Timeline view shows
+          activities or empty state
+        </li>
+        <li>
+          <input type="checkbox" id="timeline2" /> Activity cards display
+          properly (if activities exist)
+        </li>
+        <li>
+          <input type="checkbox" id="timeline3" /> Empty state message appears
+          (if no activities)
+        </li>
+        <li>
+          <input type="checkbox" id="resp1" /> Page works on mobile viewport
+        </li>
+        <li>
+          <input type="checkbox" id="resp2" /> Navigation remains usable on
+          small screens
+        </li>
+        <li>
+          <input type="checkbox" id="resp3" /> View switching works on mobile
+        </li>
+      </ul>
+    </div>
+
+    <div class="test-container">
+      <h2 class="test-header">🛡️ Error Handling & Performance</h2>
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="error1" /> No JavaScript errors in console
+        </li>
+        <li>
+          <input type="checkbox" id="error2" /> Page remains functional with
+          missing data
+        </li>
+        <li>
+          <input type="checkbox" id="error3" /> Graceful fallback to mock data
+          (if service fails)
+        </li>
+        <li>
+          <input type="checkbox" id="perf1b" /> Page loads within reasonable
+          time (&lt;5 seconds)
+        </li>
+        <li>
+          <input type="checkbox" id="perf2b" /> View switching is responsive
+        </li>
+        <li>
+          <input type="checkbox" id="access1" /> Basic accessibility (keyboard
+          navigation works)
+        </li>
+      </ul>
+    </div>
+
+    <div class="instructions">
+      <h4>✅ Test Completion</h4>
+      <p>After completing the manual testing:</p>
+      <ol>
+        <li>Check the browser console for any errors</li>
+        <li>Test on different screen sizes</li>
+        <li>Verify all interactive elements work</li>
+        <li>Note any missing features or bugs</li>
+      </ol>
+
+      <h4>🐛 Common Issues to Look For:</h4>
+      <ul>
+        <li>
+          <strong>Chart.js not loading:</strong> Charts area appears empty
+        </li>
+        <li>
+          <strong>Mock data issues:</strong> No activities or TSS indicators
+        </li>
+        <li>
+          <strong>Component state problems:</strong> View switching doesn't work
+        </li>
+        <li>
+          <strong>CSS styling issues:</strong> Layout problems or missing styles
+        </li>
+        <li>
+          <strong>Modal problems:</strong> Add Activity button missing or
+          non-functional
+        </li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; color: #6b7280">
+      <p>
+        📖 For automated test results, run:
+        <code>npm run test:e2e tests/e2e/history-page.spec.js</code>
+      </p>
+      <p>
+        📝 See <code>test-results.md</code> for comprehensive test documentation
+      </p>
+    </div>
+
+    <script>
+      // Auto-save checkbox states
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        // Load saved state
+        const saved = localStorage.getItem(checkbox.id);
+        if (saved === 'true') {
+          checkbox.checked = true;
+        }
+
+        // Save state on change
+        checkbox.addEventListener('change', () => {
+          localStorage.setItem(checkbox.id, checkbox.checked);
+        });
+      });
+
+      // Progress counter
+      function updateProgress() {
+        const total = document.querySelectorAll(
+          'input[type="checkbox"]'
+        ).length;
+        const checked = document.querySelectorAll(
+          'input[type="checkbox"]:checked'
+        ).length;
+        const percentage = Math.round((checked / total) * 100);
+
+        document.title = `Manual Test Progress: ${percentage}% (${checked}/${total})`;
+
+        // Update page heading
+        const heading = document.querySelector('h1');
+        heading.textContent = `🧪 TrainingLab HistoryPage Manual Test Checklist (${percentage}% Complete)`;
+      }
+
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateProgress);
+      });
+
+      updateProgress(); // Initial update
+    </script>
+  </body>
+</html>

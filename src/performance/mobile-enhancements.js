@@ -2,6 +2,13 @@
  * Mobile-specific enhancements and touch interactions
  */
 
+// Configuration constants
+const MOBILE_BREAKPOINT = 768;
+const SCROLL_DEBOUNCE_DELAY = 2000;
+const TOUCH_THRESHOLD = 10;
+const Z_INDEX_TOUCH_OVERLAY = 10;
+const ANIMATION_DELAY = 300;
+
 export class MobileEnhancements {
   constructor() {
     this.touchStartX = 0;
@@ -37,7 +44,7 @@ export class MobileEnhancements {
     return (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
-      ) || window.innerWidth <= 768
+      ) || window.innerWidth <= MOBILE_BREAKPOINT
     );
   }
 
@@ -80,7 +87,7 @@ export class MobileEnhancements {
                 opacity: 0;
                 transition: opacity 0.3s ease;
                 pointer-events: none;
-                z-index: 10;
+                z-index: ${Z_INDEX_TOUCH_OVERLAY};
             }
             
             .mobile-device .chart-container.show-touch-hint::after {
@@ -114,7 +121,7 @@ export class MobileEnhancements {
                 font-size: 16px; /* Prevents zoom on iOS */
             }
             
-            @media (max-width: 768px) {
+            @media (max-width: ${MOBILE_BREAKPOINT}px) {
                 .container {
                     padding-left: 16px;
                     padding-right: 16px;
@@ -170,7 +177,7 @@ export class MobileEnhancements {
           container.classList.add('show-touch-hint');
           setTimeout(() => {
             container.classList.remove('show-touch-hint');
-          }, 2000);
+          }, SCROLL_DEBOUNCE_DELAY);
         }
       },
       { passive: true }
@@ -186,7 +193,7 @@ export class MobileEnhancements {
         const deltaY = Math.abs(touch.clientY - startY);
 
         // Prevent default if it's a horizontal swipe
-        if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
+        if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > TOUCH_THRESHOLD) {
           e.preventDefault();
         }
       },
@@ -386,8 +393,8 @@ export class MobileEnhancements {
         if (document.body.contains(toast)) {
           toast.remove();
         }
-      }, 300);
-    }, 2000);
+      }, ANIMATION_DELAY);
+    }, SCROLL_DEBOUNCE_DELAY);
   }
 
   provideHapticFeedback() {
