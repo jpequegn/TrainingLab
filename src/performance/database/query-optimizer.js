@@ -3,6 +3,13 @@
  * Advanced indexing and query optimization for large datasets
  */
 
+// Configuration constants
+const PERFORMANCE_THRESHOLD = 0.01;
+const BATCH_SIZE = 10;
+const SLOW_QUERY_THRESHOLD_MS = 500;
+const CACHE_HIT_RATIO_THRESHOLD = 0.1;
+const MIN_QUERIES_FOR_ANALYSIS = 100;
+
 export class QueryOptimizer {
   constructor(storage) {
     this.storage = storage;
@@ -12,10 +19,10 @@ export class QueryOptimizer {
     this.optimizationRules = new Map();
     this.batchQueue = new Map();
     this.compressionEnabled = true;
-    
+
     this.setupOptimizationRules();
     this.initializeIndexes();
-    
+
     // Performance tracking
     this.metrics = {
       totalQueries: 0,
@@ -23,7 +30,7 @@ export class QueryOptimizer {
       cacheHits: 0,
       averageQueryTime: 0,
       slowQueries: 0,
-      indexUsage: new Map()
+      indexUsage: new Map(),
     };
   }
 
@@ -38,63 +45,63 @@ export class QueryOptimizer {
         name: 'date_index',
         keyPath: 'date',
         unique: false,
-        compound: false
+        compound: false,
       },
       {
         store: 'workouts',
         name: 'type_date_index',
         keyPath: ['type', 'date'],
         unique: false,
-        compound: true
+        compound: true,
       },
       {
         store: 'workouts',
         name: 'user_date_index',
         keyPath: ['userId', 'date'],
         unique: false,
-        compound: true
+        compound: true,
       },
       {
         store: 'workouts',
         name: 'duration_index',
         keyPath: 'duration',
         unique: false,
-        compound: false
+        compound: false,
       },
-      
+
       // Activity indexes
       {
         store: 'activities',
         name: 'timestamp_index',
         keyPath: 'timestamp',
         unique: false,
-        compound: false
+        compound: false,
       },
       {
         store: 'activities',
         name: 'user_timestamp_index',
         keyPath: ['userId', 'timestamp'],
         unique: false,
-        compound: true
+        compound: true,
       },
-      
+
       // FTP History indexes
       {
         store: 'ftpHistory',
         name: 'user_date_index',
         keyPath: ['userId', 'date'],
         unique: false,
-        compound: true
+        compound: true,
       },
-      
+
       // Training Metrics indexes
       {
         store: 'trainingMetrics',
         name: 'date_metric_index',
         keyPath: ['date', 'metricType'],
         unique: false,
-        compound: true
-      }
+        compound: true,
+      },
     ];
 
     try {
@@ -126,22 +133,25 @@ export class QueryOptimizer {
     // Note: IndexedDB indexes are created during database version upgrade
     // This would be implemented in the database upgrade handler
     // For now, we'll track the configuration for query optimization
-    
+
     if (config.compound) {
       // Compound index optimization strategies
-      this.optimizationRules.set(`${config.store}_compound_${config.keyPath.join('_')}`, {
-        type: 'compound_index',
-        store: config.store,
-        keyPath: config.keyPath,
-        optimize: this.optimizeCompoundQuery.bind(this)
-      });
+      this.optimizationRules.set(
+        `${config.store}_compound_${config.keyPath.join('_')}`,
+        {
+          type: 'compound_index',
+          store: config.store,
+          keyPath: config.keyPath,
+          optimize: this.optimizeCompoundQuery.bind(this),
+        }
+      );
     } else {
       // Single column index optimization
       this.optimizationRules.set(`${config.store}_single_${config.keyPath}`, {
         type: 'single_index',
         store: config.store,
         keyPath: config.keyPath,
-        optimize: this.optimizeSingleQuery.bind(this)
+        optimize: this.optimizeSingleQuery.bind(this),
       });
     }
   }
@@ -154,27 +164,27 @@ export class QueryOptimizer {
     this.optimizationRules.set('range_optimization', {
       type: 'range',
       pattern: /WHERE.*BETWEEN|WHERE.*>=.*AND.*<=|WHERE.*>.*AND.*</i,
-      optimize: this.optimizeRangeQuery.bind(this)
+      optimize: this.optimizeRangeQuery.bind(this),
     });
 
     // Sort optimization
     this.optimizationRules.set('sort_optimization', {
       type: 'sort',
       pattern: /ORDER BY/i,
-      optimize: this.optimizeSortQuery.bind(this)
+      optimize: this.optimizeSortQuery.bind(this),
     });
 
     // Limit optimization
     this.optimizationRules.set('limit_optimization', {
       type: 'limit',
       pattern: /LIMIT/i,
-      optimize: this.optimizeLimitQuery.bind(this)
+      optimize: this.optimizeLimitQuery.bind(this),
     });
 
     // Batch optimization
     this.optimizationRules.set('batch_optimization', {
       type: 'batch',
-      optimize: this.optimizeBatchQuery.bind(this)
+      optimize: this.optimizeBatchQuery.bind(this),
     });
   }
 
@@ -186,7 +196,7 @@ export class QueryOptimizer {
   async executeOptimizedQuery(queryConfig) {
     const startTime = performance.now();
     const queryId = this.generateQueryId(queryConfig);
-    
+
     try {
       // Check cache first
       if (queryConfig.cache !== false) {
@@ -199,10 +209,10 @@ export class QueryOptimizer {
 
       // Optimize query
       const optimizedQuery = await this.optimizeQuery(queryConfig);
-      
+
       // Execute query
       const result = await this.executeQuery(optimizedQuery);
-      
+
       // Cache result if cacheable
       if (queryConfig.cache !== false && result.length < 1000) {
         this.cacheResult(queryId, result, queryConfig.cacheTTL);
@@ -213,7 +223,6 @@ export class QueryOptimizer {
       this.updateQueryStats(queryConfig, queryTime, result.length);
 
       return result;
-
     } catch (error) {
       console.error('Query execution failed:', error);
       throw error;
@@ -225,7 +234,7 @@ export class QueryOptimizer {
    */
   async optimizeQuery(queryConfig) {
     const optimized = { ...queryConfig };
-    
+
     // Apply optimization rules
     for (const [ruleName, rule] of this.optimizationRules.entries()) {
       if (this.shouldApplyRule(queryConfig, rule)) {
@@ -248,27 +257,31 @@ export class QueryOptimizer {
    */
   async executeQuery(queryConfig) {
     const { store, operation, filters, sort, limit, offset } = queryConfig;
-    
+
     let results = [];
 
     switch (operation) {
       case 'getAll':
         results = await this.storage.getAllFromStore(store);
         break;
-        
+
       case 'getByKey':
         const item = await this.storage.getFromStore(store, queryConfig.key);
         results = item ? [item] : [];
         break;
-        
+
       case 'getByIndex':
-        results = await this.getByIndex(store, queryConfig.index, queryConfig.indexValue);
+        results = await this.getByIndex(
+          store,
+          queryConfig.index,
+          queryConfig.indexValue
+        );
         break;
-        
+
       case 'getByRange':
         results = await this.getByRange(store, queryConfig.range);
         break;
-        
+
       default:
         throw new Error(`Unsupported operation: ${operation}`);
     }
@@ -300,18 +313,18 @@ export class QueryOptimizer {
     // This would use the actual IndexedDB index in a real implementation
     const allRecords = await this.storage.getAllFromStore(store);
     const indexConfig = this.indexes.get(`${store}_${indexName}`);
-    
+
     if (!indexConfig) {
       throw new Error(`Index ${indexName} not found for store ${store}`);
     }
 
-    const keyPath = indexConfig.keyPath;
-    
+    const { keyPath } = indexConfig;
+
     return allRecords.filter(record => {
       if (Array.isArray(keyPath)) {
         // Compound index
-        return keyPath.every((key, index) => 
-          this.getNestedValue(record, key) === value[index]
+        return keyPath.every(
+          (key, index) => this.getNestedValue(record, key) === value[index]
         );
       } else {
         // Single index
@@ -325,23 +338,29 @@ export class QueryOptimizer {
    */
   async getByRange(store, range) {
     const allRecords = await this.storage.getAllFromStore(store);
-    const { keyPath, lowerBound, upperBound, includeLower = true, includeUpper = true } = range;
-    
+    const {
+      keyPath,
+      lowerBound,
+      upperBound,
+      includeLower = true,
+      includeUpper = true,
+    } = range;
+
     return allRecords.filter(record => {
       const value = this.getNestedValue(record, keyPath);
-      
+
       if (lowerBound !== undefined) {
         if (includeLower ? value < lowerBound : value <= lowerBound) {
           return false;
         }
       }
-      
+
       if (upperBound !== undefined) {
         if (includeUpper ? value > upperBound : value >= upperBound) {
           return false;
         }
       }
-      
+
       return true;
     });
   }
@@ -353,15 +372,15 @@ export class QueryOptimizer {
     return results.filter(record => {
       return filters.every(filter => {
         const value = this.getNestedValue(record, filter.field);
-        
+
         switch (filter.operator) {
           case '=':
           case '==':
-            return value == filter.value;
+            return value === filter.value;
           case '===':
             return value === filter.value;
           case '!=':
-            return value != filter.value;
+            return value !== filter.value;
           case '!==':
             return value !== filter.value;
           case '>':
@@ -393,21 +412,27 @@ export class QueryOptimizer {
    */
   applySort(results, sort) {
     const { field, direction = 'asc', type = 'auto' } = sort;
-    
+
     return results.sort((a, b) => {
       const valueA = this.getNestedValue(a, field);
       const valueB = this.getNestedValue(b, field);
-      
+
       let comparison = 0;
-      
-      if (type === 'numeric' || (type === 'auto' && typeof valueA === 'number')) {
+
+      if (
+        type === 'numeric' ||
+        (type === 'auto' && typeof valueA === 'number')
+      ) {
         comparison = valueA - valueB;
-      } else if (type === 'date' || (type === 'auto' && valueA instanceof Date)) {
+      } else if (
+        type === 'date' ||
+        (type === 'auto' && valueA instanceof Date)
+      ) {
         comparison = valueA.getTime() - valueB.getTime();
       } else {
         comparison = String(valueA).localeCompare(String(valueB));
       }
-      
+
       return direction === 'desc' ? -comparison : comparison;
     });
   }
@@ -432,9 +457,9 @@ export class QueryOptimizer {
       filters: queryConfig.filters,
       sort: queryConfig.sort,
       limit: queryConfig.limit,
-      offset: queryConfig.offset
+      offset: queryConfig.offset,
     });
-    
+
     return btoa(key).replace(/[/+=]/g, ''); // Base64 encode and clean
   }
 
@@ -447,8 +472,11 @@ export class QueryOptimizer {
       case 'single_index':
         return queryConfig.store === rule.store;
       case 'range':
-        return queryConfig.filters && queryConfig.filters.some(f => 
-          ['>', '>=', '<', '<='].includes(f.operator)
+        return (
+          queryConfig.filters &&
+          queryConfig.filters.some(f =>
+            ['>', '>=', '<', '<='].includes(f.operator)
+          )
         );
       case 'sort':
         return queryConfig.sort !== undefined;
@@ -468,12 +496,13 @@ export class QueryOptimizer {
     // Use compound index for multi-column queries
     if (queryConfig.filters && queryConfig.filters.length > 1) {
       const indexKeys = queryConfig.filters.map(f => f.field);
-      const matchingIndex = Array.from(this.indexes.values()).find(index => 
-        index.compound && 
-        index.store === queryConfig.store &&
-        index.keyPath.every(key => indexKeys.includes(key))
+      const matchingIndex = Array.from(this.indexes.values()).find(
+        index =>
+          index.compound &&
+          index.store === queryConfig.store &&
+          index.keyPath.every(key => indexKeys.includes(key))
       );
-      
+
       if (matchingIndex) {
         queryConfig.useIndex = matchingIndex.name;
         queryConfig.indexValue = matchingIndex.keyPath.map(key => {
@@ -488,12 +517,13 @@ export class QueryOptimizer {
     // Use single column index
     if (queryConfig.filters && queryConfig.filters.length === 1) {
       const filter = queryConfig.filters[0];
-      const matchingIndex = Array.from(this.indexes.values()).find(index => 
-        !index.compound && 
-        index.store === queryConfig.store &&
-        index.keyPath === filter.field
+      const matchingIndex = Array.from(this.indexes.values()).find(
+        index =>
+          !index.compound &&
+          index.store === queryConfig.store &&
+          index.keyPath === filter.field
       );
-      
+
       if (matchingIndex) {
         queryConfig.useIndex = matchingIndex.name;
         queryConfig.indexValue = filter.value;
@@ -503,30 +533,30 @@ export class QueryOptimizer {
 
   async optimizeRangeQuery(queryConfig) {
     // Convert filters to range query if possible
-    const rangeFilters = queryConfig.filters?.filter(f => 
+    const rangeFilters = queryConfig.filters?.filter(f =>
       ['>', '>=', '<', '<='].includes(f.operator)
     );
-    
+
     if (rangeFilters && rangeFilters.length >= 2) {
       const fieldGroups = {};
       rangeFilters.forEach(filter => {
         if (!fieldGroups[filter.field]) {
           fieldGroups[filter.field] = {};
         }
-        
+
         if (['>', '>='].includes(filter.operator)) {
           fieldGroups[filter.field].lower = {
             value: filter.value,
-            inclusive: filter.operator === '>='
+            inclusive: filter.operator === '>=',
           };
         } else {
           fieldGroups[filter.field].upper = {
             value: filter.value,
-            inclusive: filter.operator === '<='
+            inclusive: filter.operator === '<=',
           };
         }
       });
-      
+
       // Find fields with both upper and lower bounds
       for (const [field, bounds] of Object.entries(fieldGroups)) {
         if (bounds.lower && bounds.upper) {
@@ -536,14 +566,15 @@ export class QueryOptimizer {
             lowerBound: bounds.lower.value,
             upperBound: bounds.upper.value,
             includeLower: bounds.lower.inclusive,
-            includeUpper: bounds.upper.inclusive
+            includeUpper: bounds.upper.inclusive,
           };
-          
+
           // Remove the range filters since they're now handled by the range query
-          queryConfig.filters = queryConfig.filters.filter(f => 
-            f.field !== field || !['>', '>=', '<', '<='].includes(f.operator)
+          queryConfig.filters = queryConfig.filters.filter(
+            f =>
+              f.field !== field || !['>', '>=', '<', '<='].includes(f.operator)
           );
-          
+
           break;
         }
       }
@@ -554,12 +585,13 @@ export class QueryOptimizer {
     // Use index for sorting if available
     const sortField = queryConfig.sort?.field;
     if (sortField) {
-      const matchingIndex = Array.from(this.indexes.values()).find(index => 
-        !index.compound && 
-        index.store === queryConfig.store &&
-        index.keyPath === sortField
+      const matchingIndex = Array.from(this.indexes.values()).find(
+        index =>
+          !index.compound &&
+          index.store === queryConfig.store &&
+          index.keyPath === sortField
       );
-      
+
       if (matchingIndex) {
         queryConfig.sortOptimized = true;
         queryConfig.sortIndex = matchingIndex.name;
@@ -577,15 +609,15 @@ export class QueryOptimizer {
   async optimizeBatchQuery(queryConfig) {
     // Batch multiple similar queries
     const batchKey = `${queryConfig.store}_${queryConfig.operation}`;
-    
+
     if (!this.batchQueue.has(batchKey)) {
       this.batchQueue.set(batchKey, []);
     }
-    
+
     this.batchQueue.get(batchKey).push(queryConfig);
-    
+
     // Process batch if queue is full or after timeout
-    if (this.batchQueue.get(batchKey).length >= 10) {
+    if (this.batchQueue.get(batchKey).length >= BATCH_SIZE) {
       setTimeout(() => this.processBatch(batchKey), 0);
     }
   }
@@ -596,15 +628,15 @@ export class QueryOptimizer {
   async processBatch(batchKey) {
     const batch = this.batchQueue.get(batchKey) || [];
     if (batch.length === 0) return;
-    
+
     this.batchQueue.set(batchKey, []);
-    
+
     try {
       // Execute batched queries efficiently
       const results = await Promise.all(
         batch.map(query => this.executeQuery(query))
       );
-      
+
       return results;
     } catch (error) {
       console.error('Batch processing failed:', error);
@@ -615,11 +647,12 @@ export class QueryOptimizer {
   /**
    * Cache query result
    */
-  cacheResult(queryId, result, ttl = 300000) { // 5 minute default TTL
+  cacheResult(queryId, result, ttl = 300000) {
+    // 5 minute default TTL
     this.queryCache.set(queryId, {
       result,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
 
@@ -628,14 +661,14 @@ export class QueryOptimizer {
    */
   getCachedResult(queryId) {
     const cached = this.queryCache.get(queryId);
-    
+
     if (!cached) return null;
-    
+
     if (Date.now() - cached.timestamp > cached.ttl) {
       this.queryCache.delete(queryId);
       return null;
     }
-    
+
     return cached.result;
   }
 
@@ -644,24 +677,26 @@ export class QueryOptimizer {
    */
   updateQueryStats(queryConfig, queryTime, resultCount) {
     this.metrics.totalQueries++;
-    
+
     // Update average query time
-    this.metrics.averageQueryTime = 
-      (this.metrics.averageQueryTime * (this.metrics.totalQueries - 1) + queryTime) / 
+    this.metrics.averageQueryTime =
+      (this.metrics.averageQueryTime * (this.metrics.totalQueries - 1) +
+        queryTime) /
       this.metrics.totalQueries;
-    
+
     // Track slow queries
-    if (queryTime > 1000) { // 1 second threshold
+    if (queryTime > 1000) {
+      // 1 second threshold
       this.metrics.slowQueries++;
     }
-    
+
     // Track index usage
     if (queryConfig.useIndex) {
       const indexKey = `${queryConfig.store}_${queryConfig.useIndex}`;
       const currentUsage = this.metrics.indexUsage.get(indexKey) || 0;
       this.metrics.indexUsage.set(indexKey, currentUsage + 1);
     }
-    
+
     // Store detailed stats for this query type
     const queryType = `${queryConfig.store}_${queryConfig.operation}`;
     if (!this.queryStats.has(queryType)) {
@@ -670,10 +705,10 @@ export class QueryOptimizer {
         totalTime: 0,
         averageTime: 0,
         totalResults: 0,
-        averageResults: 0
+        averageResults: 0,
       });
     }
-    
+
     const stats = this.queryStats.get(queryType);
     stats.count++;
     stats.totalTime += queryTime;
@@ -691,15 +726,19 @@ export class QueryOptimizer {
       queryStats: Object.fromEntries(this.queryStats),
       cacheStats: {
         size: this.queryCache.size,
-        hitRate: this.metrics.totalQueries > 0 ? 
-          (this.metrics.cacheHits / this.metrics.totalQueries) * 100 : 0
+        hitRate:
+          this.metrics.totalQueries > 0
+            ? (this.metrics.cacheHits / this.metrics.totalQueries) * 100
+            : 0,
       },
       indexStats: {
         total: this.indexes.size,
-        usage: Object.fromEntries(this.metrics.indexUsage)
+        usage: Object.fromEntries(this.metrics.indexUsage),
       },
-      optimizationRate: this.metrics.totalQueries > 0 ? 
-        (this.metrics.optimizedQueries / this.metrics.totalQueries) * 100 : 0
+      optimizationRate:
+        this.metrics.totalQueries > 0
+          ? (this.metrics.optimizedQueries / this.metrics.totalQueries) * 100
+          : 0,
     };
   }
 
@@ -718,45 +757,57 @@ export class QueryOptimizer {
     const analysis = {
       slowQueries: [],
       underutilizedIndexes: [],
-      suggestions: []
+      suggestions: [],
     };
 
     // Find slow query patterns
     for (const [queryType, stats] of this.queryStats.entries()) {
-      if (stats.averageTime > 500) { // 500ms threshold
+      if (stats.averageTime > SLOW_QUERY_THRESHOLD_MS) {
         analysis.slowQueries.push({
           queryType,
           averageTime: stats.averageTime,
-          count: stats.count
+          count: stats.count,
         });
       }
     }
 
     // Find underutilized indexes
-    for (const [indexKey, config] of this.indexes.entries()) {
+    for (const [indexKey] of this.indexes.entries()) {
       const usage = this.metrics.indexUsage.get(indexKey) || 0;
       const usageRate = usage / this.metrics.totalQueries;
-      
-      if (usageRate < 0.01 && this.metrics.totalQueries > 100) { // Less than 1% usage
+
+      if (
+        usageRate < PERFORMANCE_THRESHOLD &&
+        this.metrics.totalQueries > MIN_QUERIES_FOR_ANALYSIS
+      ) {
         analysis.underutilizedIndexes.push({
           index: indexKey,
           usage,
-          usageRate: usageRate * 100
+          usageRate: usageRate * 100,
         });
       }
     }
 
     // Generate suggestions
     if (analysis.slowQueries.length > 0) {
-      analysis.suggestions.push('Consider adding indexes for slow query patterns');
+      analysis.suggestions.push(
+        'Consider adding indexes for slow query patterns'
+      );
     }
-    
-    if (this.metrics.cacheHits / this.metrics.totalQueries < 0.1) {
-      analysis.suggestions.push('Low cache hit rate - consider increasing cache TTL or optimizing query patterns');
+
+    if (
+      this.metrics.cacheHits / this.metrics.totalQueries <
+      CACHE_HIT_RATIO_THRESHOLD
+    ) {
+      analysis.suggestions.push(
+        'Low cache hit rate - consider increasing cache TTL or optimizing query patterns'
+      );
     }
-    
+
     if (analysis.underutilizedIndexes.length > 0) {
-      analysis.suggestions.push('Some indexes are rarely used - consider removing them to improve write performance');
+      analysis.suggestions.push(
+        'Some indexes are rarely used - consider removing them to improve write performance'
+      );
     }
 
     return analysis;
@@ -771,7 +822,7 @@ export class QueryOptimizer {
     this.indexes.clear();
     this.optimizationRules.clear();
     this.batchQueue.clear();
-    
+
     console.log('Query optimizer destroyed');
   }
 }
@@ -791,7 +842,7 @@ export const QueryBuilder = {
       sort: null,
       limit: null,
       offset: null,
-      cache: true
+      cache: true,
     };
   },
 
@@ -835,5 +886,5 @@ export const QueryBuilder = {
   batch(query, enabled = true) {
     query.batch = enabled;
     return query;
-  }
+  },
 };

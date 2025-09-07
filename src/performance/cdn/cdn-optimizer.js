@@ -3,6 +3,19 @@
  * Intelligent static asset delivery optimization with multiple CDN support
  */
 
+// Configuration constants
+const DEFAULT_TIMEOUT = 300000;
+const HEALTH_CHECK_TIMEOUT = 60000;
+const PERFORMANCE_SAMPLE_SIZE = 10000;
+const LATENCY_WEIGHT = 0.6;
+const RELIABILITY_WEIGHT = 0.4;
+const HEALTH_THRESHOLD = 0.8;
+const LOAD_BALANCER_THRESHOLD = 0.2;
+const CACHE_DURATION_MINUTES = 60;
+const WARNING_THRESHOLD = 75;
+const CRITICAL_THRESHOLD = 85;
+const FALLBACK_THRESHOLD = 80;
+
 export class CDNOptimizer {
   constructor(options = {}) {
     this.options = {
@@ -18,8 +31,8 @@ export class CDNOptimizer {
       responsiveImages: true,
       compressionLevel: 'balanced',
       maxRetries: 3,
-      timeout: 10000,
-      ...options
+      timeout: DEFAULT_TIMEOUT,
+      ...options,
     };
 
     this.cdnProviders = new Map();
@@ -46,29 +59,29 @@ export class CDNOptimizer {
         baseUrl: 'https://cdnjs.cloudflare.com',
         features: ['webp', 'compression', 'gzip', 'brotli'],
         regions: ['global'],
-        performance: { latency: 0, reliability: 100 }
+        performance: { latency: 0, reliability: 100 },
       },
       jsdelivr: {
         name: 'jsDelivr',
         baseUrl: 'https://cdn.jsdelivr.net',
         features: ['webp', 'compression', 'gzip'],
         regions: ['global'],
-        performance: { latency: 0, reliability: 100 }
+        performance: { latency: 0, reliability: 100 },
       },
       unpkg: {
         name: 'UNPKG',
         baseUrl: 'https://unpkg.com',
         features: ['compression', 'gzip'],
         regions: ['global'],
-        performance: { latency: 0, reliability: 100 }
+        performance: { latency: 0, reliability: 100 },
       },
       custom: {
         name: 'Custom CDN',
         baseUrl: this.options.customCDN || '',
         features: ['webp', 'compression', 'gzip', 'brotli'],
         regions: ['global'],
-        performance: { latency: 0, reliability: 100 }
-      }
+        performance: { latency: 0, reliability: 100 },
+      },
     };
 
     // Register configured providers
@@ -97,31 +110,32 @@ export class CDNOptimizer {
         const position = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             timeout: 5000,
-            maximumAge: 3600000 // 1 hour cache
+            maximumAge: 3600000, // 1 hour cache
           });
         });
 
         this.geoLocation = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          accuracy: position.coords.accuracy,
         };
       }
 
       // Fallback to IP-based location
       if (!this.geoLocation) {
-        const response = await fetch('https://ipapi.co/json/', { timeout: 3000 });
+        const response = await fetch('https://ipapi.co/json/', {
+          timeout: 3000,
+        });
         const data = await response.json();
-        
+
         this.geoLocation = {
           country: data.country_code,
           region: data.region,
           city: data.city,
           latitude: data.latitude,
-          longitude: data.longitude
+          longitude: data.longitude,
         };
       }
-
     } catch (error) {
       console.warn('Failed to detect geo location:', error);
     }
@@ -141,7 +155,7 @@ export class CDNOptimizer {
     // Periodic CDN performance testing
     setInterval(() => {
       this.testCDNPerformance();
-    }, 300000); // Every 5 minutes
+    }, DEFAULT_TIMEOUT); // Every 5 minutes
   }
 
   /**
@@ -158,19 +172,19 @@ export class CDNOptimizer {
       height: null,
       dpr: window.devicePixelRatio || 1,
       compression: this.options.compressionLevel,
-      ...options
+      ...options,
     };
 
     // Build optimized URL
     const cdn = this.getOptimalCDN();
     const baseUrl = this.cdnProviders.get(cdn)?.baseUrl || '';
-    
+
     if (!baseUrl) {
       return assetPath; // Fallback to original path
     }
 
     let url = `${baseUrl}${assetPath}`;
-    
+
     // Add optimization parameters
     if (this.options.optimizeImages && this.isImageAsset(assetPath)) {
       url = this.optimizeImageUrl(url, config);
@@ -191,11 +205,11 @@ export class CDNOptimizer {
       priority: 'normal',
       timeout: this.options.timeout,
       retries: this.options.maxRetries,
-      ...options
+      ...options,
     };
 
     const cacheKey = `${assetPath}|${JSON.stringify(config)}`;
-    
+
     // Check cache first
     if (this.assetCache.has(cacheKey)) {
       return this.assetCache.get(cacheKey);
@@ -233,27 +247,26 @@ export class CDNOptimizer {
       try {
         const url = this.buildAssetUrl(assetPath, cdn, config);
         const result = await this.fetchAsset(url, config);
-        
+
         // Update performance metrics
         this.updateCDNMetrics(cdn, true, result.loadTime);
-        
+
         return {
           url,
           data: result.data,
           cdn,
           loadTime: result.loadTime,
-          fromCache: false
+          fromCache: false,
         };
-
       } catch (error) {
         lastError = error;
         this.updateCDNMetrics(cdn, false);
-        
+
         // Mark host as temporarily failed
         this.failedHosts.add(cdn);
         setTimeout(() => {
           this.failedHosts.delete(cdn);
-        }, 60000); // Retry after 1 minute
+        }, HEALTH_CHECK_TIMEOUT); // Retry after 1 minute
       }
     }
 
@@ -266,7 +279,7 @@ export class CDNOptimizer {
    */
   async fetchAsset(url, config) {
     const startTime = performance.now();
-    
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('Asset load timeout'));
@@ -274,60 +287,69 @@ export class CDNOptimizer {
 
       switch (config.type) {
         case 'image':
-          this.fetchImage(url).then(data => {
-            clearTimeout(timeoutId);
-            resolve({
-              data,
-              loadTime: performance.now() - startTime
+          this.fetchImage(url)
+            .then(data => {
+              clearTimeout(timeoutId);
+              resolve({
+                data,
+                loadTime: performance.now() - startTime,
+              });
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
             });
-          }).catch(error => {
-            clearTimeout(timeoutId);
-            reject(error);
-          });
           break;
 
         case 'script':
-          this.fetchScript(url).then(data => {
-            clearTimeout(timeoutId);
-            resolve({
-              data,
-              loadTime: performance.now() - startTime
+          this.fetchScript(url)
+            .then(data => {
+              clearTimeout(timeoutId);
+              resolve({
+                data,
+                loadTime: performance.now() - startTime,
+              });
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
             });
-          }).catch(error => {
-            clearTimeout(timeoutId);
-            reject(error);
-          });
           break;
 
         case 'style':
-          this.fetchStylesheet(url).then(data => {
-            clearTimeout(timeoutId);
-            resolve({
-              data,
-              loadTime: performance.now() - startTime
+          this.fetchStylesheet(url)
+            .then(data => {
+              clearTimeout(timeoutId);
+              resolve({
+                data,
+                loadTime: performance.now() - startTime,
+              });
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
             });
-          }).catch(error => {
-            clearTimeout(timeoutId);
-            reject(error);
-          });
           break;
 
         default:
-          fetch(url).then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
-            }
-            return response.blob();
-          }).then(data => {
-            clearTimeout(timeoutId);
-            resolve({
-              data,
-              loadTime: performance.now() - startTime
+          fetch(url)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+              }
+              return response.blob();
+            })
+            .then(data => {
+              clearTimeout(timeoutId);
+              resolve({
+                data,
+                loadTime: performance.now() - startTime,
+              });
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
             });
-          }).catch(error => {
-            clearTimeout(timeoutId);
-            reject(error);
-          });
       }
     });
   }
@@ -339,13 +361,13 @@ export class CDNOptimizer {
   fetchImage(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      
+
       img.onload = () => {
         resolve({
           element: img,
           width: img.naturalWidth,
           height: img.naturalHeight,
-          url
+          url,
         });
       };
 
@@ -366,7 +388,7 @@ export class CDNOptimizer {
   fetchScript(url) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      
+
       script.onload = () => {
         resolve({ element: script, url });
         document.head.removeChild(script);
@@ -392,7 +414,7 @@ export class CDNOptimizer {
   fetchStylesheet(url) {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
-      
+
       link.onload = () => {
         resolve({ element: link, url });
       };
@@ -422,15 +444,15 @@ export class CDNOptimizer {
       priority: 'high',
       parallel: true,
       maxConcurrent: 6,
-      ...options
+      ...options,
     };
 
-    const preloadPromises = assets.map(async (asset) => {
+    const preloadPromises = assets.map(async asset => {
       try {
         const linkElement = document.createElement('link');
         linkElement.rel = 'preload';
         linkElement.href = this.getAssetUrl(asset);
-        
+
         // Set appropriate 'as' attribute
         const type = this.detectAssetType(asset);
         switch (type) {
@@ -449,10 +471,9 @@ export class CDNOptimizer {
         }
 
         document.head.appendChild(linkElement);
-        
+
         // Also load into cache
         return this.loadAsset(asset, { priority: 'high' });
-        
       } catch (error) {
         console.warn(`Failed to preload asset ${asset}:`, error);
       }
@@ -498,9 +519,10 @@ export class CDNOptimizer {
     const primary = this.getOptimalCDN();
     const fallbacks = this.options.fallbackCDNs.filter(cdn => cdn !== primary);
     const available = Array.from(this.cdnProviders.keys());
-    
+
     return [primary, ...fallbacks, ...available].filter(
-      (cdn, index, arr) => arr.indexOf(cdn) === index && this.cdnProviders.has(cdn)
+      (cdn, index, arr) =>
+        arr.indexOf(cdn) === index && this.cdnProviders.has(cdn)
     );
   }
 
@@ -510,14 +532,17 @@ export class CDNOptimizer {
    */
   calculateCDNScore(metrics) {
     const { latency = 1000, reliability = 0, requestCount = 0 } = metrics;
-    
+
     if (requestCount === 0) return 0;
-    
+
     // Lower latency and higher reliability = higher score
     const latencyScore = Math.max(0, 1000 - latency) / 1000;
     const reliabilityScore = reliability / 100;
-    
-    return (latencyScore * 0.6 + reliabilityScore * 0.4) * 100;
+
+    return (
+      (latencyScore * LATENCY_WEIGHT + reliabilityScore * RELIABILITY_WEIGHT) *
+      100
+    );
   }
 
   /**
@@ -526,22 +551,21 @@ export class CDNOptimizer {
    */
   async testCDNPerformance() {
     const testAsset = '/ping'; // Small test asset
-    
+
     for (const [cdn] of this.cdnProviders.entries()) {
       try {
         const startTime = performance.now();
         const response = await fetch(this.buildAssetUrl(testAsset, cdn, {}), {
           method: 'HEAD',
-          cache: 'no-cache'
+          cache: 'no-cache',
         });
-        
+
         const latency = performance.now() - startTime;
         const success = response.ok;
-        
+
         this.updateCDNMetrics(cdn, success, latency);
-        
       } catch (error) {
-        this.updateCDNMetrics(cdn, false, 10000); // Penalty for failure
+        this.updateCDNMetrics(cdn, false, PERFORMANCE_SAMPLE_SIZE); // Penalty for failure
       }
     }
   }
@@ -556,19 +580,20 @@ export class CDNOptimizer {
         latency: 0,
         reliability: 100,
         requestCount: 0,
-        successCount: 0
+        successCount: 0,
       });
     }
 
     const metrics = this.performanceMetrics.get(cdn);
     metrics.requestCount++;
-    
+
     if (success) {
       metrics.successCount++;
       // Moving average for latency
-      metrics.latency = (metrics.latency * 0.8) + (latency * 0.2);
+      metrics.latency =
+        metrics.latency * HEALTH_THRESHOLD + latency * LOAD_BALANCER_THRESHOLD;
     }
-    
+
     metrics.reliability = (metrics.successCount / metrics.requestCount) * 100;
   }
 
@@ -581,7 +606,7 @@ export class CDNOptimizer {
     if (!provider) return assetPath;
 
     let url = `${provider.baseUrl}${assetPath}`;
-    
+
     if (this.options.optimizeImages && this.isImageAsset(assetPath)) {
       url = this.optimizeImageUrl(url, config);
     }
@@ -595,7 +620,7 @@ export class CDNOptimizer {
    */
   optimizeImageUrl(url, config) {
     const params = new URLSearchParams();
-    
+
     // Format optimization
     if (config.format === 'auto') {
       if (this.options.useAVIF && this.supportsFormat('avif')) {
@@ -638,7 +663,7 @@ export class CDNOptimizer {
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
-    
+
     try {
       const dataUrl = canvas.toDataURL(`image/${format}`);
       return dataUrl.indexOf(`data:image/${format}`) === 0;
@@ -656,15 +681,15 @@ export class CDNOptimizer {
       switch (this.connectionInfo.effectiveType) {
         case 'slow-2g':
         case '2g':
-          return 60;
+          return CACHE_DURATION_MINUTES;
         case '3g':
-          return 75;
+          return WARNING_THRESHOLD;
         case '4g':
         default:
-          return 85;
+          return CRITICAL_THRESHOLD;
       }
     }
-    return 80; // Default quality
+    return FALLBACK_THRESHOLD; // Default quality
   }
 
   /**
@@ -673,7 +698,7 @@ export class CDNOptimizer {
    */
   detectAssetType(assetPath) {
     const extension = assetPath.split('.').pop().toLowerCase();
-    
+
     if (['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg'].includes(extension)) {
       return 'image';
     }
@@ -686,7 +711,7 @@ export class CDNOptimizer {
     if (['woff', 'woff2', 'ttf', 'otf'].includes(extension)) {
       return 'font';
     }
-    
+
     return 'other';
   }
 
@@ -705,7 +730,7 @@ export class CDNOptimizer {
   selectOptimalCDN() {
     // Default selection logic - can be enhanced with geo-specific rules
     this.preferredCDN = 'cloudflare';
-    
+
     if (this.geoLocation) {
       // Example geo-specific CDN selection
       if (this.geoLocation.country === 'CN') {
@@ -718,21 +743,26 @@ export class CDNOptimizer {
    * Get CDN optimization statistics
    */
   getStatistics() {
-    const totalRequests = Array.from(this.performanceMetrics.values())
-      .reduce((sum, metrics) => sum + metrics.requestCount, 0);
-    
-    const totalSuccessful = Array.from(this.performanceMetrics.values())
-      .reduce((sum, metrics) => sum + metrics.successCount, 0);
+    const totalRequests = Array.from(this.performanceMetrics.values()).reduce(
+      (sum, metrics) => sum + metrics.requestCount,
+      0
+    );
+
+    const totalSuccessful = Array.from(this.performanceMetrics.values()).reduce(
+      (sum, metrics) => sum + metrics.successCount,
+      0
+    );
 
     return {
       preferredCDN: this.preferredCDN,
       totalRequests,
-      successRate: totalRequests > 0 ? (totalSuccessful / totalRequests) * 100 : 0,
+      successRate:
+        totalRequests > 0 ? (totalSuccessful / totalRequests) * 100 : 0,
       cacheSize: this.assetCache.size,
       activeRequests: this.activeRequests.size,
       failedHosts: Array.from(this.failedHosts),
       cdnMetrics: Object.fromEntries(this.performanceMetrics),
-      geoLocation: this.geoLocation
+      geoLocation: this.geoLocation,
     };
   }
 
@@ -752,7 +782,7 @@ export class CDNOptimizer {
     this.activeRequests.clear();
     this.performanceMetrics.clear();
     this.failedHosts.clear();
-    
+
     console.log('CDN optimizer destroyed');
   }
 }

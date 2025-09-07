@@ -6,7 +6,7 @@
 
 import { createLogger } from '../../utils/logger.js';
 import { activityService } from '../../services/activity-service.js';
-import { TrainingLoadCalculator } from '../../models/TrainingLoadModel.js';
+// TrainingLoadCalculator import removed - not currently used
 
 const logger = createLogger('PerformanceTrends');
 
@@ -16,7 +16,7 @@ export class PerformanceTrends {
     this.activities = options.activities || [];
     this.dateRange = options.dateRange || 90; // days
     this.chartInstances = new Map();
-    
+
     this.render();
   }
 
@@ -208,7 +208,6 @@ export class PerformanceTrends {
 
       // Update charts
       this.updateCharts(trainingLoadSeries, rangeActivities);
-
     } catch (error) {
       logger.error('Failed to update performance trends:', error);
       this.showError('Failed to load performance data');
@@ -220,7 +219,7 @@ export class PerformanceTrends {
    */
   updateMetricCards(trainingLoadSeries, activities) {
     const latestData = trainingLoadSeries[trainingLoadSeries.length - 1];
-    
+
     if (!latestData) {
       return;
     }
@@ -234,7 +233,7 @@ export class PerformanceTrends {
     const atlMetric = this.container.querySelector('#atlMetric .metric-value');
     if (atlMetric) {
       atlMetric.textContent = Math.round(latestData.atl * 10) / 10;
-      
+
       // Add trend indicator
       const atlTrend = this.calculateTrend(trainingLoadSeries, 'atl');
       this.updateMetricTrend(atlMetric.parentElement, atlTrend);
@@ -244,7 +243,7 @@ export class PerformanceTrends {
     const ctlMetric = this.container.querySelector('#ctlMetric .metric-value');
     if (ctlMetric) {
       ctlMetric.textContent = Math.round(latestData.ctl * 10) / 10;
-      
+
       const ctlTrend = this.calculateTrend(trainingLoadSeries, 'ctl');
       this.updateMetricTrend(ctlMetric.parentElement, ctlTrend);
     }
@@ -254,25 +253,29 @@ export class PerformanceTrends {
     if (tsbMetric) {
       const tsb = Math.round(latestData.tsb * 10) / 10;
       tsbMetric.textContent = tsb;
-      
+
       // Color code TSB based on form
       const form = latestData.calculateForm();
       const formAnalysis = latestData.getFormAnalysis();
-      
+
       tsbMetric.style.color = this.getFormColor(form);
-      
+
       // Update description with form
-      const tsbDescription = this.container.querySelector('#tsbMetric .metric-description');
+      const tsbDescription = this.container.querySelector(
+        '#tsbMetric .metric-description'
+      );
       if (tsbDescription) {
         tsbDescription.textContent = formAnalysis.description;
       }
     }
 
     // Update Weekly TSS
-    const weeklyTssMetric = this.container.querySelector('#weeklyTssMetric .metric-value');
+    const weeklyTssMetric = this.container.querySelector(
+      '#weeklyTssMetric .metric-value'
+    );
     if (weeklyTssMetric) {
       weeklyTssMetric.textContent = Math.round(weeklyTSS);
-      
+
       const weeklyTrend = this.calculateWeeklyTSSTrend(trainingLoadSeries);
       this.updateMetricTrend(weeklyTssMetric.parentElement, weeklyTrend);
     }
@@ -283,13 +286,15 @@ export class PerformanceTrends {
    */
   calculateTrend(data, metric) {
     if (data.length < 14) return 0;
-    
+
     const recent = data.slice(-7);
     const previous = data.slice(-14, -7);
-    
-    const recentAvg = recent.reduce((sum, item) => sum + item[metric], 0) / recent.length;
-    const previousAvg = previous.reduce((sum, item) => sum + item[metric], 0) / previous.length;
-    
+
+    const recentAvg =
+      recent.reduce((sum, item) => sum + item[metric], 0) / recent.length;
+    const previousAvg =
+      previous.reduce((sum, item) => sum + item[metric], 0) / previous.length;
+
     return ((recentAvg - previousAvg) / previousAvg) * 100;
   }
 
@@ -298,10 +303,14 @@ export class PerformanceTrends {
    */
   calculateWeeklyTSSTrend(data) {
     if (data.length < 14) return 0;
-    
-    const thisWeek = data.slice(-7).reduce((sum, item) => sum + item.dailyTSS, 0);
-    const lastWeek = data.slice(-14, -7).reduce((sum, item) => sum + item.dailyTSS, 0);
-    
+
+    const thisWeek = data
+      .slice(-7)
+      .reduce((sum, item) => sum + item.dailyTSS, 0);
+    const lastWeek = data
+      .slice(-14, -7)
+      .reduce((sum, item) => sum + item.dailyTSS, 0);
+
     if (lastWeek === 0) return 0;
     return ((thisWeek - lastWeek) / lastWeek) * 100;
   }
@@ -317,19 +326,20 @@ export class PerformanceTrends {
     }
 
     // Add trend indicator
-    if (Math.abs(trend) > 1) { // Only show significant trends
+    if (Math.abs(trend) > 1) {
+      // Only show significant trends
       const trendElement = document.createElement('div');
       trendElement.className = 'metric-trend';
-      
+
       const isPositive = trend > 0;
       const icon = isPositive ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
       const color = isPositive ? 'text-green-500' : 'text-red-500';
-      
+
       trendElement.innerHTML = `
         <i class="${icon} ${color}"></i>
         <span class="text-xs ${color}">${Math.abs(trend).toFixed(1)}%</span>
       `;
-      
+
       metricElement.appendChild(trendElement);
     }
   }
@@ -343,9 +353,9 @@ export class PerformanceTrends {
       fresh: '#84cc16', // lime
       neutral: '#3b82f6', // blue
       tired: '#f59e0b', // amber
-      very_tired: '#ef4444' // red
+      very_tired: '#ef4444', // red
     };
-    
+
     return colors[form] || colors.neutral;
   }
 
@@ -371,7 +381,7 @@ export class PerformanceTrends {
     }
 
     const ctx = canvas.getContext('2d');
-    
+
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -383,7 +393,7 @@ export class PerformanceTrends {
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: false,
-            tension: 0.3
+            tension: 0.3,
           },
           {
             label: 'CTL (Fitness)',
@@ -391,7 +401,7 @@ export class PerformanceTrends {
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             fill: false,
-            tension: 0.3
+            tension: 0.3,
           },
           {
             label: 'TSB (Form)',
@@ -400,32 +410,32 @@ export class PerformanceTrends {
             backgroundColor: 'rgba(245, 158, 11, 0.1)',
             fill: false,
             tension: 0.3,
-            yAxisID: 'tsb'
-          }
-        ]
+            yAxisID: 'tsb',
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
           intersect: false,
-          mode: 'index'
+          mode: 'index',
         },
         scales: {
           x: {
             display: true,
             title: {
               display: true,
-              text: 'Date'
-            }
+              text: 'Date',
+            },
           },
           y: {
             display: true,
             title: {
               display: true,
-              text: 'ATL / CTL'
+              text: 'ATL / CTL',
             },
-            position: 'left'
+            position: 'left',
           },
           tsb: {
             type: 'linear',
@@ -433,34 +443,34 @@ export class PerformanceTrends {
             position: 'right',
             title: {
               display: true,
-              text: 'TSB'
+              text: 'TSB',
             },
             grid: {
               drawOnChartArea: false,
-            }
-          }
+            },
+          },
         },
         plugins: {
           legend: {
-            display: false
+            display: false,
           },
           tooltip: {
             callbacks: {
-              title: function(context) {
+              title: function (context) {
                 return context[0].label;
               },
-              afterBody: function(context) {
-                const dataIndex = context[0].dataIndex;
+              afterBody: function (context) {
+                const { dataIndex } = context[0];
                 const item = data[dataIndex];
                 return [
                   `Daily TSS: ${item.dailyTSS}`,
-                  `Form: ${item.form || 'neutral'}`
+                  `Form: ${item.form || 'neutral'}`,
                 ];
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
 
     this.chartInstances.set('trainingLoad', chart);
@@ -483,27 +493,31 @@ export class PerformanceTrends {
     for (let i = 6; i < data.length; i += 7) {
       const week = data.slice(Math.max(0, i - 6), i + 1);
       const weeklyTSS = week.reduce((sum, item) => sum + item.dailyTSS, 0);
-      const weekLabel = new Date(week[week.length - 1].date).toLocaleDateString();
-      
+      const weekLabel = new Date(
+        week[week.length - 1].date
+      ).toLocaleDateString();
+
       weeklyData.push({
         label: weekLabel,
-        value: weeklyTSS
+        value: weeklyTSS,
       });
     }
 
     const ctx = canvas.getContext('2d');
-    
+
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: weeklyData.map(item => item.label),
-        datasets: [{
-          label: 'Weekly TSS',
-          data: weeklyData.map(item => item.value),
-          backgroundColor: 'rgba(59, 130, 246, 0.6)',
-          borderColor: '#3b82f6',
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            label: 'Weekly TSS',
+            data: weeklyData.map(item => item.value),
+            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -512,22 +526,22 @@ export class PerformanceTrends {
           x: {
             title: {
               display: true,
-              text: 'Week'
-            }
+              text: 'Week',
+            },
           },
           y: {
             title: {
               display: true,
-              text: 'TSS'
-            }
-          }
+              text: 'TSS',
+            },
+          },
         },
         plugins: {
           legend: {
-            display: false
-          }
-        }
-      }
+            display: false,
+          },
+        },
+      },
     });
 
     this.chartInstances.set('weeklyTSS', chart);
@@ -556,12 +570,16 @@ export class PerformanceTrends {
       ctx.font = '16px Arial';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#666';
-      ctx.fillText('No power data available', canvas.width / 2, canvas.height / 2);
+      ctx.fillText(
+        'No power data available',
+        canvas.width / 2,
+        canvas.height / 2
+      );
       return;
     }
 
     const ctx = canvas.getContext('2d');
-    
+
     const chart = new Chart(ctx, {
       type: 'scatter',
       data: {
@@ -570,12 +588,12 @@ export class PerformanceTrends {
             label: 'Average Power',
             data: powerActivities.map(activity => ({
               x: new Date(activity.date),
-              y: activity.avgPower
+              y: activity.avgPower,
             })),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16, 185, 129, 0.6)',
             showLine: true,
-            tension: 0.3
+            tension: 0.3,
           },
           {
             label: 'Normalized Power',
@@ -583,14 +601,14 @@ export class PerformanceTrends {
               .filter(activity => activity.normalizedPower > 0)
               .map(activity => ({
                 x: new Date(activity.date),
-                y: activity.normalizedPower
+                y: activity.normalizedPower,
               })),
             borderColor: '#f59e0b',
             backgroundColor: 'rgba(245, 158, 11, 0.6)',
             showLine: true,
-            tension: 0.3
-          }
-        ]
+            tension: 0.3,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -602,28 +620,28 @@ export class PerformanceTrends {
               displayFormats: {
                 day: 'MMM DD',
                 week: 'MMM DD',
-                month: 'MMM'
-              }
+                month: 'MMM',
+              },
             },
             title: {
               display: true,
-              text: 'Date'
-            }
+              text: 'Date',
+            },
           },
           y: {
             title: {
               display: true,
-              text: 'Power (W)'
-            }
-          }
+              text: 'Power (W)',
+            },
+          },
         },
         plugins: {
           legend: {
             display: true,
-            position: 'top'
-          }
-        }
-      }
+            position: 'top',
+          },
+        },
+      },
     });
 
     this.chartInstances.set('powerProgression', chart);
@@ -639,7 +657,7 @@ export class PerformanceTrends {
       <i class="fas fa-exclamation-circle"></i>
       <span>${message}</span>
     `;
-    
+
     // Replace content with error
     this.container.innerHTML = '';
     this.container.appendChild(errorElement);
@@ -651,7 +669,7 @@ export class PerformanceTrends {
   attachEventListeners() {
     const dateRangeSelect = this.container.querySelector('#dateRangeSelect');
     if (dateRangeSelect) {
-      dateRangeSelect.addEventListener('change', (e) => {
+      dateRangeSelect.addEventListener('change', e => {
         this.setDateRange(parseInt(e.target.value));
       });
     }
@@ -666,7 +684,7 @@ export class PerformanceTrends {
       chart.destroy();
     });
     this.chartInstances.clear();
-    
+
     if (this.container) {
       this.container.innerHTML = '';
     }
